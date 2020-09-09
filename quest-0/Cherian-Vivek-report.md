@@ -1,11 +1,11 @@
 # Quest Name
-Authors: FirstName1 LastName1, FirstName2 LastName2, FirstName3 LastName 3
+Authors: Vivek Cherian
 
-Date: YYYY-MM-DD
+Date: 2020-09-08
 -----
 
 ## Summary
-
+This is an individual quest that consisted of 5 skills and an investigative question. Look in individual repo for skill reports, and investigative question is answered below.
 
 ## Self-Assessment
 
@@ -14,10 +14,10 @@ Date: YYYY-MM-DD
 | Objective Criterion | Rating | Max Value  | 
 |---------------------------------------------|:-----------:|:---------:|
 | Skill 01 | 1  |  1     | 
-| Skill 02 |  |  1     | 
-| Skill 03 |  |  1     | 
+| Skill 02 | 1 |  1     | 
+| Skill 03 | 1 |  1     | 
 | Skill 04 | 1  |  1     | 
-| Skill 05 |  |  1     | 
+| Skill 05 | 1 |  1     | 
 
 
 ### Qualitative Criteria
