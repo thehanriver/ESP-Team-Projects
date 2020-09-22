@@ -57,10 +57,12 @@ Figure 2: Wiring of ESP32, I2C display, button, and servo motor:
 ## Supporting Artifacts
 
 [Demo video](https://drive.google.com/file/d/1g3_zGDu6H-xdC5ByHxcXcN8vJxZVtbuS/view?usp=sharing)
+
 [Team Github](https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1)
 
 ## Modules, Tools, Source Used Including Attribution
 [I2C display example code](https://github.com/BU-EC444/code-examples/tree/master/i2c-display)
+
 [Servo control example code](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/mcpwm/mcpwm_servo_control)
 
 ## References
