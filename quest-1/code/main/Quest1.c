@@ -346,7 +346,7 @@ static void counter_using_clock(void *args)
     }
     //printf("global_count: %d\n", global_count);
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    printf("Time till next feeding: %d hrs: %d min: %d sec\n", hour, min, sec);
+    printf("\rTime till next feeding: %d hrs: %d min: %d sec\n", hour, min, sec);
   }
 }
 
