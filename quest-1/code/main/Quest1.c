@@ -1,5 +1,6 @@
 /*Team-2-Cherian-Han-Valiuddin
     9/22/20 
+    Source code for Quest 1: Fish Feeder
     */
 #include <stdio.h>
 #include "driver/i2c.h"
