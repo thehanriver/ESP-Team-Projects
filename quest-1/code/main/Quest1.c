@@ -23,7 +23,7 @@
 #define BUTTON 39
 
 //Global Feeding time in Seconds
-#define FEEDING_TIME 3610 // in seconds
+#define FEEDING_TIME 20 // in seconds
 
 // 14-Segment Display
 #define SLAVE_ADDR 0x70              // alphanumeric address
@@ -445,11 +445,20 @@ void servo_control(void *arg)
   mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
   while (1)
   {
-    if (global_count <= 1)
+    if (global_count < 1)
     {
       for (int times = 0; times < 3; times++)
       {
+
         for (count = 0; count < SERVO_MAX_DEGREE; count++)
+        {
+          //printf("Angle of rotation: %d\n", count);
+          angle = servo_per_degree_init(count);
+          //printf("pulse width: %dus\n", angle);
+          mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, angle);
+          vTaskDelay(10); //Add delay, since it takes time for servo to rotate, generally 100ms/60degree rotation at 5V
+        }
+        for (count = SERVO_MAX_DEGREE; count > 0; count--)
         {
           //printf("Angle of rotation: %d\n", count);
           angle = servo_per_degree_init(count);
