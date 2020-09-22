@@ -42,13 +42,18 @@ For the investigive question, we decided that it would be best if there was a se
 
 
 ## Sketches and Photos
-<center><img src="" /></center>  
-<center> </center>
+
+Console while program is running:\
+![console pic](https://user-images.githubusercontent.com/45515930/93923803-ddf6c680-fce1-11ea-81bb-f1bb57ecaefc.JPG)
 
 
 ## Supporting Artifacts
-Demo video: [insert link]
-Team Github: https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1
+
+Demo video:\ 
+[insert link]
+
+Team Github:\ 
+https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1
 
 ## Modules, Tools, Source Used Including Attribution
 I2C display code: https://github.com/BU-EC444/code-examples/tree/master/i2c-display
