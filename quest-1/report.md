@@ -9,7 +9,7 @@ In the skills pertaining to this quest, we created timers, managed multiple task
 
 Every 6 hours, the servo moves left and right three times. The I2C display shows Hours.Minutes and Minutes.Seconds when timer reaches less than 1 hour.
 
-For the investigive question. We decided that it would be best if there was a second button in which it will set the time in half hour increments. Instead of hard coding, 6 hours, the user will press the "start" button once to set the timer and another button will be needed so that the user can set how many hours/minutes they would like.
+For the investigive question, we decided that it would be best if there was a second button in which it will set the time in half hour increments. Instead of hard coding, 6 hours, the user will press the "start" button once to set the timer and another button will be needed so that the user can set how many hours/minutes they would like.
 
 ## Self-Assessment
 
