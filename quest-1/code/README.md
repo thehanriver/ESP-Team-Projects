@@ -1,4 +1,4 @@
-# Code Readme
+# Code README
 
 In this directory is the CMakeLists.txt and Makefile files that are necessary for building the project. In the main subdirectory, there is Quest1.c (the main C file for this project), CMakeLists.txt file which is again necessary for building, and components.mk which is created during building.
 
