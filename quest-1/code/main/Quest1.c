@@ -23,7 +23,7 @@
 #define BUTTON 39
 
 //Global Feeding time in Seconds
-#define FEEDING_TIME 20 // in seconds
+#define FEEDING_TIME 21600 // in seconds
 
 // 14-Segment Display
 #define SLAVE_ADDR 0x70              // alphanumeric address
