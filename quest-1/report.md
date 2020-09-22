@@ -53,6 +53,8 @@ Figure 1: Console displaying start of program and start of timer:
 Figure 2: Wiring of ESP32, I2C display, button, and servo motor:
 ![breadboard](images/breadboard.jpg)
 
+Figure 3: Storyboard for demo video:
+![storyboard-pic](images/storyboard.png)
 
 ## Supporting Artifacts
 
