@@ -35,9 +35,9 @@ It was hard to implement different parts of each code into one giant code. Howev
 |---------------------------------------------|:-----------:|:---------:|
 | Quality of solution | 5 |  5     | 
 | Quality of report.md including use of graphics | 3  |  3     | 
-| Quality of code reporting | 2  |  3     | 
+| Quality of code reporting | 3  |  3     | 
 | Quality of video presentation | 3 |  3     |
-| ***Total qualitative criteria*** | ***13*** | ***14*** | 
+| ***Total qualitative criteria*** | ***14*** | ***14*** | 
 
 
 ## Solution Design
