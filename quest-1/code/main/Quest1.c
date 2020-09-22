@@ -1,8 +1,8 @@
-*
-  Adapted I2C example code to work with the Adafruit 14-segment Alphanumeric Display. Key notes: MSB!!
+/*Adapted I2C example code to work with the Adafruit 14 - segment Alphanumeric Display.Key notes : MSB !!
 
-  Emily Lam, Sept 2018, Updated Aug 2019
-*/
+                                                                                                  Emily Lam,
+    Sept 2018, Updated Aug 2019 
+    */
 #include <stdio.h>
 #include "driver/i2c.h"
 #include "driver/uart.h"
