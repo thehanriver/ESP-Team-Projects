@@ -22,7 +22,8 @@
 //Reset Button Pin
 #define BUTTON 39
 
-#define FEEDING_TIME 80
+//Global Feeding time in Seconds
+#define FEEDING_TIME 3610 // in seconds
 
 // 14-Segment Display
 #define SLAVE_ADDR 0x70              // alphanumeric address
@@ -345,7 +346,7 @@ static void counter_using_clock(void *args)
     }
     //printf("global_count: %d\n", global_count);
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    printf("Time left till next feeding: %d : %d : %d \n", hour, min, sec);
+    printf("Time till next feeding: %d hrs: %d min: %d sec\n", hour, min, sec);
   }
 }
 
