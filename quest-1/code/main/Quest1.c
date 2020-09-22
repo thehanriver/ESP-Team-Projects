@@ -56,7 +56,7 @@
 //Servo defines
 #define SERVO_MIN_PULSEWIDTH 480  //Minimum pulse width in microsecond
 #define SERVO_MAX_PULSEWIDTH 2600 //Maximum pulse width in microsecond
-#define SERVO_MAX_DEGREE 30       //Maximum angle in degree upto which servo can rotate
+#define SERVO_MAX_DEGREE 15       //Maximum angle in degree upto which servo can rotate
 
 typedef struct
 {
@@ -179,12 +179,10 @@ int testConnection(uint8_t devAddr, int32_t timeout)
 static void i2c_scanner()
 {
   int32_t scanTimeout = 1000;
-  printf("\n>> I2C scanning ..."
-         "\n");
+  printf("\n>> I2C scanning ...\n");
   uint8_t count = 0;
   for (uint8_t i = 1; i < 127; i++)
   {
-    // printf("0x%X%s",i,"\n");
     if (testConnection(i, scanTimeout) == ESP_OK)
     {
       printf("- Device found at address: 0x%X%s", i, "\n");
@@ -192,9 +190,11 @@ static void i2c_scanner()
     }
   }
   if (count == 0)
+  {
     printf("- No I2C devices found!"
            "\n");
-  printf("\n");
+    printf("\n");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,13 +249,6 @@ int set_brightness_max(uint8_t val)
 ////////////////////////////////////////////////////////////////////////////////
 
 //Timer functions
-
-static void inline print_timer_counter(uint64_t counter_value)
-{
-  printf("Counter: 0x%08x%08x\n", (uint32_t)(counter_value >> 32),
-         (uint32_t)(counter_value));
-  printf("Time   : %.8f s\n", (double)counter_value / TIMER_SCALE);
-}
 
 void IRAM_ATTR timer_group0_isr(void *para)
 {
@@ -346,7 +339,7 @@ static void counter_using_clock(void *args)
     }
     //printf("global_count: %d\n", global_count);
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    printf("\rTime till next feeding: %d hrs: %d min: %d sec", hour, min, sec);
+    printf("Time till next feeding: %d hrs: %d min: %d sec\n", hour, min, sec);
   }
 }
 
@@ -435,7 +428,7 @@ void servo_control(void *arg)
   mcpwm_example_gpio_initialize();
 
   //2. initial mcpwm configuration
-  printf("Configuring Initial Parameters of mcpwm......\n");
+  //printf("Configuring Initial Parameters of mcpwm......\n");
   mcpwm_config_t pwm_config;
   pwm_config.frequency = 200; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
   pwm_config.cmpr_a = 0;      //duty cycle of PWMxA = 0
@@ -452,17 +445,13 @@ void servo_control(void *arg)
 
         for (count = 0; count < SERVO_MAX_DEGREE; count++)
         {
-          //printf("Angle of rotation: %d\n", count);
           angle = servo_per_degree_init(count);
-          //printf("pulse width: %dus\n", angle);
           mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, angle);
           vTaskDelay(10); //Add delay, since it takes time for servo to rotate, generally 100ms/60degree rotation at 5V
         }
         for (count = SERVO_MAX_DEGREE; count > 0; count--)
         {
-          //printf("Angle of rotation: %d\n", count);
           angle = servo_per_degree_init(count);
-          //printf("pulse width: %dus\n", angle);
           mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, angle);
           vTaskDelay(10); //Add delay, since it takes time for servo to rotate, generally 100ms/60degree rotation at 5V
         }
