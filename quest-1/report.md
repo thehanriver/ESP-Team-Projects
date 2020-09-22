@@ -45,7 +45,7 @@ It was hard to implement different parts of each code into one giant code. Howev
 Our solution design for the code was based off of skill 11 and 10. We had 3 tasks that needed to start which was I2C display, counter (for time) and printing the timer in hours,minutes, and seconds. In doing so, we took parts of skill 11 and 10, replaced LED binary count from skill 7 that was in skill 10, and added a global counter which acted as a counter for seconds.
 
 ## Sketches and Photos
-Wiring of ESP32, I2C display, button, and LEDs:
+Wiring of ESP32, I2C display, button, and servo motor:
 ![breadboard](images/breadboard.jpg)
 
 
