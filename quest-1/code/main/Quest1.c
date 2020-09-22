@@ -1,4 +1,4 @@
-/*
+*
   Adapted I2C example code to work with the Adafruit 14-segment Alphanumeric Display. Key notes: MSB!!
 
   Emily Lam, Sept 2018, Updated Aug 2019
@@ -21,6 +21,8 @@
 
 //Reset Button Pin
 #define BUTTON 39
+
+#define FEEDING_TIME 80
 
 // 14-Segment Display
 #define SLAVE_ADDR 0x70              // alphanumeric address
@@ -80,7 +82,7 @@ static const uint16_t alphafonttable[10] = {
 
 };
 //global variables initialization
-static int global_count = 21600;
+static int global_count = FEEDING_TIME;
 static int button_pressed = 0;
 
 //display buffer initialization
@@ -247,6 +249,13 @@ int set_brightness_max(uint8_t val)
 
 //Timer functions
 
+static void inline print_timer_counter(uint64_t counter_value)
+{
+  printf("Counter: 0x%08x%08x\n", (uint32_t)(counter_value >> 32),
+         (uint32_t)(counter_value));
+  printf("Time   : %.8f s\n", (double)counter_value / TIMER_SCALE);
+}
+
 void IRAM_ATTR timer_group0_isr(void *para)
 {
   timer_spinlock_take(TIMER_GROUP_0);
@@ -316,20 +325,27 @@ static void example_tg0_timer_init(int timer_idx,
 
 static void counter_using_clock(void *args)
 {
+  int hour;
+  int min;
+  int sec;
   while (1)
   {
+    min = global_count / 60 % 60;
+    hour = global_count / 3600 % 24;
+    sec = global_count % 60;
     timer_event_t evt;
     xQueueReceive(timer_queue, &evt, portMAX_DELAY);
     if (button_pressed)
     {
       global_count -= 1;
     }
-    if (global_count == 1)
+    if (global_count < 0)
     {
-      global_count = 21600;
+      global_count = FEEDING_TIME;
     }
     //printf("global_count: %d\n", global_count);
     vTaskDelay(10 / portTICK_PERIOD_MS);
+    printf("Time left till next feeding: %d : %d : %d \n", hour, min, sec);
   }
 }
 
@@ -363,7 +379,6 @@ static void print_counter()
   // Initiallize characters to buffer
   while (1)
   {
-
     // Send commands characters to display over I2C
     i2c_cmd_handle_t cmd4 = i2c_cmd_link_create();
     i2c_master_start(cmd4);
@@ -378,14 +393,24 @@ static void print_counter()
     ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd4);
 
-    int min = global_count/60 % 60;
+    int min = global_count / 60 % 60;
     int hour = global_count / 3600 % 24;
 
-    displaybuffer[0] = alphafonttable[(hour)/10%10]; //
-    displaybuffer[1] = alphafonttable[(hour)%10]  | (1 << 14);
-    displaybuffer[2] = alphafonttable[(min)/10%10]; //
-    displaybuffer[3] = alphafonttable[(min)%10]; //
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    if (global_count >= 3600)
+    {
+      displaybuffer[0] = alphafonttable[(hour) / 10 % 10]; //
+      displaybuffer[1] = alphafonttable[(hour) % 10] | (1 << 14);
+      displaybuffer[2] = alphafonttable[(min) / 10 % 10]; //
+      displaybuffer[3] = alphafonttable[(min) % 10];      //
+      vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+    else
+    {
+      displaybuffer[0] = alphafonttable[(min) / 10 % 10];               //
+      displaybuffer[1] = alphafonttable[(min) % 10];                    //
+      displaybuffer[2] = alphafonttable[(global_count % 60) / 10 % 10]; //
+      displaybuffer[3] = alphafonttable[(global_count % 60) % 10];      //
+    }
   }
 }
 
@@ -395,7 +420,7 @@ static void button_press()
   {
     if (gpio_get_level(BUTTON))
     {
-      global_count = 21600;
+      global_count = FEEDING_TIME;
       button_pressed = 1;
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -419,9 +444,9 @@ void servo_control(void *arg)
   mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
   while (1)
   {
-    if (global_count == 1)
+    if (global_count <= 1)
     {
-      for (int times = 0; times < 4; times++)
+      for (int times = 0; times < 3; times++)
       {
         for (count = 0; count < SERVO_MAX_DEGREE; count++)
         {
