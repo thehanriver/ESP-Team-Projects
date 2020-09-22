@@ -378,8 +378,13 @@ static void print_counter()
     ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd4);
 
-    displaybuffer[3] = (alphafonttable[(global_count % 10)]);
-    displaybuffer[2] = (alphafonttable[((((global_count / 10) % 10)) | (1 << 14))]);
+    int min = global_count/60 % 60;
+    int hour = global_count / 3600 % 24;
+
+    displaybuffer[0] = alphafonttable[(hour)/10%10]; //
+    displaybuffer[1] = alphafonttable[(hour)%10]  | (1 << 14);
+    displaybuffer[2] = alphafonttable[(min)/10%10]; //
+    displaybuffer[3] = alphafonttable[(min)%10]; //
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
