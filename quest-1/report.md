@@ -5,6 +5,7 @@ Date: 2020-09-22
 -----
 
 ## Summary
+
 In the skills pertaining to this quest, we created timers, managed multiple tasks, and wired LEDs, buttons, and the I2C alphanumeric display. In the quest, we tied all of this together to create a fish feeder that automatically rotates and shakes to dispense food at automated time intervals (we chose once every 6 hours) 
 
 Every 6 hours, the servo moves left and right three times. The I2C display shows Hours.Minutes and Minutes.Seconds when timer reaches less than 1 hour.
@@ -12,6 +13,8 @@ Every 6 hours, the servo moves left and right three times. The I2C display shows
 For the investigive question, we decided that it would be best if there was a second button in which it will set the time in half hour increments. Instead of hard coding, 6 hours, the user will press the "start" button once to set the timer and another button will be needed so that the user can set how many hours/minutes they would like.
 
 ## Self-Assessment
+
+It was hard to implement different parts of each code into one giant code. However, because the previous skills were detailed enough that the final solution was the combination of all these things, it wasn't as difficult as we previously though.
 
 ### Objective Criteria
 
@@ -39,7 +42,7 @@ For the investigive question, we decided that it would be best if there was a se
 
 ## Solution Design
 
-
+Our solution design for the code was based off of skill 11 and 10. We had 3 tasks that needed to start which was I2C display, counter (for time) and printing the timer in hours,minutes, and seconds. In doing so, we took parts of skill 11 and 10, replaced LED binary count from skill 7 that was in skill 10, and added a global counter which acted as a counter for seconds.
 
 ## Sketches and Photos
 
