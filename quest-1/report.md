@@ -42,15 +42,15 @@ It was hard to implement different parts of each code into one giant code. Howev
 
 ## Solution Design
 
-Our solution design for the code was based off of skill 11 and 10. We had 3 tasks that needed to start which was I2C display, counter (for time) and printing the timer in hours,minutes, and seconds. In doing so, we took parts of skill 11 and 10, replaced LED binary count from skill 7 that was in skill 10, and added a global counter which acted as a counter for seconds.
+Our solution design for the code was based off of skill 11 and 10. We had 3 tasks that needed to start which was I2C display, counter (for time) and printing the timer in hours,minutes, and seconds. In doing so, we took parts of skill 11 and 10, replaced LED binary count from skill 7 that was in skill 10, and added a global counter which acted as a counter for seconds. We initialized this counter to the equivalent of 6 hours to result in feeding 4 times a day. We also adjust the format of the time that is displayed; time is displayed in hours and minutes when time remaining is greater than or equal to an hour, and in minutes and seconds otherwise. Time remaining is also printed to the console as shown in Figure 1 below. We also implemented a push to start mechanism: when the board is flashed or reset, the countdown starts on the push of a button located between the ESP32 and the I2C display, as is seen in Figure 2.
 
 ## Sketches and Photos
-Wiring of ESP32, I2C display, button, and servo motor:
+
+Figure 1: Console while program is running:\
+![console pic](images/console-output.jpg)
+
+Figure 2: Wiring of ESP32, I2C display, button, and servo motor:
 ![breadboard](images/breadboard.jpg)
-
-
-Console while program is running:\
-![console pic](https://user-images.githubusercontent.com/45515930/93923803-ddf6c680-fce1-11ea-81bb-f1bb57ecaefc.JPG)
 
 
 ## Supporting Artifacts
