@@ -66,6 +66,7 @@ Figure 2: Wiring of ESP32, I2C display, button, and servo motor:
 [Servo control example code](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/mcpwm/mcpwm_servo_control)
 
 ## References
+
 [ESP-IDF FreeRTOS guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/freertos.html)
 -----
 
