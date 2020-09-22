@@ -7,6 +7,9 @@ Date: 2020-09-22
 ## Summary
 In the skills pertaining to this quest, we created timers, managed multiple tasks, and wired LEDs, buttons, and the I2C alphanumeric display. In the quest, we tied all of this together to create a fish feeder that automatically rotates and shakes to dispense food at automated time intervals (we chose once every 6 hours) 
 
+Every 6 hours, the servo moves left and right three times. The I2C display shows Hours.Minutes and Minutes.Seconds when timer reaches less than 1 hour.
+
+For the investigive question. T
 ## Self-Assessment
 
 ### Objective Criteria
