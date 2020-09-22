@@ -1,11 +1,11 @@
 # Quest Name
-Authors: FirstName1 LastName1, FirstName2 LastName2, FirstName3 LastName 3
+Authors: Vivek Cherian, Mario Han, Hussain Valiuddin
 
-Date: YYYY-MM-DD
+Date: 2020-09-22
 -----
 
 ## Summary
-
+In the skills pertaining to this quest, we created timers, managed multiple tasks, and wired LEDs, buttons, and the I2C alphanumeric display. In the quest, we tied all of this together to create a fish feeder that automatically rotates and shakes to dispense food at automated time intervals (we chose once every 6 hours) 
 
 ## Self-Assessment
 
@@ -13,13 +13,13 @@ Date: YYYY-MM-DD
 
 | Objective Criterion | Rating | Max Value  | 
 |---------------------------------------------|:-----------:|:---------:|
-| Objective One |  |  1     | 
-| Objective Two |  |  1     | 
-| Objective Three |  |  1     | 
-| Objective Four |  |  1     | 
-| Objective Five |  |  1     | 
-| Objective Six |  |  1     | 
-| Objective Seven |  |  1     | 
+| Servo spins right then left three times without chatter at prescribed time intervals | 1 |  1     | 
+| ALphanumeric display indicates hours and minutes | 1 |  1     | 
+| Display shows countdown time report every second with no time loss | 1 |  1     | 
+| Food dispensed at specified times | 1 |  1     | 
+| Demo delivered at scheduled time and report submitted in team folder with all required components | 1 |  1     | 
+| Investigative question response | 1 |  1     | 
+| ***Total objective criteria*** | ***6*** | ***6*** |
 
 
 ### Qualitative Criteria
@@ -29,7 +29,8 @@ Date: YYYY-MM-DD
 | Quality of solution |  |  5     | 
 | Quality of report.md including use of graphics |  |  3     | 
 | Quality of code reporting |  |  3     | 
-| Quality of video presentation |  |  3     | 
+| Quality of video presentation |  |  3     |
+| ***Total qualitative criteria*** | | 14 | 
 
 
 ## Solution Design
@@ -37,15 +38,17 @@ Date: YYYY-MM-DD
 
 
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
+<center><img src="" /></center>  
 <center> </center>
 
 
 ## Supporting Artifacts
-- [Link to video demo](). Not to exceed 120s
-
+Demo video: [insert link]
+Team Github: https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1
 
 ## Modules, Tools, Source Used Including Attribution
+I2C display code: https://github.com/BU-EC444/code-examples/tree/master/i2c-display
+
 
 ## References
 
