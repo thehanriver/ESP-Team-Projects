@@ -1,7 +1,5 @@
-/*Adapted I2C example code to work with the Adafruit 14 - segment Alphanumeric Display.Key notes : MSB !!
-
-                                                                                                  Emily Lam,
-    Sept 2018, Updated Aug 2019 
+/*Team-2-Cherian-Han-Valiuddin
+    9/22/20 
     */
 #include <stdio.h>
 #include "driver/i2c.h"
@@ -68,6 +66,7 @@ typedef struct
 
 xQueueHandle timer_queue;
 
+//numeric alphafonttable
 static const uint16_t alphafonttable[10] = {
 
     0b0000110000111111, // 0
@@ -316,7 +315,7 @@ static void example_tg0_timer_init(int timer_idx,
   timer_start(TIMER_GROUP_0, timer_idx);
 }
 /////////////////////////////////////////////////////////////////////////////////
-
+//helper function for clock
 static void counter_using_clock(void *args)
 {
   int hour;
@@ -324,11 +323,13 @@ static void counter_using_clock(void *args)
   int sec;
   while (1)
   {
+    //caluclate hours minutes and seconds
     min = global_count / 60 % 60;
     hour = global_count / 3600 % 24;
     sec = global_count % 60;
     timer_event_t evt;
     xQueueReceive(timer_queue, &evt, portMAX_DELAY);
+    //button flag raised decrements count otherwise resets back to set time interval when global_count = 0
     if (button_pressed)
     {
       global_count -= 1;
@@ -386,10 +387,10 @@ static void print_counter()
     i2c_master_stop(cmd4);
     ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd4);
-
+    //calculate hour and min
     int min = global_count / 60 % 60;
     int hour = global_count / 3600 % 24;
-
+    //show hours.minutes otherwise on the last hour show minutes.sec
     if (global_count >= 3600)
     {
       displaybuffer[0] = alphafonttable[(hour) / 10 % 10]; //
@@ -410,6 +411,7 @@ static void print_counter()
 
 static void button_press()
 {
+  //set button flag to 1 if pressed and start clock
   while (1)
   {
     if (gpio_get_level(BUTTON))
@@ -438,6 +440,7 @@ void servo_control(void *arg)
   mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
   while (1)
   {
+     //if global_count is 0, servo swings 3 times in smooth manner
     if (global_count < 1)
     {
       for (int times = 0; times < 3; times++)
@@ -463,13 +466,13 @@ void servo_control(void *arg)
 
 void app_main()
 {
-
+  //initializations
   i2c_example_master_init();
   i2c_scanner();
   led_init();
   timer_queue = xQueueCreate(10, sizeof(timer_event_t));
   example_tg0_timer_init(TIMER_0, TEST_WITH_RELOAD, TIMER_INTERVAL0_SEC);
-
+  //start tasks
   xTaskCreate(button_press, "button_press", 1024, NULL, 5, NULL);
   xTaskCreate(print_counter, "print_counter", 2048, NULL, 4, NULL);
   xTaskCreate(counter_using_clock, "counter_using_clock", 4096, NULL, 6, NULL);
