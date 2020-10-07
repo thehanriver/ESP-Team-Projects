@@ -61,6 +61,42 @@ static void thermistor()
 { // push button
     while (1)
     {
+      uint32_t adc_reading = 0;
+        //Multisampling
+        for (int i = 0; i < NO_OF_SAMPLES; i++) {
+            if (unit == ADC_UNIT_1) {
+                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
+        }
+        adc_reading /= NO_OF_SAMPLES;
+        //Convert adc_reading to voltage in mV
+        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        int og_volt;
+        og_volt = (voltage - 142)*1.6667 ;
+        voltz = voltage;
+
+        float temp,rtherm;
+        rtherm = adc_reading;
+        rtherm = (5700 * ((4096/rtherm)-1));
+        temp = rtherm / 10000;
+        temp = log(temp);
+        temp /= 3435;
+        temp += 1.0/ (15+273.15);
+        temp = 1.0/temp;
+        temp -= 273.15;
+  /*
+        float Kel, Cel;
+        float R0 = 5700;
+        float Rt = R0 * ((adcMAX/adc_reading)-1);
+
+        float mult =log ( Rt );
+        float calc = invT0 + (invBeta* mult);
+        Kel = 1.00 / calc;
+        Cel = Kel - 273.15;                      // convert to Celsius
+  */
+        printf("Raw: %d\t volt: %d\t Cel: %f\n", adc_reading, voltage, temp);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -99,7 +135,7 @@ static void IR_Range()
 }
 
 static void ultra_sonic()
-{ 
+{
     //Continuously sample ADC1
     while (1) {
         uint32_t adc_reading = 0;
@@ -117,7 +153,7 @@ static void ultra_sonic()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        
+
         // display voltage
         uint32_t distance = ultrasound_voltage_to_distance(voltage);
         printf("Raw: %d\tVoltage: %dmV\tDistance: %dcm\n", adc_reading, voltage,distance);
