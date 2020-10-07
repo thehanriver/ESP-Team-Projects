@@ -36,22 +36,11 @@ static double temperature;
 static int ultrasonic;
 static int ir_rangefinder;
 static int timer;
-
-// void init()
-// {
-//     //Configure ADC
-//     adc1_config_width(ADC_WIDTH_BIT_12);
-//     adc1_config_channel_atten(channel1, atten);
-//     adc1_config_channel_atten(channel2, atten);
-//     adc1_config_channel_atten(channel3, atten);
-
-//     //Characterize ADC
-//     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-//     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
-// }
+static char file_name[] = "../data/sensors.csv";
+static FILE *fp;
 
 static void thermistor()
-{ // push button
+{
     while (1)
     {
         uint32_t adc_reading = 0;
@@ -77,22 +66,11 @@ static void thermistor()
         temp = 1.0 / temp;
         temp -= 273.15;
         temperature = temp;
-        /*
-        float Kel, Cel;
-        float R0 = 5700;
-        float Rt = R0 * ((adcMAX/adc_reading)-1);
-        float mult =log ( Rt );
-        float calc = invT0 + (invBeta* mult);
-        Kel = 1.00 / calc;
-        Cel = Kel - 273.15;                      // convert to Celsius
-  */
-        //printf("Raw: %d\t volt: %d\t Cel: %f\n", adc_reading, voltage, temp);
     }
 }
 
 static void IR_Range()
-{ // push button
-
+{
     while (1)
     {
         uint32_t adc_reading = 0;
@@ -119,7 +97,6 @@ static void IR_Range()
             distance = (57 / (voltage - 0.08));
         }
         ir_rangefinder = distance;
-        //printf("Raw: %d\tVoltage: %fV\tDistance: %dcm\n", adc_reading, voltage, distance);
     }
 }
 
@@ -130,15 +107,36 @@ static void printstate()
         //add this line into the quest-2/code/data/sensors.csv
         if (timer == 0)
         {
-            printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
+            fp = fopen(file_name, "w");
+            fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
+            fclose(fp);
         }
         else
         {
-            printf("%d,%.1f,%d,%d\n", timer - 2, temperature, ultrasonic, ir_rangefinder);
+            fp = fopen(file_name, "a");
+            int temp = timer - 2;
+            fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
+            fclose(fp);
         }
         timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
     }
+
+    // while (1)
+    // {
+    //     //add this line into the quest-2/code/data/sensors.csv
+    //     if (timer == 0)
+    //     {
+    //         printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
+    //     }
+    //     else
+    //     {
+    //         int temp = timer - 2;
+    //         printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
+    //     }
+    //     timer += 2;
+    //     vTaskDelay(2000 / portTICK_RATE_MS);
+    // }
 }
 
 static void ultra_sonic()
@@ -159,19 +157,13 @@ static void ultra_sonic()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-        // display voltage
         uint32_t dist = ((1 / 6.4 * (voltage)) - 5) * 2.54;
-        // uint32_t distance2 = ultrasonic_voltage_to_distance(voltage);
         ultrasonic = dist;
-        //printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage, dist);
     }
 }
 
 void app_main()
 {
-    //init(); // Initialize stuff
-
     //Configure ADC
     timer = 0;
     adc1_config_width(ADC_WIDTH_BIT_12);
