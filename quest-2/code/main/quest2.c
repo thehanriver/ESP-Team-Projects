@@ -42,7 +42,7 @@ void init()
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
 }
 
-// converts voltage to distances in in
+// converts voltage to distances in cm
 static uint32_t ultrasound_voltage_to_distance(uint32_t reading)
 {
     if (reading==0)
@@ -52,7 +52,6 @@ static uint32_t ultrasound_voltage_to_distance(uint32_t reading)
     }
     else
     {
-        // uint32_t dist = (1 / .2519685 * (reading))*pow(10,-1); // .2519685 mV per mm
         uint32_t dist = ((1 / 6.4 * (reading))-5)*2.54; // 6.4 mV per in
         return dist;
     }
