@@ -121,7 +121,7 @@ static void ultra_sonic()
         
         // display voltage
         uint32_t distance = ultrasound_voltage_to_distance(voltage);
-        printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage,distance);
+        printf("Raw: %d\tVoltage: %dmV\tDistance: %dcm\n", adc_reading, voltage,distance);
     }
 }
 
