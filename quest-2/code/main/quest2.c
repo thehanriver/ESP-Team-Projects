@@ -37,7 +37,6 @@ static int ultrasonic;
 static int ir_rangefinder;
 static int timer;
 static char file_name[] = "../data/sensors.csv";
-static FILE *fp;
 
 static void thermistor()
 {
@@ -102,6 +101,8 @@ static void IR_Range()
 
 static void printstate()
 {
+    static FILE *fp;
+
     while (1)
     {
         //add this line into the quest-2/code/data/sensors.csv
