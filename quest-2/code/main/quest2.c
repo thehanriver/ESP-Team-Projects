@@ -17,9 +17,9 @@
 #define NO_OF_SAMPLES 20  //Multisampling
 
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = a1; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel2 = a2; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel3 = a3; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel1 = 34; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel2 = 39; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel3 = 36; //GPIO34 if ADC1, GPIO14 if ADC2
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
