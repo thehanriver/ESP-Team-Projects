@@ -45,7 +45,7 @@ void init()
 // converts voltage to distances in in
 static uint32_t voltage_to_distance(uint32_t reading)
 {
-    if (reading==0)
+    if (reading == 0)
     {
         printf("returning 0");
         return 0;
@@ -53,7 +53,7 @@ static uint32_t voltage_to_distance(uint32_t reading)
     else
     {
         // uint32_t dist = (1 / .2519685 * (reading))*pow(10,-1); // .2519685 mV per mm
-        uint32_t dist = ((1 / 6.4 * (reading))-5)*2.54; // 6.4 mV per in
+        uint32_t dist = ((1 / 6.4 * (reading)) - 5) * 2.54; // 6.4 mV per in
         return dist;
     }
 }
@@ -100,15 +100,20 @@ static void IR_Range()
 }
 
 static void ultra_sonic()
-{ 
+{
     //Continuously sample ADC1
-    while (1) {
+    while (1)
+    {
         uint32_t adc_reading = 0;
         //Multisampling
-        for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit == ADC_UNIT_1) {
+        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        {
+            if (unit == ADC_UNIT_1)
+            {
                 adc_reading += adc1_get_raw((adc1_channel_t)channel3);
-            } else {
+            }
+            else
+            {
                 int raw;
                 adc2_get_raw((adc2_channel_t)channel3, ADC_WIDTH_BIT_12, &raw);
                 adc_reading += raw;
@@ -118,10 +123,10 @@ static void ultra_sonic()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        
+
         // display voltage
         uint32_t distance = voltage_to_distance(voltage);
-        printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage,distance);
+        printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage, distance);
     }
 }
 
