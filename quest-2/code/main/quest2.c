@@ -36,7 +36,7 @@ static double temperature;
 static int ultrasonic;
 static int ir_rangefinder;
 static int timer;
-static char file_name[] = "../data/sensors.csv";
+//static char file_name[] = "../data/sensors.csv";
 
 static void thermistor()
 {
@@ -101,43 +101,42 @@ static void IR_Range()
 
 static void printstate()
 {
-    static FILE *fp;
+    // static FILE *fp;
+    // while (1)
+    // {
+    //     //add this line into the quest-2/code/data/sensors.csv
+    //     if (timer == 0)
+    //     {
+    //         fp = fopen(file_name, "w");
+    //         fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
+    //         fclose(fp);
+    //     }
+    //     else
+    //     {
+    //         fp = fopen(file_name, "a");
+    //         int temp = timer - 2;
+    //         fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
+    //         fclose(fp);
+    //     }
+    //     timer += 2;
+    //     vTaskDelay(2000 / portTICK_RATE_MS);
+    // }
 
     while (1)
     {
         //add this line into the quest-2/code/data/sensors.csv
         if (timer == 0)
         {
-            fp = fopen(file_name, "w");
-            fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
-            fclose(fp);
+            printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
         }
         else
         {
-            fp = fopen(file_name, "a");
             int temp = timer - 2;
-            fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-            fclose(fp);
+            printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
         }
         timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
     }
-
-    // while (1)
-    // {
-    //     //add this line into the quest-2/code/data/sensors.csv
-    //     if (timer == 0)
-    //     {
-    //         printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
-    //     }
-    //     else
-    //     {
-    //         int temp = timer - 2;
-    //         printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-    //     }
-    //     timer += 2;
-    //     vTaskDelay(2000 / portTICK_RATE_MS);
-    // }
 }
 
 static void ultra_sonic()
