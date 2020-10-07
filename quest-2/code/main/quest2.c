@@ -62,7 +62,7 @@ static void IR_Range()
         {
             if (unit == ADC_UNIT_1)
             {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+                adc_reading += adc1_get_raw((adc1_channel_t)channel2);
                 vTaskDelay(100 / portTICK_RATE_MS);
             }
         }
