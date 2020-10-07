@@ -35,6 +35,7 @@ static const adc_unit_t unit = ADC_UNIT_1;
 static double temperature;
 static int ultrasonic;
 static int ir_rangefinder;
+static int timer;
 
 // void init()
 // {
@@ -126,7 +127,16 @@ static void printstate()
 {
     while (1)
     {
-        printf("Temp:%.1f, Dist1:%d, Dist2:%d\n", temperature, ultrasonic, ir_rangefinder);
+        //add this line into the quest-2/code/data/sensors.csv
+        if (timer == 0)
+        {
+            printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
+        }
+        else
+        {
+            printf("%d,%.1f,%d,%d\n", timer - 2, temperature, ultrasonic, ir_rangefinder);
+        }
+        timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
     }
 }
@@ -163,6 +173,7 @@ void app_main()
     //init(); // Initialize stuff
 
     //Configure ADC
+    timer = 0;
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
     adc1_config_channel_atten(channel2, atten);
