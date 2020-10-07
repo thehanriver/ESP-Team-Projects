@@ -43,7 +43,7 @@ void init()
 }
 
 // converts voltage to distances in in
-static uint32_t voltage_to_distance(uint32_t reading)
+static uint32_t ultrasound_voltage_to_distance(uint32_t reading)
 {
     if (reading==0)
     {
@@ -120,7 +120,7 @@ static void ultra_sonic()
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
         
         // display voltage
-        uint32_t distance = voltage_to_distance(voltage);
+        uint32_t distance = ultrasound_voltage_to_distance(voltage);
         printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage,distance);
     }
 }
