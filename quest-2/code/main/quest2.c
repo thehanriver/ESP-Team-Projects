@@ -1,5 +1,5 @@
 //Quest 2
-//Mario Han, Vivek [Insert Last Name], Hussain [insert last name]
+//Mario Han, Vivek Cherian, Hussain Valiuddin
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,9 +17,9 @@
 #define NO_OF_SAMPLES 20  //Multisampling
 
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = 34; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel2 = 39; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel3 = 36; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel1 = a1; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel2 = a2; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel3 = a3; //GPIO34 if ADC1, GPIO14 if ADC2
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
@@ -40,6 +40,22 @@ void init()
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+}
+
+// converts voltage to distances in in
+static uint32_t voltage_to_distance(uint32_t reading)
+{
+    if (reading==0)
+    {
+        printf("returning 0");
+        return 0;
+    }
+    else
+    {
+        // uint32_t dist = (1 / .2519685 * (reading))*pow(10,-1); // .2519685 mV per mm
+        uint32_t dist = ((1 / 6.4 * (reading))-5)*2.54; // 6.4 mV per in
+        return dist;
+    }
 }
 
 static void thermistor()
@@ -84,9 +100,28 @@ static void IR_Range()
 }
 
 static void ultra_sonic()
-{ // I2C alpha numeric display
-    while (1)
-    {
+{ 
+    //Continuously sample ADC1
+    while (1) {
+        uint32_t adc_reading = 0;
+        //Multisampling
+        for (int i = 0; i < NO_OF_SAMPLES; i++) {
+            if (unit == ADC_UNIT_1) {
+                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+            } else {
+                int raw;
+                adc2_get_raw((adc2_channel_t)channel, ADC_WIDTH_BIT_12, &raw);
+                adc_reading += raw;
+            }
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+        adc_reading /= NO_OF_SAMPLES;
+        //Convert adc_reading to voltage in mV
+        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        
+        // display voltage
+        uint32_t distance = voltage_to_distance(voltage);
+        printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage,distance);
     }
 }
 
