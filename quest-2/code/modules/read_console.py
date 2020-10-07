@@ -8,14 +8,17 @@ def myrun(cmd):
     stdout = []
     while True:
         line = p.stdout.readline()
-        with open('resources/console.txt','a') as file:
+        print(line)
+        with open('../data/sensors.txt','a') as file:
             file.write(line)
         stdout.append(line)
-        print(line)
+
         if line == '' and p.poll() != None:
             break
     return ''.join(stdout)
 
 if __name__ == "__main__":
-    os.system("rm resources/console.txt")
+    if not os.path.exists('../data'):
+        os.makedirs('../data')
+    os.system("rm ../data/sensors.txt")
     myrun("node demo.js")
