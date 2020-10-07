@@ -17,11 +17,15 @@
 #define NO_OF_SAMPLES 20  //Multisampling
 
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = a1; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel2 = a2; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel3 = a3; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel1 = 34; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel2 = 39; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel3 = 36; //GPIO34 if ADC1, GPIO14 if ADC2
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
+
+static int temperature;
+static int ultrasonic;
+static int ir_rangefinder;
 
 void init()
 {
@@ -68,17 +72,13 @@ static void thermistor()
         {
             if (unit == ADC_UNIT_1)
             {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+                adc_reading += adc1_get_raw((adc1_channel_t)channel1);
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             }
         }
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        int og_volt;
-        og_volt = (voltage - 142) * 1.6667;
-        voltz = voltage;
-
         float temp, rtherm;
         rtherm = adc_reading;
         rtherm = (5700 * ((4096 / rtherm) - 1));
@@ -88,18 +88,17 @@ static void thermistor()
         temp += 1.0 / (15 + 273.15);
         temp = 1.0 / temp;
         temp -= 273.15;
+        temperature = temp;
         /*
         float Kel, Cel;
         float R0 = 5700;
         float Rt = R0 * ((adcMAX/adc_reading)-1);
-
         float mult =log ( Rt );
         float calc = invT0 + (invBeta* mult);
         Kel = 1.00 / calc;
         Cel = Kel - 273.15;                      // convert to Celsius
   */
-        printf("Raw: %d\t volt: %d\t Cel: %f\n", adc_reading, voltage, temp);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        //printf("Raw: %d\t volt: %d\t Cel: %f\n", adc_reading, voltage, temp);
     }
 }
 
@@ -108,8 +107,6 @@ static void IR_Range()
     while (1)
     {
         uint32_t adc_reading = 0;
-        uint32_t reading = 0;
-
         int distance = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
@@ -132,8 +129,8 @@ static void IR_Range()
         {
             distance = (57 / (voltage - 0.08));
         }
-
-        printf("Raw: %d\tVoltage: %fV\tDistance: %dcm\n", adc_reading, voltage, distance);
+        ir_rangefinder = distance;
+        //printf("Raw: %d\tVoltage: %fV\tDistance: %dcm\n", adc_reading, voltage, distance);
     }
 }
 
@@ -149,30 +146,34 @@ static void ultra_sonic()
             if (unit == ADC_UNIT_1)
             {
                 adc_reading += adc1_get_raw((adc1_channel_t)channel3);
+                vTaskDelay(100 / portTICK_RATE_MS);
             }
-            else
-            {
-                int raw;
-                adc2_get_raw((adc2_channel_t)channel3, ADC_WIDTH_BIT_12, &raw);
-                adc_reading += raw;
-            }
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+
+            adc_reading /= NO_OF_SAMPLES;
+            //Convert adc_reading to voltage in mV
+            uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+
+            // display voltage
+            uint32_t distance = voltage_to_distance(voltage);
+            ultrasonic = distance;
+            //printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage, distance);
         }
-        adc_reading /= NO_OF_SAMPLES;
-        //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-        // display voltage
-        uint32_t distance = voltage_to_distance(voltage);
-        printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage, distance);
     }
-}
 
-void app_main()
-{
-    init(); // Initialize stuff
+    static void output()
+    {
+        while (1)
+        {
+            printf("%f,%f,%f", temperature, ultrasonic, ir_rangefinder);
+        }
+    }
 
-    xTaskCreate(thermistor, "thermistor", 4096, NULL, 7, NULL);
-    xTaskCreate(IR_Range, "IR_Range", 4096, NULL, 5, NULL);
-    xTaskCreate(ultra_sonic, "ultra_sonic", 4096, NULL, 9, NULL);
-}
+    void app_main()
+    {
+        init(); // Initialize stuff
+
+        xTaskCreate(thermistor, "thermistor", 4096, NULL, 5, NULL);
+        xTaskCreate(IR_Range, "IR_Range", 4096, NULL, 5, NULL);
+        xTaskCreate(ultra_sonic, "ultra_sonic", 4096, NULL, 5, NULL);
+        xTaskCreate(output, "output", 1024, NULL, 9, NULL);
+    }
