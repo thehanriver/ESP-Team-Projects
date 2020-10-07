@@ -12,28 +12,30 @@
 #include "driver/i2c.h"
 #include "sdkconfig.h"
 #include "esp_vfs_dev.h"
+#include "driver/uart.h"
+#include "math.h"
 
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES 20  //Multisampling
 
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = 34; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel2 = 39; //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel3 = 36; //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel1 = ADC_CHANNEL_0; //Thermistor GPIO 36
+static const adc_channel_t channel2 = ADC_CHANNEL_3; //IR GPIO 39
+static const adc_channel_t channel3 = ADC_CHANNEL_6; //ultrasonic GPIO 34
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
-static int temperature;
-static int ultrasonic;
-static int ir_rangefinder;
+static double temperature;
+static double ultrasonic;
+static double ir_rangefinder;
 
 void init()
 {
-    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0,
-                                        256, 0, 0, NULL, 0));
+    // ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0,
+    //                                     256, 0, 0, NULL, 0));
 
-    /* Tell VFS to use UART driver */
-    esp_vfs_dev_uart_use_driver(UART_NUM_0);
+    // /* Tell VFS to use UART driver */
+    // esp_vfs_dev_uart_use_driver(UART_NUM_0);
 
     //Configure ADC
     adc1_config_width(ADC_WIDTH_BIT_12);
@@ -47,7 +49,7 @@ void init()
 }
 
 // converts voltage to distances in cm
-static uint32_t ultrasound_voltage_to_distance(uint32_t reading)
+static uint32_t ultrasonic_voltage_to_distance(uint32_t reading)
 {
     if (reading == 0)
     {
@@ -78,7 +80,7 @@ static void thermistor()
         }
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        //uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
         float temp, rtherm;
         rtherm = adc_reading;
         rtherm = (5700 * ((4096 / rtherm) - 1));
@@ -134,6 +136,15 @@ static void IR_Range()
     }
 }
 
+static void printstate()
+{
+    while (1)
+    {
+        printf("Temp:%f, Dist1:%f, Dist2:%f\n", temperature, ultrasonic, ir_rangefinder);
+        vTaskDelay(2000 / portTICK_RATE_MS);
+    }
+}
+
 static void ultra_sonic()
 {
     //Continuously sample ADC1
@@ -154,26 +165,19 @@ static void ultra_sonic()
             uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
             // display voltage
-            uint32_t distance = voltage_to_distance(voltage);
-            ultrasonic = distance;
+            uint32_t distance2 = ultrasonic_voltage_to_distance(voltage);
+            ultrasonic = distance2;
             //printf("Raw: %d\tVoltage: %dmV\tDistance: %din\n", adc_reading, voltage, distance);
         }
     }
+}
 
-    static void output()
-    {
-        while (1)
-        {
-            printf("%f,%f,%f", temperature, ultrasonic, ir_rangefinder);
-        }
-    }
+void app_main()
+{
+    init(); // Initialize stuff
 
-    void app_main()
-    {
-        init(); // Initialize stuff
-
-        xTaskCreate(thermistor, "thermistor", 4096, NULL, 5, NULL);
-        xTaskCreate(IR_Range, "IR_Range", 4096, NULL, 5, NULL);
-        xTaskCreate(ultra_sonic, "ultra_sonic", 4096, NULL, 5, NULL);
-        xTaskCreate(output, "output", 1024, NULL, 9, NULL);
-    }
+    xTaskCreate(thermistor, "thermistor", 512, NULL, 5, NULL);
+    xTaskCreate(IR_Range, "IR_Range", 512, NULL, 6, NULL);
+    xTaskCreate(printstate, "printstate", 512, NULL, 8, NULL);
+    xTaskCreate(ultra_sonic, "ultra_sonic", 512, NULL, 7, NULL);
+}
