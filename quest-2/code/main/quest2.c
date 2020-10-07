@@ -107,10 +107,10 @@ static void ultra_sonic()
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++) {
             if (unit == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+                adc_reading += adc1_get_raw((adc1_channel_t)channel3);
             } else {
                 int raw;
-                adc2_get_raw((adc2_channel_t)channel, ADC_WIDTH_BIT_12, &raw);
+                adc2_get_raw((adc2_channel_t)channel3, ADC_WIDTH_BIT_12, &raw);
                 adc_reading += raw;
             }
             vTaskDelay(100 / portTICK_PERIOD_MS);
