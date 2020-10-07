@@ -42,8 +42,8 @@ void init()
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
 }
 
-// converts voltage to distances in in
-static uint32_t voltage_to_distance(uint32_t reading)
+// converts voltage to distances in cm
+static uint32_t ultrasound_voltage_to_distance(uint32_t reading)
 {
     if (reading == 0)
     {
@@ -62,6 +62,44 @@ static void thermistor()
 { // push button
     while (1)
     {
+        uint32_t adc_reading = 0;
+        //Multisampling
+        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        {
+            if (unit == ADC_UNIT_1)
+            {
+                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
+        }
+        adc_reading /= NO_OF_SAMPLES;
+        //Convert adc_reading to voltage in mV
+        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        int og_volt;
+        og_volt = (voltage - 142) * 1.6667;
+        voltz = voltage;
+
+        float temp, rtherm;
+        rtherm = adc_reading;
+        rtherm = (5700 * ((4096 / rtherm) - 1));
+        temp = rtherm / 10000;
+        temp = log(temp);
+        temp /= 3435;
+        temp += 1.0 / (15 + 273.15);
+        temp = 1.0 / temp;
+        temp -= 273.15;
+        /*
+        float Kel, Cel;
+        float R0 = 5700;
+        float Rt = R0 * ((adcMAX/adc_reading)-1);
+
+        float mult =log ( Rt );
+        float calc = invT0 + (invBeta* mult);
+        Kel = 1.00 / calc;
+        Cel = Kel - 273.15;                      // convert to Celsius
+  */
+        printf("Raw: %d\t volt: %d\t Cel: %f\n", adc_reading, voltage, temp);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
