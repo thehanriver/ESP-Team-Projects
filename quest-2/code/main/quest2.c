@@ -57,6 +57,10 @@ static void thermistor()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        
+        //1k ohm for R2 in voltage divider and 4096 as voltaged measured... solved for rtherm
+        //Used the formula supplied to use in piazza post also 20 degrees initial room temperature.
+        //B value = 3435
         float temp, rtherm;
         rtherm = adc_reading;
         rtherm = (1000 * ((4096 / rtherm) - 1));
@@ -89,7 +93,10 @@ static void IR_Range()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         double voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        //change mV to V
         voltage /= 1000;
+        //Based on graph on data sheet used best fit lines
+        // distance = x, voltage = y, so found best fit lines in format y = mx+b but solved for y here (3 best fit lines)
         if (voltage > 2)
         {
             distance = (30 / (voltage - 1));
@@ -105,6 +112,7 @@ static void IR_Range()
             temp = temp/1.4;
             distance = temp + 25.5;
         }
+        //cm to m
         ir_rangefinder = distance/100.0;
     }
 }
@@ -131,7 +139,7 @@ static void printstate()
     //     timer += 2;
     //     vTaskDelay(2000 / portTICK_RATE_MS);
     // }
-
+    //prints everything
     while (1)
     {
         //add this line into the quest-2/code/data/sensors.csv
@@ -168,6 +176,7 @@ static void ultra_sonic()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        //first converts voltage to inches then centimeters. offset by 5 because kept giving us a value +5 inches
         uint32_t dist = ((1 / 6.4 * (voltage))) * 2.54;
         dist = dist - 5;
         //calibration
