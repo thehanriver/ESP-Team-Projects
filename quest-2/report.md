@@ -12,9 +12,13 @@ In addition to this, we use a python file (read_console.py) to take the output t
 
 The dynamic array should take the lastest 20 values from the csv file every 1 second and rerender the chart.
 This would be how the quest 2 would be run: 
+
   1: flash quest 2 but not monitor
+  
   2: call python read_console.py to make a .csv file
+  
   3: call node index.js (demo.js would've already been called from read_console)
+  
   4: observe chart (open localhost:8080 in a browser)
   
 The circuit itself is all the sensors added together. 
