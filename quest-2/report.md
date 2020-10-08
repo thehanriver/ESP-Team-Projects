@@ -25,7 +25,9 @@ The circuit itself is all the sensors added together.
 Thermistor: we used a 1k Ohm value in order to make sure the voltages are in range to read up to -20 C to 105 C and not exceed 3V. The reading is plugged into the ADC Pin A3 and uses 5V as source.
 IR range finder: we use ADC Pin A2 to get readings and this uses 5V as source.
 Ultrasonic: we used ADC Pin A4 to get readings and this uses 3V as source.
-  
+
+For the investigative question, we chose to use the IR rangefinder for thee robot car. It is more accurate, less noise, and gets data faster where as the ultrasonic sensor seems to take in less noise and loads the data slower. In addition, the minimum range to take values for the IR rangefinder is about 20cm while the ultrasonic sensor has a minimum range to take values of about 40cm.
+
 ## Self-Assessment
 
 ### Objective Criteria
@@ -56,9 +58,20 @@ Ultrasonic: we used ADC Pin A4 to get readings and this uses 3V as source.
 
 
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
-<center> </center>
 
+Picture of Board:
+![circuit](https://user-images.githubusercontent.com/45515930/95498616-14834100-0972-11eb-9490-fc985d68eaba.JPG)
+
+Console:
+
+<img width="458" alt="console-output" src="https://user-images.githubusercontent.com/45515930/95498702-37155a00-0972-11eb-9918-49a1778e4671.png">
+
+Testing:
+![testing](https://user-images.githubusercontent.com/45515930/95498770-50b6a180-0972-11eb-89cc-e43ff89fd266.JPG)
+
+Graph:
+
+<img width="1320" alt="plot" src="https://user-images.githubusercontent.com/45515930/95498831-63c97180-0972-11eb-8ce9-8ef47f791f4f.png">
 
 ## Supporting Artifacts
 - [Link to video demo](). Not to exceed 120s
