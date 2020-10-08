@@ -19,7 +19,7 @@ app.get('/data', function(req, res) {
     if (row === last_row){
       return;
     } else {
-      console.log(row);
+      // console.log(row);
       data.push(row);  // Add row of data to array
       last_row = row;
     }

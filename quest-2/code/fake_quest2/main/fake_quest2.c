@@ -428,6 +428,7 @@ void app_main(void)
     init();
 
     char disp_str[5];
+    int count =0;
 
     //Continuously sample ADC1
     while (1) {
@@ -449,7 +450,8 @@ void app_main(void)
 
         // display voltage
         uint32_t distance = voltage_to_distance(voltage);
-        printf("%d,%d,%d\n",distance, distance + 5, distance + 10);
+        printf("%d,%d,%d,%d\n",count,distance, distance + 5, distance + 10);
+        count+=2;
         itoa(distance,disp_str,10);
         my_alpha_display(disp_str,1);
     }
