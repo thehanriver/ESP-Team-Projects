@@ -76,6 +76,7 @@ static void IR_Range()
     {
         uint32_t adc_reading = 0;
         int distance = 0;
+        int temp = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
         {
