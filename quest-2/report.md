@@ -79,7 +79,13 @@ Graph:
 
 ## Modules, Tools, Source Used Including Attribution
 
+Template: 
+https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1/code/main
+
+CSV example
+https://github.com/BU-EC444/code-examples/tree/master/DataLoadingTest
 ## References
+
 
 -----
 
