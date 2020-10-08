@@ -132,12 +132,9 @@ static void printstate()
         else
         {
             int temp = timer - 2;
-<<<<<<< Updated upstream
             // printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
             printf("%d,%d,%d,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
-=======
-            printf("%d,%.1f,%d,%d\n", temp, ultrasonic, ir_rangefinder, temperature);
->>>>>>> Stashed changes
+
         }
         timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
