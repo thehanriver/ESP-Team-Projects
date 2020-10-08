@@ -7,132 +7,100 @@
 <script>
 window.onload = function () {
 	
-	// var chart = new CanvasJS.Chart("chartContainer", {
-	// 		title :{
-	// 			text: "Dynamic Sensor Data"
-	// 		},
-	// 		data: [{
-	// 			type:"line",
-	// 			axisYType: "secondary",
-	// 			name: "Ultrasound",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "$#,###",
-	// 			dataPoints: ultrasound_dps
-	// 		}, {
-	// 			type:"line",
-	// 			axisYType: "secondary",
-	// 			name: "IR",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "$#,###",
-	// 			dataPoints: ir_dps
-	// 		}, {
-	// 			type:"line",
-	// 			axisYType: "secondary",
-	// 			name: "Thermistor",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "$#,###",
-	// 			dataPoints: therm_dps
-	// 		}]
-	// 	});
-	
 
 	var updateInterval = 1000;
-	var dataLength = 20; // number of dataPoints visible at any point
+	var dataLength = 25; // number of dataPoints visible at any point
 	var last_time = "-1";
 	var ultrasound_dps = [];
 	var ir_dps = [];
 	var therm_dps = [];
 
+	var chart = new CanvasJS.Chart("chartContainer", {
+			title :{
+				text: "Dynamic Sensor Data"
+			},
+			axisX:  {
+				title: "Time Since Flash (s)"
+			},
+			axisY: {
+				title: "Distance (m)"
+			},
+			axisY2: {
+				title: "Temperature (°C)",
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor: "pointer",
+				verticalAlign: "top",
+				horizontalAlign: "center",
+			},
+			data: [{
+				type:"line",
+				axisYType: "primary",
+				name: "Ultrasound",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###m",
+				dataPoints: ultrasound_dps
+			}, {
+				type:"line",
+				axisYType: "primary",
+				name: "IR",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###m",
+				dataPoints: ir_dps
+			}, {
+				type:"line",
+				axisYType: "secondary",
+				name: "Thermistor",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###°C",
+				dataPoints: therm_dps
+			}]
+		});
 
-	// $.ajax({url: "/data", success: function(result){
+
+	$.ajax({url: "/data", success: function(result){
 		
-	// 	// result_array = Array.from(result)
-	// 	// console.log(typeof(result_array))
-	// 	// var row = result[-1];
-	// 	// console.log("hello");
-	// 	// console.log(row);
-	// 	// console.log(typeof(result));
-
-	// 	// if (row[0]===last_time)
-	// 	// {
-	// 	// 	return;
-	// 	// }
-	// 	// last_time=row[0];
-	// 	// chart.data[0].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[1]) });
-	// 	// chart.data[1].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[2]) });
-	// 	// chart.data[2].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[3]) });
-		
-
-		
-	// 	jQuery.each(result, function(i, val) {
+		jQuery.each(result, function(i, val) {
 
 
-	// 		ultrasound_dps.push({ x: parseInt(val[0]), y: parseInt(val[1]) });
-	// 		ir_dps.push({ x: parseInt(val[0]), y: parseInt(val[2]) });
-	// 		therm_dps.push({ x: parseInt(val[0]), y: parseInt(val[3]) });
+			ultrasound_dps.push({ x: parseInt(val[0]), y: parseInt(val[1]) });
+			ir_dps.push({ x: parseInt(val[0]), y: parseInt(val[2]) });
+			therm_dps.push({ x: parseInt(val[0]), y: parseInt(val[3]) });
 			
-	// 		if (ultrasound_dps.length > dataLength) {
-	// 			console.log(ultrasound_dps.length);
-	// 			ultrasound_dps.shift();
-	// 			ir_dps.shift();
-	// 			therm_dps.shift();
-	// 		}
+			if (ultrasound_dps.length > dataLength) {
+				ultrasound_dps.shift();
+				ir_dps.shift();
+				therm_dps.shift();
+			}
 			
-	// 	});
+		});
 
-	
-	
-
-	// 	// if (ultrasound_dps.length > dataLength) {
-	// 	// 	ultrasound_dps.shift();
-	// 	// }
-	// 	// if (ir_dps.length > dataLength) {
-	// 	// 	ir_dps.shift();
-	// 	// }
-	// 	// if (therm_dps.length > dataLength) {
-	// 	// 	therm_dps.shift();
-	// 	// }
-
-	// 	updateChart(ultrasound_dps,ir_dps,therm_dps);
-	// }});
+		
+		chart.render();
+	}});
 
 	
 	
 
 	var updateChart = function (ultrasound_dp,ir_dp,therm_dp) {
 
-		$.ajax({url: "/data", success: function(result){
-		
-			// result_array = Array.from(result)
-			// console.log(typeof(result_array))
-			// var row = result[-1];
-			// console.log("hello");
-			// console.log(row);
-			// console.log(typeof(result));
+	
+		$.ajax({url: "/data/last", success: function(result){
 
-			// if (row[0]===last_time)
-			// {
-			// 	return;
-			// }
-			// last_time=row[0];
-			// chart.data[0].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[1]) });
-			// chart.data[1].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[2]) });
-			// chart.data[2].dataPoints.push({ x: parseInt(row[0]), y: parseInt(row[3]) });
-			
-
-			
 			jQuery.each(result, function(i, val) {
 
 
-				ultrasound_dps.push({ x: parseInt(val[0]), y: parseInt(val[1]) });
-				ir_dps.push({ x: parseInt(val[0]), y: parseInt(val[2]) });
-				therm_dps.push({ x: parseInt(val[0]), y: parseInt(val[3]) });
+				ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+				ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+				therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
 				
 				if (ultrasound_dps.length > dataLength) {
-					console.log(ultrasound_dps.length);
 					ultrasound_dps.shift();
 					ir_dps.shift();
 					therm_dps.shift();
@@ -141,51 +109,13 @@ window.onload = function () {
 			});
 
 		}});
-		var chart = new CanvasJS.Chart("chartContainer", {
-			title :{
-				text: "Dynamic Sensor Data"
-			},
-			axisX:  {
-				title: "Seconds since Flash",
-			},
-			axisY: {
-				title: "Distance in cm"
-			},
-			axisY2: {
-				title: "Temperature in C"
-			},
-			data: [{
-				type:"line",
-				axisYType: "primary",
-				name: "Ultrasound",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###",
-				dataPoints: ultrasound_dps
-			}, {
-				type:"line",
-				axisYType: "primary",
-				name: "IR",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###",
-				dataPoints: ir_dps
-			}, {
-				type:"line",
-				axisYType: "secondary",
-				name: "Thermistor",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###",
-				dataPoints: therm_dps
-			}]
-		});
+		
+		
 		chart.render()
 	};
 
 	updateChart();
 	setInterval(function(){updateChart()}, updateInterval);
-
 }
 </script>
 </head>

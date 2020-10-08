@@ -141,9 +141,8 @@ static void printstate()
         else
         {
             int temp = timer - 2;
-            // printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-            printf("%d,%.2f,%.2f,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
 
+            printf("%d,%.2f,%.2f,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
         }
         timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
