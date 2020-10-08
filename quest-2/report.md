@@ -1,4 +1,4 @@
-# Quest Name
+# Quest 2: Tactile Internet
 Authors: Hussain Valiuddin, Mario Han, Vivek Cherian
 
 Date: 2020-10-08
