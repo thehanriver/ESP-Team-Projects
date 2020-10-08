@@ -6,6 +6,9 @@ Date: 2020-10-08
 
 ## Summary
 
+This project uses all of the previous skills and adds them into one board. The code from Quest 1 (with three tasks) is used as a template for Quest 2's code. Instead of the three tasks being I2C, Servo, and Clock , we used it to calculate the values of the thermistor, IR rangefinder, and ultrasonic sensors along with an additional task for printing.
+
+In addition to this, we used a python file to conver the console 
 
 ## Self-Assessment
 
