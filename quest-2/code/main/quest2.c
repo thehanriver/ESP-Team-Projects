@@ -133,7 +133,7 @@ static void printstate()
         {
             int temp = timer - 2;
             // printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-            printf("%d,%d,%d,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
+            printf("%d,%.2f,%.2f,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
 
         }
         timer += 2;
