@@ -75,8 +75,8 @@ static void IR_Range()
     while (1)
     {
         uint32_t adc_reading = 0;
-        int distance = 0;
-        int temp = 0;
+        double distance = 0;
+        double temp = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
         {
@@ -155,7 +155,7 @@ static void ultra_sonic()
      //Continuously sample ADC1
     while (1)
     {
-        uint32_t adc_reading = 0;
+         uint32_t adc_reading = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
         {
@@ -170,12 +170,12 @@ static void ultra_sonic()
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
         uint32_t dist = ((1 / 6.4 * (voltage))) * 2.54;
         dist = dist - 5;
-        // //calibration
+        //calibration
         if (dist > 100){
-            dist = dist * 1.1;
+            dist = dist * 1.09;
         }
         else if (dist > 50 && dist < 100){
-            dist = dist * 1.05; 
+            dist = dist * 1.08; 
         }
         ultrasonic = dist/100.0;
     }
