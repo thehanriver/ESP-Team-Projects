@@ -22,14 +22,14 @@ This would be how the quest 2 would be run:
   4: observe chart (open localhost:8080 in a browser)
   
 The circuit itself is all the sensors added together. 
-Thermistor: we used a 1k Ohm value in order to make sure the voltages are in range to read up to -20 C to 105 C and not exceed 3V. The reading is plugged into the ADC Pin A3 and uses 5V as source.
+Thermistor: we used a 1k Ohm value in order to make sure the voltages are in range to read up to -10 C to 105 C and not exceed 3V. The reading is plugged into the ADC Pin A3 and uses 5V as source.
 IR range finder: we use ADC Pin A2 to get readings and this uses 5V as source.
 Ultrasonic: we used ADC Pin A4 to get readings and this uses 3V as source.
 
 Problems:
 For some reason, the dynamic chart crashes every 30 seconds? We suspect this is due to a memory leak somewhere since the page needs to render and iterate through csv all the elements using "foreach". Also, there is a bug in which there is a random line connecting the first and last datapoint in the graph itself (this fixes itself after 10 seconds). 
 
-For the investigative question, we chose to use the IR rangefinder for thee robot car. It is more accurate, less noise, and gets data faster where as the ultrasonic sensor seems to take in less noise and loads the data slower. In addition, the minimum range to take values for the IR rangefinder is about 20cm while the ultrasonic sensor has a minimum range to take values of about 40cm.
+For the investigative question, we chose to use the IR rangefinder for thee robot car. It is more accurate, works for a larger range of values with less noise, where as the ultrasonic sensor seems to take in more noise and can take time to update to the accurate calue. In addition, the minimum range to take values for the IR rangefinder is about 20cm while the ultrasonic sensor has a minimum range to take values of about 40cm.
 
 ## Self-Assessment
 
