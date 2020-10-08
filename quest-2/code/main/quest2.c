@@ -33,8 +33,8 @@ static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
 static double temperature;
-static int ultrasonic;
-static int ir_rangefinder;
+static double ultrasonic;
+static double ir_rangefinder;
 static int timer;
 //static char file_name[] = "../data/sensors.csv";
 
@@ -95,7 +95,7 @@ static void IR_Range()
         {
             distance = (57 / (voltage - 0.08));
         }
-        ir_rangefinder = distance;
+        ir_rangefinder = distance/100.0;
     }
 }
 
@@ -127,12 +127,13 @@ static void printstate()
         //add this line into the quest-2/code/data/sensors.csv
         if (timer == 0)
         {
-            printf("Time: Temp: Dist(U_S): Dist2(IR)\n");
+            printf("Time: Dist(U_S): Dist2(IR): Temp\n");
         }
         else
         {
             int temp = timer - 2;
-            printf("%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
+
+            printf("%d,%.2f,%.2f,%.1f\n", temp, ultrasonic, ir_rangefinder, temperature);
         }
         timer += 2;
         vTaskDelay(2000 / portTICK_RATE_MS);
@@ -158,7 +159,7 @@ static void ultra_sonic()
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
         uint32_t dist = ((1 / 6.4 * (voltage)) - 5) * 2.54;
-        ultrasonic = dist;
+        ultrasonic = dist/100.0;
     }
 }
 
