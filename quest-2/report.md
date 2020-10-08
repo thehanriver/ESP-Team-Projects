@@ -26,6 +26,9 @@ Thermistor: we used a 1k Ohm value in order to make sure the voltages are in ran
 IR range finder: we use ADC Pin A2 to get readings and this uses 5V as source.
 Ultrasonic: we used ADC Pin A4 to get readings and this uses 3V as source.
 
+Problems:
+For some reason, the dynamic chart crashes every 30 seconds? We suspect this is due to a memory leak somewhere since the page needs to render and iterate through csv all the elements using "foreach". Also, there is a bug in which there is a random line connecting the first and last datapoint in the graph itself (this fixes itself after 10 seconds). 
+
 For the investigative question, we chose to use the IR rangefinder for thee robot car. It is more accurate, less noise, and gets data faster where as the ultrasonic sensor seems to take in less noise and loads the data slower. In addition, the minimum range to take values for the IR rangefinder is about 20cm while the ultrasonic sensor has a minimum range to take values of about 40cm.
 
 ## Self-Assessment
@@ -55,7 +58,7 @@ For the investigative question, we chose to use the IR rangefinder for thee robo
 
 ## Solution Design
 
-
+For the code itself, we used the same format as Quest 1 in which where we use tasks. We use 3 tasks for caluclating sensor values and 1 task for printing. To display the data onto localhose:8080 we first made a python file that reads the console called console.py in order to make a csv file and read the console. This python script calls demo.js in order to capture the flash that is coming from the serial port. From that, index.js needs to be called using node to start localhost:8080.
 
 ## Sketches and Photos
 
@@ -79,13 +82,17 @@ Graph:
 
 ## Modules, Tools, Source Used Including Attribution
 
-Template: 
-https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1/code/main
+[Quest 1 Code](https://github.com/BU-EC444/Team2-Cherian-Han-Valiuddin/tree/master/quest-1/code/main)
 
-CSV example
-https://github.com/BU-EC444/code-examples/tree/master/DataLoadingTest
+[CSV example code](https://github.com/BU-EC444/code-examples/tree/master/DataLoadingTest)
+
 ## References
 
+[Thermistor Specs](https://eaa.net.au/PDF/Hitech/MF52type.pdf)
+
+[IR Range Finder Specs](https://www.sparkfun.com/datasheets/Sensors/Infrared/gp2y0a02yk_e.pdf)
+
+[Ultrasonic Specs](https://www.maxbotix.com/documents/HRLV-MaxSonar-EZ_Datasheet.pdf)
 
 -----
 
