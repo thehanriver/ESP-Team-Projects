@@ -24,6 +24,8 @@
 
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES 10  //Multisampling
+#define E 2.718
+
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Thermistor GPIO 36 A3
@@ -91,9 +93,16 @@ static void IR_Range()
         {
             distance = (30 / (voltage - 1));
         }
-        else
+        else if( voltage < 2 && voltage > 1)
         {
             distance = (57 / (voltage - 0.08));
+        }
+        else
+        {
+            temp = (3 - voltage)/0.5;
+            temp = pow(E, temp);
+            temp = temp/1.4;
+            distance = temp + 25.5;
         }
         ir_rangefinder = distance/100.0;
     }
@@ -143,7 +152,7 @@ static void printstate()
 
 static void ultra_sonic()
 {
-    //Continuously sample ADC1
+     //Continuously sample ADC1
     while (1)
     {
         uint32_t adc_reading = 0;
@@ -159,7 +168,15 @@ static void ultra_sonic()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        uint32_t dist = ((1 / 6.4 * (voltage)) - 5) * 2.54;
+        uint32_t dist = ((1 / 6.4 * (voltage))) * 2.54;
+        dist = dist - 5;
+        // //calibration
+        if (dist > 100){
+            dist = dist * 1.1;
+        }
+        else if (dist > 50 && dist < 100){
+            dist = dist * 1.05; 
+        }
         ultrasonic = dist/100.0;
     }
 }
