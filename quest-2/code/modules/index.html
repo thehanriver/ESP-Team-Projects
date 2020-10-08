@@ -145,21 +145,30 @@ window.onload = function () {
 			title :{
 				text: "Dynamic Sensor Data"
 			},
+			axisX:  {
+				title: "Seconds since Flash",
+			},
+			axisY: {
+				title: "Distance in cm"
+			},
+			axisY2: {
+				title: "Temperature in C"
+			},
 			data: [{
 				type:"line",
-				axisYType: "secondary",
+				axisYType: "primary",
 				name: "Ultrasound",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "$#,###",
+				yValueFormatString: "#,###",
 				dataPoints: ultrasound_dps
 			}, {
 				type:"line",
-				axisYType: "secondary",
+				axisYType: "primary",
 				name: "IR",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "$#,###",
+				yValueFormatString: "#,###",
 				dataPoints: ir_dps
 			}, {
 				type:"line",
@@ -167,7 +176,7 @@ window.onload = function () {
 				name: "Thermistor",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "$#,###",
+				yValueFormatString: "#,###",
 				dataPoints: therm_dps
 			}]
 		});
