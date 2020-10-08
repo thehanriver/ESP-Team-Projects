@@ -27,7 +27,7 @@ IR range finder: we use ADC Pin A2 to get readings and this uses 5V as source.
 Ultrasonic: we used ADC Pin A4 to get readings and this uses 3V as source.
 
 Problems:
-For some reason,the graph crashes on safari after 30 seconds but not on chrome. We don't havea a current solution for this but we advice whoever is testing our code to use chrome.
+For some reason,the graph crashes sometimes. Sometimes on safari it runs for 7 minutes and sometimes in crashes 30 seconds and we don't know the reason. Chrome seems to work fine but we haven't tested running the graph past 8 mins.
 
 For the investigative question, we chose to use the IR rangefinder for thee robot car. It is more accurate, works for a larger range of values with less noise, where as the ultrasonic sensor seems to take in more noise and can take time to update to the accurate calue. In addition, the minimum range to take values for the IR rangefinder is about 20cm while the ultrasonic sensor has a minimum range to take values of about 40cm.
 
