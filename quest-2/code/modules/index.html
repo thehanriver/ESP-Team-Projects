@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-  <head><title>Stock Graph</title></head>
+  <head><title>Dynamic Sensor Data</title></head>
 <body>
 <div id="div1"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
 window.onload = function () {
-	
+
 
 	var updateInterval = 1000;
 	var dataLength = 25; // number of dataPoints visible at any point
@@ -42,7 +42,7 @@ window.onload = function () {
 				name: "Ultrasound",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "#,###m",
+				yValueFormatString: "#,###.00m",
 				dataPoints: ultrasound_dps
 			}, {
 				type:"line",
@@ -50,7 +50,7 @@ window.onload = function () {
 				name: "IR",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "#,###m",
+				yValueFormatString: "#,###.00m",
 				dataPoints: ir_dps
 			}, {
 				type:"line",
@@ -58,39 +58,39 @@ window.onload = function () {
 				name: "Thermistor",
 				showInLegend: true,
 				markerSize: 0,
-				yValueFormatString: "#,###°C",
+				yValueFormatString: "#,###.00°C",
 				dataPoints: therm_dps
 			}]
 		});
 
 
 	$.ajax({url: "/data", success: function(result){
-		
+
 		jQuery.each(result, function(i, val) {
 
 
-			ultrasound_dps.push({ x: parseInt(val[0]), y: parseInt(val[1]) });
-			ir_dps.push({ x: parseInt(val[0]), y: parseInt(val[2]) });
-			therm_dps.push({ x: parseInt(val[0]), y: parseInt(val[3]) });
-			
+			ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+			ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+			therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+
 			if (ultrasound_dps.length > dataLength) {
 				ultrasound_dps.shift();
 				ir_dps.shift();
 				therm_dps.shift();
 			}
-			
+
 		});
 
-		
+
 		chart.render();
 	}});
 
-	
-	
+
+
 
 	var updateChart = function (ultrasound_dp,ir_dp,therm_dp) {
 
-	
+
 		$.ajax({url: "/data/last", success: function(result){
 
 			jQuery.each(result, function(i, val) {
@@ -99,18 +99,18 @@ window.onload = function () {
 				ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
 				ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
 				therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
-				
+
 				if (ultrasound_dps.length > dataLength) {
 					ultrasound_dps.shift();
 					ir_dps.shift();
 					therm_dps.shift();
 				}
-				
+
 			});
 
 		}});
-		
-		
+
+
 		chart.render()
 	};
 

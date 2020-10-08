@@ -450,7 +450,7 @@ void app_main(void)
 
         // display voltage
         uint32_t distance = voltage_to_distance(voltage);
-        printf("%d,%d,%d,%d\n",count,distance, distance + 5, distance + 10);
+        printf("%d,%f,%f,%f\n",count,(float) (distance+0.5), (float) (distance + 5.23), (float) (distance + 10.0756));
         count+=2;
         itoa(distance,disp_str,10);
         my_alpha_display(disp_str,1);
