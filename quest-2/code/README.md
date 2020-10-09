@@ -1,8 +1,11 @@
 # Code Readme
 
-Please describe what is in your code folder and subfolders. Make it
-easy for us to navigate this space.
+Run 'idf.py -p [port] flash' to flash the quest2.c source code.
 
-Also
-- Please provide your name and date in any code submitted
-- Indicate attributrion for any code you have adopted from elsewhere
+In ./main/, there is the quest2.c source code and a build file, CMakeLists.txt.
+
+In ./modules/ there are the other files that are used to run the server, including demo.js, read_console.py, index.js, index.html, and package-lock.json.
+
+The Makefile and CMakeLists.txt in this directory are for building the project. 
+
+./fake_quest2 is a directory that can be ignored.
