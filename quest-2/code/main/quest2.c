@@ -67,7 +67,7 @@ static void thermistor()
         temp = rtherm / 10000;
         temp = log(temp);
         temp /= 3435;
-        temp += 1.0 / (20 + 273.15);
+        temp += 1.0 / (25 + 273.15);
         temp = 1.0 / temp;
         temp -= 273.15;
         temperature = temp;
@@ -107,6 +107,7 @@ static void IR_Range()
         }
         else
         {
+            //used a logarithmic equation for longer distances since the linear equations were becoming too inaccurate
             temp = (3 - voltage)/0.5;
             temp = pow(E, temp);
             temp = temp/1.4;
@@ -119,27 +120,7 @@ static void IR_Range()
 
 static void printstate()
 {
-    // static FILE *fp;
-    // while (1)
-    // {
-    //     //add this line into the quest-2/code/data/sensors.csv
-    //     if (timer == 0)
-    //     {
-    //         fp = fopen(file_name, "w");
-    //         fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
-    //         fclose(fp);
-    //     }
-    //     else
-    //     {
-    //         fp = fopen(file_name, "a");
-    //         int temp = timer - 2;
-    //         fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-    //         fclose(fp);
-    //     }
-    //     timer += 2;
-    //     vTaskDelay(2000 / portTICK_RATE_MS);
-    // }
-    //prints everything
+
     while (1)
     {
         //add this line into the quest-2/code/data/sensors.csv
