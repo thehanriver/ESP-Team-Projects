@@ -158,7 +158,7 @@ static void ultra_sonic()
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
         //first converts voltage to inches then centimeters. offset by 5 because kept giving us a value +5 inches
-        uint32_t dist = ((1 / 6.4 * (voltage))) * 2.54;
+        double dist = ((1 / 6.4 * (voltage))) * 2.54;
         dist = dist - 5;
         //calibration
         if (dist > 100){
