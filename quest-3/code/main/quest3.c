@@ -585,7 +585,7 @@ static void printstate()
         {
             int temp = timer - 2;
             printf("Time: %d \t Temperature: %.1f \t X: %.2f \t Y: %.2f \t Z: %.2f \t\n", temp, temperature, xVal, yVal, zVal);
-            //printf("X: %.2f \t Y: %.2f \t Z: %.2f \t\n", x, y, z);
+            printf("%d,%.1f,%.2f,%.2f,%.2f\n", temp, temperature, xVal, yVal, zVal);
         }
         timer++;
         vTaskDelay(1000 / portTICK_RATE_MS);
