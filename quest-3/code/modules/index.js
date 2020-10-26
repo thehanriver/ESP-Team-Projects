@@ -31,10 +31,10 @@ getLastLine = (fileName, minLength) => {
   })
 }
 
-// // viewed at http://localhost:8080
-// app.get('/', function(req, res) {
-//   res.sendFile(path.join(__dirname + '/index.html'));
-// });
+// viewed at http://localhost:8080
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname + '/index.html'));
+});
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data', function(req, res) {
 //   var data = [];  // Array to hold all csv data

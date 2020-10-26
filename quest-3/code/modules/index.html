@@ -11,11 +11,12 @@ window.onload = function () {
 	var updateInterval = 1000;
 	var dataLength = 25; // number of dataPoints visible at any point
 	var last_time = "-1";
-	var ultrasound_dps = [];
-	var ir_dps = [];
+	var x_dps = [];
+	var y_dps = [];
+	var z_dps = [];
 	var therm_dps = [];
 
-	var chart = new CanvasJS.Chart("chartContainer", {
+	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
 				text: "Dynamic Sensor Data"
 			},
@@ -23,10 +24,7 @@ window.onload = function () {
 				title: "Time Since Flash (s)"
 			},
 			axisY: {
-				title: "Distance (m)"
-			},
-			axisY2: {
-				title: "Temperature (°C)",
+				title: "Temperature (°C)"
 			},
 			toolTip: {
 				shared: true
@@ -38,7 +36,6 @@ window.onload = function () {
 			},
 			data: [{
 				type:"line",
-				axisYType: "primary",
 				name: "Thermistor",
 				showInLegend: true,
 				markerSize: 0,
@@ -49,27 +46,71 @@ window.onload = function () {
 			}]
 		});
 
-
-	$.ajax({url: "/data", success: function(result){
-
-		jQuery.each(result, function(i, val) {
-
-
-			ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-			ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
-
-			if (ultrasound_dps.length > dataLength) {
-				ultrasound_dps.shift();
-				ir_dps.shift();
-				therm_dps.shift();
-			}
-
+		var chart2 = new CanvasJS.Chart("chartContainer2", {
+			title :{
+				text: "Dynamic Sensor Data"
+			},
+			axisX:  {
+				title: "Time Since Flash (s)"
+			},
+			axisY: {
+				title: "Acceleration (m/s^2)"
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor: "pointer",
+				verticalAlign: "top",
+				horizontalAlign: "center",
+			},
+			data: [{
+				type:"line",
+				name: "X Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: x_dps
+			}, {
+				type:"line",
+				name: "Y Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: y_dps
+			}, {
+				type:"line",
+				name: "Z Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: z_dps
+			}]
 		});
 
 
-		chart.render();
-	}});
+	// $.ajax({url: "/data", success: function(result){
+
+	// 	jQuery.each(result, function(i, val) {
+
+	// 		// fix
+	// 		x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+	// 		y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+	// 		z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+	// 		therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+
+	// 		if (x_dps.length > dataLength) {
+	// 			x_dps.shift();
+	// 			y_dps.shift();
+	// 			z_dps.shift();
+	// 			therm_dps.shift();
+	// 		}
+
+	// 	});
+
+	// 	chart1.render();
+	// 	chart2.render();
+	// }});
 
 
 
@@ -79,25 +120,41 @@ window.onload = function () {
 
 		$.ajax({url: "/data/last", success: function(result){
 
-			jQuery.each(result, function(i, val) {
+			// jQuery.each(result, function(i, val) {
 
+			// 	// fix
+			// 	x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+			// 	y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+			// 	z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+			// 	therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
 
-				ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-				ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-				therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+			// 	if (x_dps.length > dataLength) {
+			// 		x_dps.shift();
+			// 		y_dps.shift();
+			// 		z_dps.shift();
+			// 		therm_dps.shift();
+			// 	}
 
-				if (ultrasound_dps.length > dataLength) {
-					ultrasound_dps.shift();
-					ir_dps.shift();
-					therm_dps.shift();
-				}
+			// });
 
-			});
+			// fix
+			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
+			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
+			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
+			therm_dps.push({ x: parseInt(result[0]), y: parseFloat(result[1]) });
+
+			if (x_dps.length > dataLength) {
+				x_dps.shift();
+				y_dps.shift();
+				z_dps.shift();
+				therm_dps.shift();
+			}
 
 		}});
 
-
-		chart.render()
+		chart1.render();
+		chart2.render();
+	
 	};
 
 	updateChart();
@@ -106,7 +163,9 @@ window.onload = function () {
 </script>
 </head>
 <body>
-<div id="chartContainer" style="height: 300px; width: 100%;"></div>
+<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
+<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+<!-- <button onclick= {event ></button> -->
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
 </html>
