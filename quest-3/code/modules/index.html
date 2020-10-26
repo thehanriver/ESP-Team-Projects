@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Dynamic Sensor Data</title></head>
+<body>
+<div id="div1"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+window.onload = function () {
+
+
+	var updateInterval = 1000;
+	var dataLength = 25; // number of dataPoints visible at any point
+	var last_time = "-1";
+	var ultrasound_dps = [];
+	var ir_dps = [];
+	var therm_dps = [];
+
+	var chart = new CanvasJS.Chart("chartContainer", {
+			title :{
+				text: "Dynamic Sensor Data"
+			},
+			axisX:  {
+				title: "Time Since Flash (s)"
+			},
+			axisY: {
+				title: "Distance (m)"
+			},
+			axisY2: {
+				title: "Temperature (°C)",
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor: "pointer",
+				verticalAlign: "top",
+				horizontalAlign: "center",
+			},
+			data: [{
+				type:"line",
+				axisYType: "primary",
+				name: "Ultrasound",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00m",
+				dataPoints: ultrasound_dps
+			}, {
+				type:"line",
+				axisYType: "primary",
+				name: "IR",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00m",
+				dataPoints: ir_dps
+			}, {
+				type:"line",
+				axisYType: "secondary",
+				name: "Thermistor",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00°C",
+				dataPoints: therm_dps
+			}]
+		});
+
+
+	$.ajax({url: "/data", success: function(result){
+
+		jQuery.each(result, function(i, val) {
+
+
+			ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+			ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+			therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+
+			if (ultrasound_dps.length > dataLength) {
+				ultrasound_dps.shift();
+				ir_dps.shift();
+				therm_dps.shift();
+			}
+
+		});
+
+
+		chart.render();
+	}});
+
+
+
+
+	var updateChart = function (ultrasound_dp,ir_dp,therm_dp) {
+
+
+		$.ajax({url: "/data/last", success: function(result){
+
+			jQuery.each(result, function(i, val) {
+
+
+				ultrasound_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
+				ir_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+				therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+
+				if (ultrasound_dps.length > dataLength) {
+					ultrasound_dps.shift();
+					ir_dps.shift();
+					therm_dps.shift();
+				}
+
+			});
+
+		}});
+
+
+		chart.render()
+	};
+
+	updateChart();
+	setInterval(function(){updateChart()}, updateInterval);
+}
+</script>
+</head>
+<body>
+<div id="chartContainer" style="height: 300px; width: 100%;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</body>
+</html>
