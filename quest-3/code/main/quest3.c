@@ -210,7 +210,7 @@ static void printstate()
         else
         {
             int temp = timer - 2;
-            printf("Time: %d \t Temperature: %.1f \t X: %.2f \t Y: %.2f \t Z: %.2f \t\n", temp, temperature, x, y, z);
+            printf("Time: %d \t Temperature: %.1f \t X: %.2f \t Y: %.2f \t Z: %.2f \t\n", temp, temperature, xVal, yVal, zVal);
             //printf("X: %.2f \t Y: %.2f \t Z: %.2f \t\n", x, y, z);
         }
         timer += 2;
