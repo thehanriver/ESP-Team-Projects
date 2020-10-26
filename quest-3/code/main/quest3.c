@@ -163,21 +163,42 @@ static void test_adxl343()
     }
 }
 
-static void toggle_LED()
-{
-    gpio_pad_select_gpio(BLINK_GPIO);
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
+// static void toggle_LED()
+// {
+//     gpio_pad_select_gpio(BLINK_GPIO);
+//     /* Set the GPIO as a push/pull output */
+//     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
-    while (1)
-    {
-        gpio_set_level(BLINK_GPIO, toggle);
-        vTaskDelay(1000 / portTICK_RATE_MS);
-    }
-}
+//     while (1)
+//     {
+//         gpio_set_level(BLINK_GPIO, toggle);
+//         vTaskDelay(1000 / portTICK_RATE_MS);
+//     }
+// }
 
 static void printstate()
 {
+
+    // static FILE *fp;
+    // while (1)
+    // {
+    //     //add this line into the quest-2/code/data/sensors.csv
+    //     if (timer == 0)
+    //     {
+    //         fp = fopen(file_name, "w");
+    //         fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
+    //         fclose(fp);
+    //     }
+    //     else
+    //     {
+    //         fp = fopen(file_name, "a");
+    //         int temp = timer - 2;
+    //         fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
+    //         fclose(fp);
+    //     }
+    //     timer += 2;
+    //     vTaskDelay(2000 / portTICK_RATE_MS);
+    // }
 
     while (1)
     {
@@ -225,8 +246,12 @@ void app_main()
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
 
+    // Create Task to get data from thermistor
     xTaskCreate(thermistor, "thermistor", 4096, NULL, 5, NULL);
-    xTaskCreate(printstate, "printstate", 4096, NULL, 8, NULL);
+    // Create Task to toggle LED
+    //xTaskCreate(toggle_LED, "toggle_LED", 4096, NULL, 5, NULL);
     // Create task to poll ADXL343
     xTaskCreate(test_adxl343, "test_adxl343", 4096, NULL, 5, NULL);
+    // Create Task to print out values received
+    xTaskCreate(printstate, "printstate", 4096, NULL, 8, NULL);
 }
