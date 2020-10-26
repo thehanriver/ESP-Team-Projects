@@ -595,7 +595,7 @@ static void udp_client_task(void *pvParameters)
             int status;
             int temp4;
             temp4 = timer - 2;
-            status = sprintf(buffer2, "Time: %d \t Temperature: %.1f \t X: %.2f \t Y: %.2f \t Z: %.2f \t\n", temp4, temperature, xVal, yVal, zVal);
+            status = sprintf(buffer2, "%d,%.1f,%.2f,%.2f,%.2f", temp4, temperature, xVal, yVal, zVal);
             payload = buffer2;
 
             int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
