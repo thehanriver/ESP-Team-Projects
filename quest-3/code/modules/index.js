@@ -99,7 +99,7 @@ server.on('listening', function () {
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
     lastNMessages.push(message.toString());
-    if (lastNMessages.length()>N)
+    if (lastNMessages.length>N)
     {
       lastNMessages.shift();
     }
