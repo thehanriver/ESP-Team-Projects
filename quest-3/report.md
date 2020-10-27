@@ -13,6 +13,8 @@ The end result is a web page which displays sensory information in 2 line charts
 How the Node Js server works
 The NodeJS server hasnt changed much from Quest2. Button to control the LED and Button to access the webcam have been added
 
+Investigative question: What are steps you can take to make your device and system low power? 
+Turn off tasks until acceleromator or thermistor senses something.
 
 ## Self-Assessment
 
@@ -25,9 +27,10 @@ The NodeJS server hasnt changed much from Quest2. Button to control the LED and 
 | Objective Three | 1 |  1     | 
 | Objective Four | 1 |  1     | 
 | Objective Five | 1 |  1     | 
-| Objective Six | 1/0 |  1     | //depending if scheduled time accounts for time extension
+| Objective Six | 1/0 |  1     | 
 | Objective Seven | 1 |  1     | 
 
+For Objective Six: depending if scheduled time accounts for time extension
 
 ### Qualitative Criteria
 
@@ -50,7 +53,8 @@ In the code, we scheduled individual modules as tasks. At first, all I2C, UDP, A
 5. Print task just prints all of this data to the console on ESP for easier debugging.
    The Webcam is run on a seperate Node server which can be accessed by pressing the button link on the main webpage.
 
-The raspberry pi recieves ESP32 data at its port 1234. The Nodejs application reads the incoming data and displays it on a webpage and sends back the LED status to the ESP. The
+The raspberry pi recieves ESP32 data at its port 1234. 
+The Nodejs application reads the incoming data and displays it on a webpage and sends back the LED status to the ESP. 
 
 ## Sketches and Photos
 <center><img src="./images/ece444.png" width="25%" /></center>  
