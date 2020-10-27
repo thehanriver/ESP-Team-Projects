@@ -98,7 +98,11 @@ server.on('listening', function () {
 // On connection, print out received message
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
-    lastNMessages.push(message.toString());
+    var temp = message.toString().split(',')
+    if (temp[0] >= 0)
+    {
+      lastNMessages.push(message.toString());
+    }
     if (lastNMessages.length>N)
     {
       lastNMessages.shift();
