@@ -70,9 +70,9 @@ Fixed:
 
 ## Sketches and Photos
 
-Picture of board while user press Turn Off button:
+Picture of board when user press Turn Off button:
 
-Picture of board while user press Turn On button:
+Picture of board when user press Turn On button:
 
 Console Pic (NodeJs receiving / ESP monitor):
 
