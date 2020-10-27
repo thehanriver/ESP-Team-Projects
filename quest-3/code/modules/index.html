@@ -11,6 +11,7 @@
 
 
 	var updateInterval = 1000;
+	var updateStatusInterval = 100;
 	var dataLength = 25; // number of dataPoints visible at any point
 	var last_time = "-1";
 	var x_dps = [];
@@ -18,6 +19,7 @@
 	var z_dps = [];
 	var therm_dps = [];
 	var latestTime = -1;
+	var disp_status;
 
 	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
@@ -149,19 +151,37 @@
 
 	};
 
+	var updateStatus = function (ultrasound_dp,ir_dp,therm_dp) {
+		$.get('/status',{led_status: 1},function(data,status){
+			console.log(data);
+			disp_status=data;
+				});
+	}
+
 	updateChart();
+	updateStatus();
 	setInterval(function(){updateChart()}, updateInterval);
+	setInterval(function(){updateStatus()}, updateStatusInterval);
 
 }</script>
 
   	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
-  	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+	  
   	<button id="OnOff"
 			  type="button"
-			  onClick="sendOnOff()"
+			  onClick="sendOn()"
 			  style=" height:50px; width:200px ">
   		Turn On
-  	</button>
+	</button>
+	
+  	<button id="OnOff"
+			  type="button"
+			  onClick="sendOff()"
+			  style=" height:50px; width:200px ">
+  		Turn Off
+	</button>
+	  
   	<button type="button"
 			  id="webCam"
 			  onclick=" window.location.href='http://vivpi.ddns.net:3434/';"
@@ -170,20 +190,23 @@
 	</button>
 	
   	<script type="text/javascript">
-		function sendOnOff() {
-			var name = document.getElementById("OnOff").innerText;
-			if(name === 'Turn On'){
-				document.getElementById("OnOff").innerText = 'Turn Off';
+		function sendOn() {
+			//var name = document.getElementById("OnOff").innerText;
+			//if(name === 'Turn On'){
+				//document.getElementById("OnOff").innerText = 'Turn Off';
 				// POST request to on
 				$.post('/status',{led_status: 1},function(data,status){
 				});
-			}
-			else if(name === 'Turn Off'){
-				document.getElementById("OnOff").innerText = 'Turn On';
-				$.post('/status',{led_status: 0},function(data,status){
-				});
+			//}
+			//else if(name === 'Turn Off'){
+				//document.getElementById("OnOff").innerText = 'Turn On';
+				//$.post('/status',{led_status: 0},function(data,status){});
 		}
-	  }</script>
+
+		function sendOff() {
+			$.post('/status',{led_status: 0},function(data,status){});
+		}
+	  </script>
   	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   </body>
 </html>

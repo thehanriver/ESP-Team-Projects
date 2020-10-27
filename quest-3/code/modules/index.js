@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 var lastMessage = "";
 var lastNMessages = [];
-var N = 20;
+var N = 25;
 var led_status = 0;
 var latestTime = -1;
 
@@ -27,6 +27,10 @@ app.get('/', function(req, res) {
 app.post('/status', (req,res) => {
   led_status = req.body.led_status;
   res.end('yes');
+});
+
+app.get('/status', (req,res) => {
+  res.send(led_status);
 });
 
 
