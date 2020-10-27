@@ -1,11 +1,10 @@
-import led_status from './toggle.js';
-
 var express = require('express');
 var app = express();
 var path = require('path');
 var fs = require('fs');
 const readline = require('readline');
 const Stream = require('stream');
+var tog = require('toggle.js');
 
 var lastMessage = "";
 
@@ -129,7 +128,7 @@ server.on('message', function (message, remote) {
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
-    server.send(led_status.toString(),remote.port,remote.address,function(error){
+    server.send(tog.led_status.toString(),remote.port,remote.address,function(error){
       if(error){
         console.log('MEH!');
       }

@@ -1,6 +1,6 @@
 var led_status = 0;
-
-function toggleLED() {
+exports.led_status = led_status;
+exports.toggleLED = function () {
     if (!led_status)
     {
       led_status=1;
@@ -10,5 +10,3 @@ function toggleLED() {
       led_status=0
     }
 }
-
-export {led_status, toggleLED};
