@@ -545,17 +545,17 @@ static void test_adxl343()
     while (1)
     {
         float xsum = 0, ysum = 0, zsum = 0;
-        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        for (int i = 0; i < 5 * NO_OF_SAMPLES; i++)
         {
             getAccel(&xtemp, &ytemp, &ztemp);
-            xsum += xtemp;
-            ysum += ysum;
-            zsum += zsum;
-            vTaskDelay(50 / portTICK_PERIOD_MS);
+            xsum = xsum + xtemp;
+            ysum = ysum + ytemp;
+            zsum = zsum + ztemp;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
         }
-        xVal = xsum / NO_OF_SAMPLES;
-        yVal = ysum / NO_OF_SAMPLES;
-        zVal = zsum / NO_OF_SAMPLES;
+        xVal = xsum / (5 * NO_OF_SAMPLES);
+        yVal = ysum / (5 * NO_OF_SAMPLES);
+        zVal = zsum / (5 * NO_OF_SAMPLES);
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
