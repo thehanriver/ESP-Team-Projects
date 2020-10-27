@@ -6,13 +6,14 @@ var fs = require('fs');
 const readline = require('readline');
 const Stream = require('stream');
 const bodyParser = require('body-parser');
-const router = express.Router();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
 var lastMessage = "";
+var lastNMessages = [];
+var N = 20;
 var led_status = 0;
 
 // viewed at http://localhost:8080
@@ -23,34 +24,15 @@ app.get('/', function(req, res) {
 
 
 app.post('/status', (req,res) => {
-  console.log("Received POST request with req.body.led_status = ");
-  console.log(req.body.led_status);
   led_status = req.body.led_status;
-  // res.send(led_status);
   res.end('yes');
 });
 
 
-// // request data at http://localhost:8080/data or just "/data"
-// app.get('/data', function(req, res) {
-//   var data = [];  // Array to hold all csv data
-//   var last_row = "";
-//   fs.createReadStream('../data/sensors.csv')  // path to csv
-//   .pipe(csv())
-//   .on('data', (row) => {
-//     // add thing to check time on row to check if it is a new row. push to data only if it is new
-//     if (row === last_row){
-//       return;
-//     } else {
-//       // console.log(row);
-//       data.push(row);  // Add row of data to array
-//       last_row = row;
-//     }
-//   })
-//   .on('end', () => {
-//     res.send(data);  // Send array of data back to requestor
-//   });
-// });
+// request data at http://localhost:8080/data or just "/data"
+app.get('/data', function(req, res) {
+  res.send(lastNMessages);
+});
 
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data/last', function(req, res) {
@@ -116,15 +98,17 @@ server.on('listening', function () {
 // On connection, print out received message
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
+    lastNMessages.push(message.toString());
+    if (lastNMessages.length>N)
+    {
+      lastNMessages.shift();
+    }
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
     server.send(led_status.toString(),remote.port,remote.address,function(error){
       if(error){
-        console.log('MEH!');
-      }
-      else {
-        console.log('Sent: ' + led_status.toString());
+        console.log('Error: failed to acknowledge');
       }
     });
 
