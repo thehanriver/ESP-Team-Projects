@@ -41,7 +41,7 @@
 
 //Thermistor defines
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES 39  //Multisampling
+#define NO_OF_SAMPLES 19  //Multisampling
 #define E 2.718
 
 #define HOST_IP_ADDR "192.168.1.111"
@@ -541,9 +541,23 @@ void getAccel(float *xp, float *yp, float *zp)
 static void test_adxl343()
 {
     printf("\n>> Polling ADAXL343\n");
+    float xtemp, ytemp, ztemp;
     while (1)
     {
-        getAccel(&xVal, &yVal, &zVal);
+        float xsum = 0, ysum = 0, zsum = 0;
+
+        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        {
+            getAccel(&xtemp, &ytemp, &ztemp);
+            xsum += xtemp;
+            ysum += ysum;
+            zsum += zsum;
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+        }
+        xVal = xsum / NO_OF_SAMPLES;
+        yVal = ysum / NO_OF_SAMPLES;
+        zVal = zsum / NO_OF_SAMPLES;
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -630,7 +644,7 @@ static void udp_client_task(void *pvParameters)
                 }
             }
 
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
         if (sock != -1)
