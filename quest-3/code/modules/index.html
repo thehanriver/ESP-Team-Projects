@@ -184,7 +184,6 @@
 			var name = document.getElementById("OnOff").innerText;
 			if(name === 'Turn On'){
 				document.getElementById("OnOff").innerText = 'Turn Off';
-				toggleLED();
 				// POST request to on
 				$.ajax.post('/led-status',
 				{
@@ -196,7 +195,6 @@
 			}
 			else if(name === 'Turn Off'){
 				document.getElementById("OnOff").innerText = 'Turn On';
-				toggleLED();
 				$.ajax.post('/led-status',
 				{
 					led_status: 0
@@ -206,9 +204,6 @@
 				});
 		}
 	  }</script>
-	<script type="module">
-		import {toggleLED} from './toggle.js';
-	</script>
   	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   </body>
 </html>
