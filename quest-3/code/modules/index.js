@@ -8,29 +8,7 @@ const Stream = require('stream');
 
 
 var lastMessage = "";
-
-// getLastLine function is written by Michael Hobbs
-// and taken from https://stackoverflow.com/questions/40107433/read-last-line-of-a-large-file-with-nodejs/46349455
-getLastLine = (fileName, minLength) => {
-  let inStream = fs.createReadStream(fileName);
-  let outStream = new Stream;
-  return new Promise((resolve, reject)=> {
-      let rl = readline.createInterface(inStream, outStream);
-
-      let lastLine = '';
-      rl.on('line', function (line) {
-          if (line.length >= minLength) {
-              lastLine = line;
-          }
-      });
-
-      rl.on('error', reject)
-
-      rl.on('close', function () {
-          resolve(lastLine)
-      });
-  })
-}
+var led_status = 0;
 
 // viewed at http://localhost:8080
 app.get('/', function(req, res) {
@@ -38,9 +16,16 @@ app.get('/', function(req, res) {
 });
 
 
-app.get('/toggle.js', function(req, res) {
-  res.sendFile(path.join(__dirname + '/toggle.js'));
+// app.get('/led-status', function(req,res) {
+//   res.send(led_status);
+// });
+
+app.post('/led-status', function(req,res) {
+  led_status = req.body.led_status;
+  res.send(led_status);
 });
+
+
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data', function(req, res) {
 //   var data = [];  // Array to hold all csv data
@@ -125,14 +110,10 @@ server.on('listening', function () {
 
 // On connection, print out received message
 server.on('message', function (message, remote) {
-    var led_status;
     lastMessage = message.toString();
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
-    $.get('/led-status',function(data,status){
-      led_status = data.led_status;
-    })
     server.send(led_status.toString(),remote.port,remote.address,function(error){
       if(error){
         console.log('MEH!');
