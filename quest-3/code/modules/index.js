@@ -34,6 +34,11 @@ getLastLine = (fileName, minLength) => {
 app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
+
+
+app.get('/index.js', function(req, res) {
+  res.sendFile(path.join(__dirname + '/index.js'));
+});
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data', function(req, res) {
 //   var data = [];  // Array to hold all csv data
@@ -78,9 +83,6 @@ app.get('/', function(req, res) {
 
 // request data at http://localhost:8080/data or just "/data"
 app.get('/data/last', function(req, res) {
-  data_last = []
-  last_lastLine = '';
-  const filename = '../data/sensors.csv';
   res.send(lastMessage.split(','))
 });
 
