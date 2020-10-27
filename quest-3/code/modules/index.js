@@ -19,7 +19,7 @@ app.get('/', function(req, res) {
 
 app.post('/status', function(req,res) {
   console.log("Received POST request with req = \n");
-  console.log(req);
+  console.log(req.body.led_status);
   led_status = req.body.led_status;
   res.send(led_status);
 });
