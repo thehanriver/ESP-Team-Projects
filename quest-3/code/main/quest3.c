@@ -545,7 +545,6 @@ static void test_adxl343()
     while (1)
     {
         float xsum = 0, ysum = 0, zsum = 0;
-
         for (int i = 0; i < NO_OF_SAMPLES; i++)
         {
             getAccel(&xtemp, &ytemp, &ztemp);
