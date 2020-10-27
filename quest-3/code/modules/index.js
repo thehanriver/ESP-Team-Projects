@@ -22,7 +22,7 @@ app.get('/', function(req, res) {
 
 
 
-router.post('/status', (req,res) => {
+app.post('/status', (req,res) => {
   console.log("Received POST request with req.body.led_status = ");
   console.log(req.body.led_status);
   led_status = req.body.led_status;
