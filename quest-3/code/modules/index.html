@@ -152,7 +152,7 @@
 	};
 
 	var updateStatus = function (ultrasound_dp,ir_dp,therm_dp) {
-		$.get('/status',{led_status: 1},function(data,status){
+		$.get('/status',function(data,status){
 			console.log(data);
 			disp_status=data;
 				});
