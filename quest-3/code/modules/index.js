@@ -1,3 +1,5 @@
+import {led_status,toggleLED} from './toggle.js';
+
 var express = require('express');
 var app = express();
 var path = require('path');
@@ -36,8 +38,8 @@ app.get('/', function(req, res) {
 });
 
 
-app.get('/index.js', function(req, res) {
-  res.sendFile(path.join(__dirname + '/index.js'));
+app.get('/toggle.js', function(req, res) {
+  res.sendFile(path.join(__dirname + '/toggle.js'));
 });
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data', function(req, res) {
@@ -101,18 +103,18 @@ var HOST = '192.168.1.111';
 // Create socket
 var server = dgram.createSocket('udp4');
 
-led_status = 0;
+// led_status = 0;
 
-function toggleLED() {
-    if (!led_status)
-    {
-      led_status=1;
-    }
-    else
-    {
-      led_status=0
-    }
-}
+// function toggleLED() {
+//     if (!led_status)
+//     {
+//       led_status=1;
+//     }
+//     else
+//     {
+//       led_status=0
+//     }
+// }
 
 
 // Create server
