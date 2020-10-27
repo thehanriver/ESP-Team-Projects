@@ -174,12 +174,12 @@ window.onload = function () {
 </button> 
 <script>
 	function sendOnOff() {
-		var name = document.getElementById("OnOff");
-		if(name.firstChild.data == "On"){
-			name.firstChild.data === "Off";
+		var name = document.getElementById("OnOff").innerText;
+		if(name === "On"){
+			name = "Off";
 		}
-		else if(name.firstChild.data === "Off"){
-			name.firstChild.data = "On";
+		else if(name === "Off"){
+			name = "On";
 		}
 	}
 </script>
