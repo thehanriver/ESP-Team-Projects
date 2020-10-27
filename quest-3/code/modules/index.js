@@ -5,6 +5,11 @@ var path = require('path');
 var fs = require('fs');
 const readline = require('readline');
 const Stream = require('stream');
+const bodyParser = require('body-parser');
+const router = express.Router();
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 
 var lastMessage = "";
@@ -17,11 +22,12 @@ app.get('/', function(req, res) {
 
 
 
-app.post('/status', function(req,res) {
-  console.log("Received POST request with req = \n");
+router.post('/status', (req,res) => {
+  console.log("Received POST request with req.body.led_status = ");
   console.log(req.body.led_status);
   led_status = req.body.led_status;
-  res.send(led_status);
+  // res.send(led_status);
+  res.end('yes');
 });
 
 
