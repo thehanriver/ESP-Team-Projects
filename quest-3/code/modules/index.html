@@ -185,9 +185,9 @@
 			if(name === 'Turn On'){
 				document.getElementById("OnOff").innerText = 'Turn Off';
 				// POST request to on
-				$.post('/led-status',
+				$.post('/status',
 				{
-					led_status: 1
+					led_status: "hellofromtheotherside"
 				},
 				function(data,status){
 				console.log('turned on');
@@ -195,9 +195,9 @@
 			}
 			else if(name === 'Turn Off'){
 				document.getElementById("OnOff").innerText = 'Turn On';
-				$.post('/led-status',
+				$.post('/status',
 				{
-					led_status: 0
+					led_status: "hellofromtheotherside"
 				},
 				function(data,status){
 				console.log('turned off');

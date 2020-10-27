@@ -16,11 +16,8 @@ app.get('/', function(req, res) {
 });
 
 
-// app.get('/led-status', function(req,res) {
-//   res.send(led_status);
-// });
 
-app.post('/led-status', function(req,res) {
+app.post('/status', function(req,res) {
   console.log("Received POST request with req = \n");
   console.log(req);
   led_status = req.body.led_status;
