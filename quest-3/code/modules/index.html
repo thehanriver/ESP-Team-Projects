@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head><title>Dynamic Sensor Data</title></head>
-<body>
-<div id="div1"></div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script type="text/javascript" charset="UTF-8" src="index.js"></script>
-<script type='text/javascript'>
-
-  window.num = 0;
-</script>
-<script>
-window.onload = function () {
+  <body>
+  	<div id="div1"></div>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  	
+  	<script>window.onload = function () {
 
 
 	var updateInterval = 1000;
@@ -159,37 +154,40 @@ window.onload = function () {
 
 		chart1.render();
 		chart2.render();
-	
+
 	};
 
 	updateChart();
 	setInterval(function(){updateChart()}, updateInterval);
 
-}
-</script>
+}</script>
 
-<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
-<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
-<button 
-		id="OnOff" 
-		type="button" 
-		onClick=  "sendOnOff()" 
-		style=" height:50px; width:200px "
-		>On
-</button> 
-<script>
+  	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
+  	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+  	<button id="OnOff"
+			  type="button"
+			  onClick="sendOnOff()"
+			  style=" height:50px; width:200px ">
+  		Turn On
+  	</button>
+  	<button type="button"
+			  id="webCam"
+			  onclick=" window.location.href='http://vivpi.ddns.net:3434/';"
+			  style=" height:50px; width:200px " />
+	<script type="text/javascript" src="index.js"></script>
+	<script type="text/javascript">toggleLED();</script>
+  	<script type="text/javascript">
 	function sendOnOff() {
-		var name = document.getElementById("OnOff").innerText;
-		if(name === 'On'){
-			//document.getElementById("OnOff").innerText = 'Off';
-			 windows.num = 0;
-		}
-		else if(name === 'Off'){
-			//document.getElementById("OnOff").innerText = 'On';
-			windows.num = 1;
-		}
-	}
-</script>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-</body>
+  		var name = document.getElementById("OnOff").innerText;
+  		if(name === 'Turn On'){
+  			document.getElementById("OnOff").innerText = 'Turn Off';
+  			toggleLED();
+  		}
+  		else if(name === 'Turn Off'){
+  			document.getElementById("OnOff").innerText = 'Turn On';
+  			toggleLED();
+  	}
+  	}</script>
+  	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  </body>
 </html>

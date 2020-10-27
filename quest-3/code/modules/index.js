@@ -114,8 +114,18 @@ var HOST = '192.168.1.111';
 // Create socket
 var server = dgram.createSocket('udp4');
 
-var num = 0;
+led_status = 0;
 
+function toggleLED() {
+    if (!led_status)
+    {
+      led_status=1;
+    }
+    else
+    {
+      led_status=0
+    }
+}
 
 
 // Create server
@@ -130,20 +140,11 @@ server.on('message', function (message, remote) {
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
-    server.send(num.toString(),remote.port,remote.address,function(error){
+    server.send(led_status.toString(),remote.port,remote.address,function(error){
       if(error){
         console.log('MEH!');
       }
       else {
-          var name = document.getElementById("OnOff").innerText;
-          if (name === 'On') {
-              document.getElementById("OnOff").innerText = 'Off';
-              windows.num = 0;
-          }
-          else if (name === 'Off') {
-              document.getElementById("OnOff").innerText = 'On';
-              windows.num = 1;
-          }
         console.log('Sent: Ok');
       }
     });
