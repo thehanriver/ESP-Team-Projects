@@ -21,7 +21,8 @@ app.get('/', function(req, res) {
 // });
 
 app.post('/led-status', function(req,res) {
-  console.log("Received POST request with req.body.led_status = " + req.body.led_status);
+  console.log("Received POST request with req = \n");
+  console.log(req);
   led_status = req.body.led_status;
   res.send(led_status);
 });
@@ -120,7 +121,7 @@ server.on('message', function (message, remote) {
         console.log('MEH!');
       }
       else {
-        console.log('Sent: Ok');
+        console.log('Sent: ' + led_status.toString());
       }
     });
 
