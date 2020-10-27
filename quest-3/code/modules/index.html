@@ -17,6 +17,7 @@
 	var y_dps = [];
 	var z_dps = [];
 	var therm_dps = [];
+	var latestTime = 0;
 
 	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
@@ -114,6 +115,22 @@
 
 
 		$.ajax({url: "/data/last", success: function(result){
+
+			if (result[0]>latestTime)
+			{
+				latestTime=result[0];
+			}
+			else 
+			{
+				latestTime = result[0];
+				x_dps = [];
+				y_dps = [];
+				z_dps = [];
+				therm_dps = [];
+				chart1.render();
+				chart2.render();
+			}
+			
 
 			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
 			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
