@@ -72,8 +72,10 @@ Fixed:
 ## Sketches and Photos
 
 Picture of board when user press Turn Off button:
+![Led on](images/led-on.JPG)
 
 Picture of board when user press Turn On button:
+![Led off](images/led-off.JPG)
 
 Console Pic (NodeJs receiving / ESP monitor):
 
