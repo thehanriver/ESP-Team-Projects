@@ -91,28 +91,21 @@
 		});
 
 
-	// $.ajax({url: "/data", success: function(result){
+	$.ajax({url: "/data", success: function(result){
 
-	// 	jQuery.each(result, function(i, val) {
+		jQuery.each(result, function(i, val) {
+			val = val.split(',')
+			// fix
+			x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
+			y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+			z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[4]) });
+			therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
 
-	// 		// fix
-	// 		x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-	// 		y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+		});
 
-	// 		if (x_dps.length > dataLength) {
-	// 			x_dps.shift();
-	// 			y_dps.shift();
-	// 			z_dps.shift();
-	// 			therm_dps.shift();
-	// 		}
-
-	// 	});
-
-	// 	chart1.render();
-	// 	chart2.render();
-	// }});
+		chart1.render();
+		chart2.render();
+	}});
 
 
 
@@ -122,24 +115,6 @@
 
 		$.ajax({url: "/data/last", success: function(result){
 
-			// jQuery.each(result, function(i, val) {
-
-			// 	// fix
-			// 	x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-			// 	y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
-
-			// 	if (x_dps.length > dataLength) {
-			// 		x_dps.shift();
-			// 		y_dps.shift();
-			// 		z_dps.shift();
-			// 		therm_dps.shift();
-			// 	}
-
-			// });
-
-			// fix
 			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
 			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
 			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });

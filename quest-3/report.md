@@ -6,15 +6,17 @@ Date: 2020-10-26
 
 ## Summary
 
-This project uses previous skills and quests to create a Hurricane Box. In this quest, we take the Accelerometer and thermistor sensory data and send it from the ESP32 to a raspberry pi. The data transfer takes place over a UDP socket between the ESP32 and the Pi. When the raspberry pi sends a response to the ESP about receiving its data packet, we sneak in the state of the on-board LED in the response. Using this state, the ESP turns the onboard LED on or off. This sensory data is shown by the raspberry pi on a local server. The raspberry pi also hosts another server to stream video feed from the camera connected to the pi. By implementing DDNS to our router and enabling port forwarding we are able to view this webpage from anywhere over the internet, and are no longer limited ot viewing it through the local host.
+This project uses previous skills and quests to create a Hurricane Box. In this quest, we take the Accelerometer and thermistor sensory data and send it from the ESP32 to a raspberry pi. The data transfer takes place over a UDP socket between the ESP32 and the Pi. When the raspberry pi sends a response to the ESP about receiving its data packet, we sneak in the state of the on-board LED in the response. Using this state, the ESP turns the onboard LED on or off. This sensory data is shown by the raspberry pi on a local server. The raspberry pi also hosts another server to stream video feed from the camera connected to the pi. By implementing DDNS to our router and enabling port forwarding we are able to view this webpage from anywhere over the internet, and are no longer limited to viewing it through the local host.
 
 The end result is a web page which displays sensory information in 2 line charts, has a button to access the webcam and a button to toggle the on-board LED on the ESP.
 
 How the Node Js server works:
 The NodeJS server hasnt changed much from Quest2. We seperated values by adding two graphs: one for accelerometer and one for thermistor. The graph with thermistor is graphing the thermistor readings with Celcius. The graph with accelerometer graphs X, Y, Z acceleration in M/S^2. Both takes readings and graphs every two seconds through an ajax call from /data/last. Button to control the LED and Button to access the webcam have been added. LED status is determined through and ajax call to /status. The webcam button is linked so that with on click it will go to port 3434 on the node server. 
 
+Note: Due to Vivek having the router and Mario living further from Vivek and Hussain, Mario and Vivek worked together using Visual Studio Code's Live Share to work on some coding since we can edit the same file live and Mario can see the changes once Vivek pushes the code to the raspberry Pi via GitHub and start the server. Therefore, while Mario and Vivek were working together, all commits were made by Vivek through his GitHub.
+
 Investigative question: What are steps you can take to make your device and system low power? 
-Turn off tasks until acceleromator or thermistor senses something or queue tasks so that they all don't run concurrently.
+Turn off tasks until acceleromator or thermistor senses a significant change in the readings or queue tasks so that they all don't run concurrently.
 Turn off the webcam somehow when the user isn't on the webpage. The webcam is turned on serpeately from the node server (from the previous skills commands) and is on at all times even thought node server might not be running. We can try to check if the user is in the webcam port and turn it on and turn it off from there.
 
 ## Self-Assessment
@@ -63,19 +65,26 @@ Improvements:
 3) When refreshing browser, keep last 20 points and graph it. Currently, the graphs restart everytime when refreshed.
 4) Sync the button texts with Socket.io. When two users press button, buttons go out of sync which is a problem for controlling LED.
 
+Fixed:
+1) Z acceleration fixed. Takes 50 readings and averages it out. More consistent with 9.8 M/S^2
+
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
-<center> </center>
 
-Board Pic
+Picture of board while user press Turn Off button:
 
-Console Pic (NodeJs receiving / ESP monitor)
+Picture of board while user press Turn On button:
 
-Webpage
+Console Pic (NodeJs receiving / ESP monitor):
 
-## Supporting Artifacts
-- [Link to video demo](). Not to exceed 120s
+Main Webpage:
 
+Web Cam Webpage:
+
+## Supporting Artifacts'
+
+- [Link to video demo](). 
+
+Script:
 
 
 ## Modules, Tools, Source Used Including Attribution

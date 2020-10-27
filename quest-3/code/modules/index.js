@@ -15,6 +15,7 @@ var lastMessage = "";
 var lastNMessages = [];
 var N = 20;
 var led_status = 0;
+var latestTime = 0;
 
 // viewed at http://localhost:8080
 app.get('/', function(req, res) {
@@ -98,7 +99,21 @@ server.on('listening', function () {
 // On connection, print out received message
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
-    lastNMessages.push(message.toString());
+    var temp = message.toString().split(',')
+    var time = temp[0]
+    if (time >= 0)
+    {
+      lastNMessages.push(message.toString());
+    }
+    if (time > latestTime)
+    {
+      latestTime = time;
+    }
+    else if (time<=latestTime)
+    {
+      lastNMessages = [];
+      latestTime = time;
+    }
     if (lastNMessages.length>N)
     {
       lastNMessages.shift();
