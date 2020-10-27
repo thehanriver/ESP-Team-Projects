@@ -81,21 +81,6 @@ app.get('/data/last', function(req, res) {
   data_last = []
   last_lastLine = '';
   const filename = '../data/sensors.csv';
-  // getLastLine(filename, 1)
-  //   .then((lastLine)=> {
-  //     if (lastLine === last_lastLine){
-  //       return;
-  //     } else {
-  //       last_lastLine = lastLine;
-  //       data_last.push(lastLine.split(','))
-  //       res.send(data_last);
-  //     }
-  //   })
-  //   .catch((err)=> {
-  //       console.error(err);
-  //       res.send(err);
-  //   });
-  // data_last.push(lastMessage.split(','))
   res.send(lastMessage.split(','))
 });
 

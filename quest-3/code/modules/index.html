@@ -2,7 +2,6 @@
 <html>
   <head>
 	  <title>Dynamic Sensor Data</title>
-	  <script type="text/javascript" src="./index.js"></script>
   </head>
   <body>
   	<div id="div1"></div>
@@ -181,17 +180,18 @@
 	</button>
 	
   	<script type="text/javascript">
-	function sendOnOff() {
-  		var name = document.getElementById("OnOff").innerText;
-  		if(name === 'Turn On'){
-  			document.getElementById("OnOff").innerText = 'Turn Off';
-  			toggleLED();
-  		}
-  		else if(name === 'Turn Off'){
-  			document.getElementById("OnOff").innerText = 'Turn On';
-  			toggleLED();
-  	}
-  	}</script>
+		function sendOnOff() {
+			var name = document.getElementById("OnOff").innerText;
+			if(name === 'Turn On'){
+				document.getElementById("OnOff").innerText = 'Turn Off';
+				toggleLED();
+			}
+			else if(name === 'Turn Off'){
+				document.getElementById("OnOff").innerText = 'Turn On';
+				toggleLED();
+		}
+	  }</script>
+	<script type="text/javascript" src="index.js"></script>
   	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   </body>
 </html>
