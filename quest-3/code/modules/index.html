@@ -185,18 +185,14 @@
 			if(name === 'Turn On'){
 				document.getElementById("OnOff").innerText = 'Turn Off';
 				// POST request to on
-				$.post('/status',{led_status: "hellofromtheotherside"},function(data,status){
-				console.log('turned on');
+				$.post('/status',{led_status: 1},function(data,status){
+					console.log('turned on');
 				});
 			}
 			else if(name === 'Turn Off'){
 				document.getElementById("OnOff").innerText = 'Turn On';
-				$.post('/status',
-				{
-					led_status: "hellofromtheotherside"
-				},
-				function(data,status){
-				console.log('turned off');
+				$.post('/status',{led_status: 0},function(data,status){
+					console.log('turned off');
 				});
 		}
 	  }</script>
