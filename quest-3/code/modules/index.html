@@ -169,20 +169,20 @@ window.onload = function () {
 		id="OnOff" 
 		type="button" 
 		onClick=  "sendOnOff()" 
-		style=" height:200px; width:200px "
-		innerText = "On"
-		></button> 
+		style=" height:100px; width:200px "
+
+		>On</button> 
 <script>
 	function sendOnOff() {
-		var name = document.getElementById("OnOff").innerText;
+		var name = document.getElementById("#OnOff").innerText;
 		console.log(name);
-		if(name === "On"){
+		if(name === 'On'){
 			console.log(name);
-			name = "Off";
+			name = 'Off';
 		}
-		else if(name === "Off"){
+		else if(name === 'Off'){
 			console.log(name);
-			name = "On";
+			name = 'On';
 		}
 	}
 </script>
