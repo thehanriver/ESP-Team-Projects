@@ -65,6 +65,9 @@ Improvements:
 3) When refreshing browser, keep last 20 points and graph it. Currently, the graphs restart everytime when refreshed.
 4) Sync the button texts with Socket.io. When two users press button, buttons go out of sync which is a problem for controlling LED.
 
+Fixed:
+1) Z acceleration fixed. Takes 50 readings and averages it out. More consistent with 9.8 M/S^2
+
 ## Sketches and Photos
 
 Picture of board while user press Turn Off button:
