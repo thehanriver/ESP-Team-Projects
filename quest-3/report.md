@@ -66,8 +66,6 @@ Improvements:
 4) Sync the button texts with Socket.io. When two users press button, buttons go out of sync which is a problem for controlling LED.
 
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
-<center> </center>
 
 Picture of board while user press Turn Off button:
 
