@@ -2,7 +2,6 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var fs = require('fs');
-var csv = require("csv-parse");
 const readline = require('readline');
 const Stream = require('stream');
 
@@ -101,7 +100,7 @@ app.get('/data/last', function(req, res) {
 });
 
 
-app.listen(8080);
+app.listen(4000);
 
 
 
@@ -110,7 +109,7 @@ var dgram = require('dgram');
 
 // Port and IP
 var PORT = 1234;
-var HOST = '192.168.1.139';
+var HOST = '192.168.1.111';
 
 // Create socket
 var server = dgram.createSocket('udp4');

@@ -44,7 +44,7 @@
 #define NO_OF_SAMPLES 39  //Multisampling
 #define E 2.718
 
-#define HOST_IP_ADDR "192.168.1.139"
+#define HOST_IP_ADDR "192.168.1.111"
 #define PORT 1234
 
 //accel defines

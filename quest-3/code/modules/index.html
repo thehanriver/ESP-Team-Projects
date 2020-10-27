@@ -159,13 +159,30 @@ window.onload = function () {
 
 	updateChart();
 	setInterval(function(){updateChart()}, updateInterval);
+
 }
 </script>
-</head>
-<body>
+
 <div id="chartContainer1" style="height: 300px; width: 100%;"></div>
 <div id="chartContainer2" style="height: 300px; width: 100%;"></div>
-<!-- <button onclick= {event ></button> -->
+<button 
+		id="OnOff" 
+		type="button" 
+		onClick=  "sendOnOff()" 
+		style=" height:200px; width:200px "
+		> On 
+</button> 
+<script>
+	function sendOnOff() {
+		var name = document.getElementById("OnOff");
+		if(name.firstChild.data == "On"){
+			name.firstChild.data === "Off";
+		}
+		else if(name.firstChild.data === "Off"){
+			name.firstChild.data = "On";
+		}
+	}
+</script>
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
 </html>
