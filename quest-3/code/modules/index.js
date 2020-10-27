@@ -4,7 +4,7 @@ var path = require('path');
 var fs = require('fs');
 const readline = require('readline');
 const Stream = require('stream');
-var tog = require('toggle.js');
+var tog = require('./toggle');
 
 var lastMessage = "";
 
