@@ -83,7 +83,7 @@ Main Webpage:
 
 Web Cam Webpage:
 
-![Webcam](./images/ESP_Camera.JPG)
+![Webcam](./images/Camera.JPG)
 
 ## Supporting Artifacts'
 
