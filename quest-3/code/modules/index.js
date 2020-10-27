@@ -21,6 +21,7 @@ app.get('/', function(req, res) {
 // });
 
 app.post('/led-status', function(req,res) {
+  console.log("Received POST request with req.body.led_status = " + req.body.led_status);
   led_status = req.body.led_status;
   res.send(led_status);
 });
