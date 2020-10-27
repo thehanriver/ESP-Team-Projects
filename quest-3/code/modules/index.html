@@ -185,7 +185,7 @@
 			if(name === 'Turn On'){
 				document.getElementById("OnOff").innerText = 'Turn Off';
 				// POST request to on
-				$.ajax.post('/led-status',
+				$.post('/led-status',
 				{
 					led_status: 1
 				},
@@ -195,7 +195,7 @@
 			}
 			else if(name === 'Turn Off'){
 				document.getElementById("OnOff").innerText = 'Turn On';
-				$.ajax.post('/led-status',
+				$.post('/led-status',
 				{
 					led_status: 0
 				},
