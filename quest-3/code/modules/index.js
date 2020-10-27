@@ -130,7 +130,7 @@ server.on('message', function (message, remote) {
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
-    $.ajax.get('/led-status',function(data,status){
+    $.get('/led-status',function(data,status){
       led_status = data.led_status;
     })
     server.send(led_status.toString(),remote.port,remote.address,function(error){
