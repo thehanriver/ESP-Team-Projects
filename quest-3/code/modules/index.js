@@ -128,7 +128,7 @@ server.on('listening', function () {
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
     console.log(remote.address + ':' + remote.port +' - ' + message);
-    num = (num+1)%2;
+    //num = (num+1)%2;
     // Send Ok acknowledgement
     server.send(num.toString(),remote.port,remote.address,function(error){
       if(error){

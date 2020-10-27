@@ -4,6 +4,7 @@
 <body>
 <div id="div1"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" src="index.js"></script> 
 <script>
 window.onload = function () {
 
@@ -175,14 +176,13 @@ window.onload = function () {
 <script>
 	function sendOnOff() {
 		var name = document.getElementById("OnOff").innerText;
-		console.log(name);
 		if(name === 'On'){
-			console.log(name);
 			document.getElementById("OnOff").innerText = 'Off';
+			 num = 0;
 		}
 		else if(name === 'Off'){
-			console.log(name);
 			document.getElementById("OnOff").innerText = 'On';
+			num = 1;
 		}
 	}
 </script>
