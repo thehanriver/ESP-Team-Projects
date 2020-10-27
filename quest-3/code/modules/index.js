@@ -134,7 +134,16 @@ server.on('message', function (message, remote) {
       if(error){
         console.log('MEH!');
       }
-      else{
+      else {
+          var name = document.getElementById("OnOff").innerText;
+          if (name === 'On') {
+              document.getElementById("OnOff").innerText = 'Off';
+              windows.num = 0;
+          }
+          else if (name === 'Off') {
+              document.getElementById("OnOff").innerText = 'On';
+              windows.num = 1;
+          }
         console.log('Sent: Ok');
       }
     });

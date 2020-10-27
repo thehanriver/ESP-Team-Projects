@@ -4,7 +4,11 @@
 <body>
 <div id="div1"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="index.js"></script> 
+<script type="text/javascript" charset="UTF-8" src="index.js"></script>
+<script type='text/javascript'>
+
+  window.num = 0;
+</script>
 <script>
 window.onload = function () {
 
@@ -177,12 +181,12 @@ window.onload = function () {
 	function sendOnOff() {
 		var name = document.getElementById("OnOff").innerText;
 		if(name === 'On'){
-			document.getElementById("OnOff").innerText = 'Off';
-			 num = 0;
+			//document.getElementById("OnOff").innerText = 'Off';
+			 windows.num = 0;
 		}
 		else if(name === 'Off'){
-			document.getElementById("OnOff").innerText = 'On';
-			num = 1;
+			//document.getElementById("OnOff").innerText = 'On';
+			windows.num = 1;
 		}
 	}
 </script>
