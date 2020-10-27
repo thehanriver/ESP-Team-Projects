@@ -6,15 +6,16 @@ Date: 2020-10-26
 
 ## Summary
 
- This project uses previous skills and quests to create a Hurricane Box. In this quest, we take the Accelerometer and thermistor sensory data and send it from the ESP32 to a raspberry pi. The data transfer takes place over a UDP socket between the ESP32 and the Pi. When the raspberry pi sends a response to the ESP about receiving its data packet, we sneak in the state of the on-board LED in the response. Using this state, the ESP turns the onboard LED on or off. This sensory data is shown by the raspberry pi on a local server. The raspberry pi also hosts another server to stream video feed from the camera connected to the pi. By implementing DDNS to our router and enabling port forwarding we are able to view this webpage from anywhere over the internet, and are no longer limited ot viewing it through the local host.
+This project uses previous skills and quests to create a Hurricane Box. In this quest, we take the Accelerometer and thermistor sensory data and send it from the ESP32 to a raspberry pi. The data transfer takes place over a UDP socket between the ESP32 and the Pi. When the raspberry pi sends a response to the ESP about receiving its data packet, we sneak in the state of the on-board LED in the response. Using this state, the ESP turns the onboard LED on or off. This sensory data is shown by the raspberry pi on a local server. The raspberry pi also hosts another server to stream video feed from the camera connected to the pi. By implementing DDNS to our router and enabling port forwarding we are able to view this webpage from anywhere over the internet, and are no longer limited ot viewing it through the local host.
 
 The end result is a web page which displays sensory information in 2 line charts, has a button to access the webcam and a button to toggle the on-board LED on the ESP.
 
-How the Node Js server works
-The NodeJS server hasnt changed much from Quest2. Button to control the LED and Button to access the webcam have been added
+How the Node Js server works:
+The NodeJS server hasnt changed much from Quest2. We seperated values by adding two graphs: one for accelerometer and one for thermistor. The graph with thermistor is graphing the thermistor readings with Celcius. The graph with accelerometer graphs X, Y, Z acceleration in M/S^2. Both takes readings and graphs every two seconds through an ajax call from /data/last. Button to control the LED and Button to access the webcam have been added. LED status is determined through and ajax call to /status. The webcam button is linked so that with on click it will go to port 3434 on the node server. 
 
 Investigative question: What are steps you can take to make your device and system low power? 
-Turn off tasks until acceleromator or thermistor senses something.
+Turn off tasks until acceleromator or thermistor senses something or queue tasks so that they all don't run concurrently.
+Turn off the webcam somehow when the user isn't on the webpage. The webcam is turned on serpeately from the node server (from the previous skills commands) and is on at all times even thought node server might not be running. We can try to check if the user is in the webcam port and turn it on and turn it off from there.
 
 ## Self-Assessment
 
@@ -55,6 +56,12 @@ In the code, we scheduled individual modules as tasks. At first, all I2C, UDP, A
 
 The raspberry pi recieves ESP32 data at its port 1234. 
 The Nodejs application reads the incoming data and displays it on a webpage and sends back the LED status to the ESP. 
+
+Improvements:
+1) Z acceleration drops to 0 or goes to 20 sometimes. Should be able to average the values every 10 readings so that it will be more consistent with ~10 M/S^2
+2) Send packets for led status and data seperately with led status being 100 ms and data every 1 s. This will reduce LED_status lag.
+3) When refreshing browser, keep last 20 points and graph it. Currently, the graphs restart everytime when refreshed.
+4) Sync the button texts with Socket.io. When two users press button, buttons go out of sync which is a problem for controlling LED.
 
 ## Sketches and Photos
 <center><img src="./images/ece444.png" width="25%" /></center>  
