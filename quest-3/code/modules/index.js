@@ -1,4 +1,4 @@
-import {led_status} from './toggle.js';
+import led_status from './toggle.js';
 
 var express = require('express');
 var app = express();
