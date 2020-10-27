@@ -4,7 +4,6 @@ var path = require('path');
 var fs = require('fs');
 const readline = require('readline');
 const Stream = require('stream');
-var tog = require('./toggle');
 
 var lastMessage = "";
 
@@ -124,11 +123,15 @@ server.on('listening', function () {
 
 // On connection, print out received message
 server.on('message', function (message, remote) {
+    var led_status;
     lastMessage = message.toString();
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement
-    server.send(tog.led_status.toString(),remote.port,remote.address,function(error){
+    $.get('/led-status',function(data,status){
+      led_status = data.led_status;
+    })
+    server.send(led_status.toString(),remote.port,remote.address,function(error){
       if(error){
         console.log('MEH!');
       }
