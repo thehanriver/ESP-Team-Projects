@@ -606,40 +606,41 @@ static void udp_client_task(void *pvParameters)
         {
             char buffer2[128];
             int status;
-            int temp4;
-            temp4 = timer - 2;
-            status = sprintf(buffer2, "%d,%.1f,%.2f,%.2f,%.2f", temp4, temperature, xVal, yVal, zVal);
+            status = sprintf(buffer2, "%d,%.1f,%.2f,%.2f,%.2f", (timer - 6), temperature, xVal, yVal, zVal);
             payload = buffer2;
 
-            int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-            if (err < 0)
+            if (timer > 5) //Accelorometer takes some time to start giving data
             {
-                ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-                break;
-            }
-            ESP_LOGI(TAG, "Message sent");
-
-            struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
-            socklen_t socklen = sizeof(source_addr);
-            int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
-
-            // Error occurred during receiving
-            if (len < 0)
-            {
-                ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
-                break;
-            }
-            // Data received
-            else
-            {
-                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
-                ESP_LOGI(TAG, "%s", rx_buffer);
-                toggle = atoi(rx_buffer);
-                if (strncmp(rx_buffer, "OK: ", 4) == 0)
+                int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+                if (err < 0)
                 {
-                    ESP_LOGI(TAG, "Received expected message, reconnecting");
+                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                     break;
+                }
+                ESP_LOGI(TAG, "Message sent");
+
+                struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
+                socklen_t socklen = sizeof(source_addr);
+                int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
+
+                // Error occurred during receiving
+                if (len < 0)
+                {
+                    ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
+                    break;
+                }
+                // Data received
+                else
+                {
+                    rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
+                    ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
+                    ESP_LOGI(TAG, "%s", rx_buffer);
+                    toggle = atoi(rx_buffer);
+                    if (strncmp(rx_buffer, "OK: ", 4) == 0)
+                    {
+                        ESP_LOGI(TAG, "Received expected message, reconnecting");
+                        break;
+                    }
                 }
             }
 
@@ -659,39 +660,16 @@ static void udp_client_task(void *pvParameters)
 static void printstate()
 {
 
-    // static FILE *fp;
-    // while (1)
-    // {
-    //     //add this line into the quest-2/code/data/sensors.csv
-    //     if (timer == 0)
-    //     {
-    //         fp = fopen(file_name, "w");
-    //         fprintf(fp, "Time: Temp: Dist(U_S): Dist2(IR)\n");
-    //         fclose(fp);
-    //     }
-    //     else
-    //     {
-    //         fp = fopen(file_name, "a");
-    //         int temp = timer - 2;
-    //         fprintf(fp, "%d,%.1f,%d,%d\n", temp, temperature, ultrasonic, ir_rangefinder);
-    //         fclose(fp);
-    //     }
-    //     timer += 2;
-    //     vTaskDelay(2000 / portTICK_RATE_MS);
-    // }
-
     while (1)
     {
-        //add this line into the quest-2/code/data/sensors.csv
         if (timer == 0)
         {
-            printf("Time: Dist(U_S): Dist2(IR): Temp\n");
+            printf("Time: Temp:  xVal:  yVal:  zVal\n");
         }
-        else
+        else if (timer > 5) //Accelorometer takes some time to start giving data
         {
-            int temp = timer - 2;
             // printf("Time: %d \t Temperature: %.1f \t X: %.2f \t Y: %.2f \t Z: %.2f \t\n", temp, temperature, xVal, yVal, zVal);
-            printf("%d,%.1f,%.2f,%.2f,%.2f\n", temp, temperature, xVal, yVal, zVal);
+            printf("%d,%.1f,%.2f,%.2f,%.2f\n", (timer - 6), temperature, xVal, yVal, zVal);
         }
         timer++;
         vTaskDelay(1000 / portTICK_RATE_MS);
