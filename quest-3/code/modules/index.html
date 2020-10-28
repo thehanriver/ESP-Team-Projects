@@ -96,7 +96,6 @@
 		jQuery.each(result, function(i, val) {
 
 			message = val.split(',');
-			console.log(message);
 			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
 			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
 			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
@@ -126,6 +125,10 @@
 			if (time>lastTime)
 			{
 				lastTime = time;
+			}
+			else if (time==lastTime)
+			{
+				return;
 			}
 			else
 			{
