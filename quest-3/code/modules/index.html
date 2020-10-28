@@ -209,18 +209,20 @@
 			console.log(led_status);
 		}});
 
-		};
+		if(led_status == 1){
+		   rightNow = words[0];
+		}
+		else{
+			rightNow = words[1];
+		}
+
+	};
 
 
 	updateStatus();
 	setInterval(function(){updateStatus()}, 500);
 
-	if(led_status == 1){
-		   rightNow = words[0];
-	}
-	else{
-		   rightNow = words[1];
-	}
+	
 
 	// Change the word in the span for a random one in the array of words
 	$('#changing').html( rightNow );
