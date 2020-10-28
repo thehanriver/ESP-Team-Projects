@@ -33,6 +33,10 @@ app.post('/status', (req,res) => {
   res.end('yes');
 });
 
+app.get('/status', function(req,res) {
+  res.send(led_status);
+})
+
 
 // request data at http://localhost:8080/data or just "/data"
 app.get('/data', function(req, res) {

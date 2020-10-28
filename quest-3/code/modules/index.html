@@ -6,18 +6,20 @@
   <body>
   	<div id="div1"></div>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  	
   	<script>window.onload = function () {
 
-
+	//"Global" variables
 	var updateInterval = 1000;
+	var updateStatusInterval = 100;
 	var dataLength = 25; // number of dataPoints visible at any point
 	var lastTime = -1;
 	var x_dps = [];
 	var y_dps = [];
 	var z_dps = [];
 	var therm_dps = [];
+	var led_status = 0;
 
+	//Chart for Temperature
 	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
 				text: "Dynamic Sensor Data"
@@ -48,6 +50,7 @@
 			}]
 		});
 
+		//Code for Temperature
 		var chart2 = new CanvasJS.Chart("chartContainer2", {
 			title :{
 				text: "Dynamic Sensor Data"
@@ -90,7 +93,7 @@
 			}]
 		});
 
-
+	//Ajax call for first few data incoming
 	$.ajax({url: "/data", success: function(result){
 
 		jQuery.each(result, function(i, val) {
@@ -101,97 +104,14 @@
 			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
 			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
 
-			// if (x_dps.length > dataLength) {
-			// 	x_dps.shift();
-			// 	y_dps.shift();
-			// 	z_dps.shift();
-			// 	therm_dps.shift();
-			// }
-
 		});
-
-
-		// var chart1 = new CanvasJS.Chart("chartContainer1", {
-		// 	title :{
-		// 		text: "Dynamic Sensor Data"
-		// 	},
-		// 	axisX:  {
-		// 		title: "Time Since Flash (s)"
-		// 	},
-		// 	axisY: {
-		// 		title: "Temperature (°C)"
-		// 	},
-		// 	toolTip: {
-		// 		shared: true
-		// 	},
-		// 	legend: {
-		// 		cursor: "pointer",
-		// 		verticalAlign: "top",
-		// 		horizontalAlign: "center",
-		// 	},
-		// 	data: [{
-		// 		type:"line",
-		// 		name: "Thermistor",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00°C",
-		// 		dataPoints: therm_dps
-		// 	}, {
-
-		// 	}]
-		// });
-
-		// var chart2 = new CanvasJS.Chart("chartContainer2", {
-		// 	title :{
-		// 		text: "Dynamic Sensor Data"
-		// 	},
-		// 	axisX:  {
-		// 		title: "Time Since Flash (s)"
-		// 	},
-		// 	axisY: {
-		// 		title: "Acceleration (m/s^2)"
-		// 	},
-		// 	toolTip: {
-		// 		shared: true
-		// 	},
-		// 	legend: {
-		// 		cursor: "pointer",
-		// 		verticalAlign: "top",
-		// 		horizontalAlign: "center",
-		// 	},
-		// 	data: [{
-		// 		type:"line",
-		// 		name: "X Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: x_dps
-		// 	}, {
-		// 		type:"line",
-		// 		name: "Y Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: y_dps
-		// 	}, {
-		// 		type:"line",
-		// 		name: "Z Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: z_dps
-		// 	}]
-		// });
-
-		
 
 		chart1.render();
 		chart2.render();
 	}});
 
-
-
-
+	//Updating chart and checking if reset button is pressed on ESP
+	//If reset button is pressed, charts re renders back to 0
 	var updateChart = function () {
 
 
@@ -232,79 +152,6 @@
 		console.log('rendering')
 		console.log(therm_dps);
 
-
-		// var chart1 = new CanvasJS.Chart("chartContainer1", {
-		// 	title :{
-		// 		text: "Dynamic Sensor Data"
-		// 	},
-		// 	axisX:  {
-		// 		title: "Time Since Flash (s)"
-		// 	},
-		// 	axisY: {
-		// 		title: "Temperature (°C)"
-		// 	},
-		// 	toolTip: {
-		// 		shared: true
-		// 	},
-		// 	legend: {
-		// 		cursor: "pointer",
-		// 		verticalAlign: "top",
-		// 		horizontalAlign: "center",
-		// 	},
-		// 	data: [{
-		// 		type:"line",
-		// 		name: "Thermistor",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00°C",
-		// 		dataPoints: therm_dps
-		// 	}, {
-
-		// 	}]
-		// });
-
-		// var chart2 = new CanvasJS.Chart("chartContainer2", {
-		// 	title :{
-		// 		text: "Dynamic Sensor Data"
-		// 	},
-		// 	axisX:  {
-		// 		title: "Time Since Flash (s)"
-		// 	},
-		// 	axisY: {
-		// 		title: "Acceleration (m/s^2)"
-		// 	},
-		// 	toolTip: {
-		// 		shared: true
-		// 	},
-		// 	legend: {
-		// 		cursor: "pointer",
-		// 		verticalAlign: "top",
-		// 		horizontalAlign: "center",
-		// 	},
-		// 	data: [{
-		// 		type:"line",
-		// 		name: "X Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: x_dps
-		// 	}, {
-		// 		type:"line",
-		// 		name: "Y Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: y_dps
-		// 	}, {
-		// 		type:"line",
-		// 		name: "Z Acceleration",
-		// 		showInLegend: true,
-		// 		markerSize: 0,
-		// 		yValueFormatString: "#,###.00",
-		// 		dataPoints: z_dps
-		// 	}]
-		// });
-
 		chart1.options.data[0].dataPoints = therm_dps;
 		chart2.options.data[0].dataPoints = x_dps;
 		chart2.options.data[1].dataPoints = y_dps;
@@ -314,14 +161,24 @@
 		chart2.render();
 
 	};
+	
+	var updateStatus = function () {
+		$.ajax({url: "/status", success: function(result){
+			led_status = parseInt(result);
+		}});
+
+		};
 
 	updateChart();
+	updateStatus();
 	setInterval(function(){updateChart()}, updateInterval);
+	setInterval(function(){updateStatus()}, updateStatusInterval);
 
 }</script>
 
   	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
   	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+	//button for On and off
   	<button id="On"
 			  type="button"
 			  onClick="sendOn()"
@@ -341,21 +198,13 @@
 		Webcam
 	</button>
 	
+	//Ajax call for /status seeing if it is on or off
   	<script type="text/javascript">
+
 		function sendOn() {
-			//var name = document.getElementById("OnOff").innerText;
-			//if(name === 'Turn On'){
-				//document.getElementById("OnOff").innerText = 'Turn Off';
-				// POST request to on
 		$.post('/status',{led_status: 1},function(data,status){
 					console.log('turned on');
 				});
-			//}
-			//else if(name === 'Turn Off'){
-			//	document.getElementById("OnOff").innerText = 'Turn On';
-				
-			//		console.log('turned off');
-			//	});
 		}
 
 		function sendOff() {
