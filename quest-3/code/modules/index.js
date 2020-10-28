@@ -104,7 +104,7 @@ server.on('listening', function () {
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
     time = lastMessage.split(',');
-    time = time[0];
+    time = time[0].toInt();
     if (time > lastTime)
     {
       lastNMessages.push(lastMessage);
