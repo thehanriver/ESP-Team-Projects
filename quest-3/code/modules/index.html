@@ -122,6 +122,7 @@
 
 		$.ajax({url: "/data/last", success: function(result){
 			time = parseInt(result[0]);
+			console.log("time is " + time.toString());
 			if (time>lastTime)
 			{
 				lastTime = time;
