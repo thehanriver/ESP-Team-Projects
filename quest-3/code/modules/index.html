@@ -101,12 +101,12 @@
 			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
 			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
 
-			if (x_dps.length > dataLength) {
-				x_dps.shift();
-				y_dps.shift();
-				z_dps.shift();
-				therm_dps.shift();
-			}
+			// if (x_dps.length > dataLength) {
+			// 	x_dps.shift();
+			// 	y_dps.shift();
+			// 	z_dps.shift();
+			// 	therm_dps.shift();
+			// }
 
 		});
 
@@ -117,7 +117,7 @@
 
 
 
-	var updateChart = function (ultrasound_dp,ir_dp,therm_dp) {
+	var updateChart = function () {
 
 
 		$.ajax({url: "/data/last", success: function(result){
