@@ -191,16 +191,15 @@
   	</button>
 
 	<div>
-  	<b>This is: <span id="changing">status</span>
-  	 <script>
+		<b>
+			This is: <span id="changing">status</span>
+			<script>console.log("HELLO FROM LOWER SCRIPT");
 
-	console.log("HELLO FROM LOWER SCRIPT");
+			// Array of words
+			var words = ['On', 'Off'];
 
-	// Array of words
-	var words = ['On', 'Off'];
-
-	// Function that executes every 2000 milliseconds
-	var t = setInterval(function() {
+			// Function that executes every 2000 milliseconds
+			var t = setInterval(function() {
 	var rightNow;
 	var led_status;
 	var updateStatusInterval = 500;
@@ -226,8 +225,8 @@
 
 	// Change the word in the span for a random one in the array of words
 	$('#changing').html( rightNow );
-	}, updateStatusInterval);
-  	</script> 
+	}, updateStatusInterval);</script>
+	</b>
 	</div>
 
 
