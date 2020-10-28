@@ -202,7 +202,6 @@
 			var t = setInterval(function() {
 	var rightNow;
 	var led_status;
-	var updateStatusInterval = 500;
 
 	var updateStatus = function () {
 		$.ajax({url: "/status", success: function(result){
@@ -214,7 +213,7 @@
 
 
 	updateStatus();
-	setInterval(function(){updateStatus()}, updateStatusInterval);
+	setInterval(function(){updateStatus()}, 500);
 
 	if(led_status == 1){
 		   rightNow = words[0];
@@ -225,7 +224,7 @@
 
 	// Change the word in the span for a random one in the array of words
 	$('#changing').html( rightNow );
-	}, updateStatusInterval);</script>
+	}, 500);</script>
 	</b>
 	</div>
 
