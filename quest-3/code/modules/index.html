@@ -18,100 +18,7 @@
 	var z_dps = [];
 	var therm_dps = [];
 
-	// var chart1 = new CanvasJS.Chart("chartContainer1", {
-	// 		title :{
-	// 			text: "Dynamic Sensor Data"
-	// 		},
-	// 		axisX:  {
-	// 			title: "Time Since Flash (s)"
-	// 		},
-	// 		axisY: {
-	// 			title: "Temperature (°C)"
-	// 		},
-	// 		toolTip: {
-	// 			shared: true
-	// 		},
-	// 		legend: {
-	// 			cursor: "pointer",
-	// 			verticalAlign: "top",
-	// 			horizontalAlign: "center",
-	// 		},
-	// 		data: [{
-	// 			type:"line",
-	// 			name: "Thermistor",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "#,###.00°C",
-	// 			dataPoints: therm_dps
-	// 		}, {
-
-	// 		}]
-	// 	});
-
-	// 	var chart2 = new CanvasJS.Chart("chartContainer2", {
-	// 		title :{
-	// 			text: "Dynamic Sensor Data"
-	// 		},
-	// 		axisX:  {
-	// 			title: "Time Since Flash (s)"
-	// 		},
-	// 		axisY: {
-	// 			title: "Acceleration (m/s^2)"
-	// 		},
-	// 		toolTip: {
-	// 			shared: true
-	// 		},
-	// 		legend: {
-	// 			cursor: "pointer",
-	// 			verticalAlign: "top",
-	// 			horizontalAlign: "center",
-	// 		},
-	// 		data: [{
-	// 			type:"line",
-	// 			name: "X Acceleration",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "#,###.00",
-	// 			dataPoints: x_dps
-	// 		}, {
-	// 			type:"line",
-	// 			name: "Y Acceleration",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "#,###.00",
-	// 			dataPoints: y_dps
-	// 		}, {
-	// 			type:"line",
-	// 			name: "Z Acceleration",
-	// 			showInLegend: true,
-	// 			markerSize: 0,
-	// 			yValueFormatString: "#,###.00",
-	// 			dataPoints: z_dps
-	// 		}]
-	// 	});
-
-
-	$.ajax({url: "/data", success: function(result){
-
-		jQuery.each(result, function(i, val) {
-
-			message = val.split(',');
-			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
-			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
-			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
-			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
-
-			// if (x_dps.length > dataLength) {
-			// 	x_dps.shift();
-			// 	y_dps.shift();
-			// 	z_dps.shift();
-			// 	therm_dps.shift();
-			// }
-
-		});
-
-
-		var chart1 = new CanvasJS.Chart("chartContainer1", {
+	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
 				text: "Dynamic Sensor Data"
 			},
@@ -182,6 +89,104 @@
 				dataPoints: z_dps
 			}]
 		});
+
+
+	$.ajax({url: "/data", success: function(result){
+
+		jQuery.each(result, function(i, val) {
+
+			message = val.split(',');
+			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
+			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
+			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
+			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
+
+			// if (x_dps.length > dataLength) {
+			// 	x_dps.shift();
+			// 	y_dps.shift();
+			// 	z_dps.shift();
+			// 	therm_dps.shift();
+			// }
+
+		});
+
+
+		// var chart1 = new CanvasJS.Chart("chartContainer1", {
+		// 	title :{
+		// 		text: "Dynamic Sensor Data"
+		// 	},
+		// 	axisX:  {
+		// 		title: "Time Since Flash (s)"
+		// 	},
+		// 	axisY: {
+		// 		title: "Temperature (°C)"
+		// 	},
+		// 	toolTip: {
+		// 		shared: true
+		// 	},
+		// 	legend: {
+		// 		cursor: "pointer",
+		// 		verticalAlign: "top",
+		// 		horizontalAlign: "center",
+		// 	},
+		// 	data: [{
+		// 		type:"line",
+		// 		name: "Thermistor",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00°C",
+		// 		dataPoints: therm_dps
+		// 	}, {
+
+		// 	}]
+		// });
+
+		// var chart2 = new CanvasJS.Chart("chartContainer2", {
+		// 	title :{
+		// 		text: "Dynamic Sensor Data"
+		// 	},
+		// 	axisX:  {
+		// 		title: "Time Since Flash (s)"
+		// 	},
+		// 	axisY: {
+		// 		title: "Acceleration (m/s^2)"
+		// 	},
+		// 	toolTip: {
+		// 		shared: true
+		// 	},
+		// 	legend: {
+		// 		cursor: "pointer",
+		// 		verticalAlign: "top",
+		// 		horizontalAlign: "center",
+		// 	},
+		// 	data: [{
+		// 		type:"line",
+		// 		name: "X Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: x_dps
+		// 	}, {
+		// 		type:"line",
+		// 		name: "Y Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: y_dps
+		// 	}, {
+		// 		type:"line",
+		// 		name: "Z Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: z_dps
+		// 	}]
+		// });
+
+		chart1.data[0].dataPoints = therm_dps;
+		chart2.data[0].dataPoints = x_dps;
+		chart2.data[1].dataPoints = y_dps;
+		chart2.data[2].dataPoints = z_dps;
 
 		chart1.render();
 		chart2.render();
@@ -231,77 +236,77 @@
 		console.log(therm_dps);
 
 
-		var chart1 = new CanvasJS.Chart("chartContainer1", {
-			title :{
-				text: "Dynamic Sensor Data"
-			},
-			axisX:  {
-				title: "Time Since Flash (s)"
-			},
-			axisY: {
-				title: "Temperature (°C)"
-			},
-			toolTip: {
-				shared: true
-			},
-			legend: {
-				cursor: "pointer",
-				verticalAlign: "top",
-				horizontalAlign: "center",
-			},
-			data: [{
-				type:"line",
-				name: "Thermistor",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###.00°C",
-				dataPoints: therm_dps
-			}, {
+		// var chart1 = new CanvasJS.Chart("chartContainer1", {
+		// 	title :{
+		// 		text: "Dynamic Sensor Data"
+		// 	},
+		// 	axisX:  {
+		// 		title: "Time Since Flash (s)"
+		// 	},
+		// 	axisY: {
+		// 		title: "Temperature (°C)"
+		// 	},
+		// 	toolTip: {
+		// 		shared: true
+		// 	},
+		// 	legend: {
+		// 		cursor: "pointer",
+		// 		verticalAlign: "top",
+		// 		horizontalAlign: "center",
+		// 	},
+		// 	data: [{
+		// 		type:"line",
+		// 		name: "Thermistor",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00°C",
+		// 		dataPoints: therm_dps
+		// 	}, {
 
-			}]
-		});
+		// 	}]
+		// });
 
-		var chart2 = new CanvasJS.Chart("chartContainer2", {
-			title :{
-				text: "Dynamic Sensor Data"
-			},
-			axisX:  {
-				title: "Time Since Flash (s)"
-			},
-			axisY: {
-				title: "Acceleration (m/s^2)"
-			},
-			toolTip: {
-				shared: true
-			},
-			legend: {
-				cursor: "pointer",
-				verticalAlign: "top",
-				horizontalAlign: "center",
-			},
-			data: [{
-				type:"line",
-				name: "X Acceleration",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###.00",
-				dataPoints: x_dps
-			}, {
-				type:"line",
-				name: "Y Acceleration",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###.00",
-				dataPoints: y_dps
-			}, {
-				type:"line",
-				name: "Z Acceleration",
-				showInLegend: true,
-				markerSize: 0,
-				yValueFormatString: "#,###.00",
-				dataPoints: z_dps
-			}]
-		});
+		// var chart2 = new CanvasJS.Chart("chartContainer2", {
+		// 	title :{
+		// 		text: "Dynamic Sensor Data"
+		// 	},
+		// 	axisX:  {
+		// 		title: "Time Since Flash (s)"
+		// 	},
+		// 	axisY: {
+		// 		title: "Acceleration (m/s^2)"
+		// 	},
+		// 	toolTip: {
+		// 		shared: true
+		// 	},
+		// 	legend: {
+		// 		cursor: "pointer",
+		// 		verticalAlign: "top",
+		// 		horizontalAlign: "center",
+		// 	},
+		// 	data: [{
+		// 		type:"line",
+		// 		name: "X Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: x_dps
+		// 	}, {
+		// 		type:"line",
+		// 		name: "Y Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: y_dps
+		// 	}, {
+		// 		type:"line",
+		// 		name: "Z Acceleration",
+		// 		showInLegend: true,
+		// 		markerSize: 0,
+		// 		yValueFormatString: "#,###.00",
+		// 		dataPoints: z_dps
+		// 	}]
+		// });
 
 
 		chart1.render();
