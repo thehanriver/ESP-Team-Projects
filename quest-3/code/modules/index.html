@@ -17,7 +17,7 @@
 	var y_dps = [];
 	var z_dps = [];
 	var therm_dps = [];
-	var led_status = 0;
+	var led_status;
 
 	//Chart for Temperature
 	var chart1 = new CanvasJS.Chart("chartContainer1", {
@@ -156,12 +156,12 @@
 		chart2.options.data[0].dataPoints = x_dps;
 		chart2.options.data[1].dataPoints = y_dps;
 		chart2.options.data[2].dataPoints = z_dps;
-		
+
 		chart1.render();
 		chart2.render();
 
 	};
-	
+
 	var updateStatus = function () {
 		$.ajax({url: "/status", success: function(result){
 			led_status = parseInt(result);
@@ -178,30 +178,28 @@
 
   	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
   	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
-	//button for On and off
+  	//button for On and off
   	<button id="On"
 			  type="button"
 			  onClick="sendOn()"
 			  style=" height:50px; width:200px ">
   		Turn On LED
-	</button>
-	<button id="Off"
+  	</button>
+  	<button id="Off"
 			  type="button"
 			  onClick="sendOff()"
 			  style=" height:50px; width:200px ">
   		Turn Off LED
-  	</button>  
+  	</button>
   	<button type="button"
 			  id="webCam"
 			  onclick=" window.location.href='http://vivpi.ddns.net:3434/';"
-			  style=" height:50px; width:200px " >
-		Webcam
-	</button>
-	
-	//Ajax call for /status seeing if it is on or off
-  	<script type="text/javascript">
-
-		function sendOn() {
+			  style=" height:50px; width:200px ">
+  		Webcam
+  	</button>
+  	<b>This is: <span id="changing">status</span><b></b>
+  	//Ajax call for /status seeing if it is on or off
+  	<script type="text/javascript">function sendOn() {
 		$.post('/status',{led_status: 1},function(data,status){
 					console.log('turned on');
 				});
@@ -211,8 +209,7 @@
 			$.post('/status',{led_status: 0},function(data,status){
 				console.log('turned off');
 				});
-		}
-	  </script>
+		}</script>
   	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   </body>
 </html>

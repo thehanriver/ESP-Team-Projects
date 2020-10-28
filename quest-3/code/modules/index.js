@@ -34,7 +34,7 @@ app.post('/status', (req,res) => {
 });
 
 app.get('/status', function(req,res) {
-  res.send(led_status);
+  res.send([led_status]);
 })
 
 
