@@ -199,7 +199,6 @@
 			var words = ['On', 'Off'];
 
 			// Function that executes every 2000 milliseconds
-			var t = setInterval(function() {
 	var rightNow;
 	var led_status;
 
@@ -216,6 +215,8 @@
 			rightNow = words[1];
 		}
 
+		$('#changing').html( rightNow );
+
 	};
 
 
@@ -225,8 +226,8 @@
 	
 
 	// Change the word in the span for a random one in the array of words
-	$('#changing').html( rightNow );
-	}, 500);</script>
+	
+	</script>
 	</b>
 	</div>
 
