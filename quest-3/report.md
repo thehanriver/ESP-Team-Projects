@@ -71,10 +71,10 @@ Fixed:
 
 ## Sketches and Photos
 
-Picture of board when user press Turn Off button:
+Picture of board when user press Turn Off LED button:
 ![Led off](images/led-off.JPG)
 
-Picture of board when user press Turn On button:
+Picture of board when user press Turn On LED button:
 ![Led on](images/led-on.JPG)
 
 Console output of Node js server:
