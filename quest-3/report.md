@@ -72,16 +72,20 @@ Fixed:
 ## Sketches and Photos
 
 Picture of board when user press Turn Off button:
-![Led on](images/led-on.JPG)
-
-Picture of board when user press Turn On button:
 ![Led off](images/led-off.JPG)
 
-Console Pic (NodeJs receiving / ESP monitor):
+Picture of board when user press Turn On button:
+![Led on](images/led-on.JPG)
 
+Console output of Node js server:
+![node output](./images/node_console.png)
+
+
+Console output of ESP monitor:
 ![Console pic](./images/ESP_console.JPG)
 
 Main Webpage:
+![home page](./images/home.png)
 
 Web Cam Webpage:
 
