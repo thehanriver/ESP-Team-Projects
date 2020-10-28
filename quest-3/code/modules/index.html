@@ -179,6 +179,7 @@
 
   	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
   	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+
   	//button for On and off
   	<button id="On"
 			  type="button"
@@ -198,19 +199,27 @@
 			  style=" height:50px; width:200px ">
   		Webcam
   	</button>
+	<div>
   	<b>This is: <span id="changing">status</span></b>
-  	<!-- <script>
+  	 <script>
 	// Array of words
 	var words = ['On', 'Off'];
 
 	// Function that executes every 2000 milliseconds
 	var t = setInterval(function() {
-	
-	// Change the word in the span for a random one in the array of words
-	$('#changing').html( words[ randomNumber ] );
-	}, updateStatusInterval);
-  	</script> -->
+	var rightNow;
+	if(led_status == 1){
+		   rightNow = words[0];
+	}
+	else{
+		   rightNow = words[1];
+	}
 
+	// Change the word in the span for a random one in the array of words
+	$('#changing').html( rightNow );
+	}, updateStatusInterval);
+  	</script> 
+	</div>
 
 
   	//Ajax call for /status seeing if it is on or off
