@@ -26,10 +26,7 @@ app.get('/', function(req, res) {
 
 
 app.post('/status', (req,res) => {
-  console.log("Received POST request with req.body.led_status = ");
-  console.log(req.body.led_status);
   led_status = req.body.led_status;
-  // res.send(led_status);
   res.end('yes');
 });
 
@@ -43,26 +40,6 @@ app.get('/data', function(req, res) {
   res.send(lastNMessages);  // Send array of data back to requestor
 });
 
-// // request data at http://localhost:8080/data or just "/data"
-// app.get('/data/last', function(req, res) {
-//   data_last = []
-//   last_lastLine = '';
-//   const filename = '../data/sensors.csv';
-//   getLastLine(filename, 1)
-//     .then((lastLine)=> {
-//       if (lastLine === last_lastLine){
-//         return;
-//       } else {
-//         last_lastLine = lastLine;
-//         data_last.push(lastLine.split(','))
-//         res.send(data_last);
-//       }
-//     })
-//     .catch((err)=> {
-//         console.error(err);
-//         res.send(err);
-//     });
-// });
 
 // request data at http://localhost:8080/data or just "/data"
 app.get('/data/last', function(req, res) {
@@ -84,18 +61,6 @@ var HOST = '192.168.1.111';
 // Create socket
 var server = dgram.createSocket('udp4');
 
-// led_status = 0;
-
-// function toggleLED() {
-//     if (!led_status)
-//     {
-//       led_status=1;
-//     }
-//     else
-//     {
-//       led_status=0
-//     }
-// }
 
 
 // Create server
@@ -120,14 +85,12 @@ server.on('message', function (message, remote) {
     }
     else
     {
-      console.log('clearing')
       lastNMessages = [];
       lastNMessages.push(lastMessage);
       lastTime = time;
     }
     console.log(remote.address + ':' + remote.port +' - ' + message);
-    //num = (num+1)%2;
-    // Send Ok acknowledgement
+
     server.send(led_status.toString(),remote.port,remote.address,function(error){
       if(error){
         console.log('MEH!');
