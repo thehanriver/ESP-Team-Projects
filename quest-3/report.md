@@ -96,7 +96,7 @@ Web Cam Webpage:
 
 ## Supporting Artifacts'
 
-- [Link to video demo]().
+- [Link to video demo](https://drive.google.com/file/d/1gyUoaOwLAesO4bNsB-IcHPQ4nw7KMyvq/view?usp=sharing).
 
 Script:
 ![Screenshot (193)](https://user-images.githubusercontent.com/45515930/97356600-e311dd00-186e-11eb-8550-d28df7b23589.png)
