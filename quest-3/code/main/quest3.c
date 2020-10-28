@@ -37,13 +37,16 @@
 #include "protocol_examples_common.h"
 #include "addr_from_stdin.h"
 
-//#include "./init_functions.h"
+///////////////////////////////////////////////////////////////////////////////
+//-----------------------------DEFINES---------------------------------------//
+///////////////////////////////////////////////////////////////////////////////
 
 //Thermistor defines
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES 19  //Multisampling
 #define E 2.718
 
+//UDP address
 #define HOST_IP_ADDR "192.168.1.111"
 #define PORT 1234
 
@@ -73,6 +76,9 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
+///////////////////////////////////////////////////////////////////////////////
+//--------------------------GLOBAL VARIABLES---------------------------------//
+///////////////////////////////////////////////////////////////////////////////
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Thermistor GPIO 36 A3
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
@@ -95,8 +101,16 @@ static const char *TAG = "Client";
 static const char *payload = "Hello from the other siiiiiddddddeeeee";
 
 static int timer;
-//static char file_name[] = "../data/sensors.csv";
 
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//---------------------INITIALIZATION FUNTIONS-------------------------------//
+//                                                                           //
+//            Skip to line 486 for user coded functions                      //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+//-------------------------i2c inits---------------------------------//
 // Function to initiate i2c-- note the MSB declaration !
 static void i2c_master_init()
 {
@@ -132,8 +146,6 @@ static void i2c_master_init()
     // Data in MSB mode
     i2c_set_data_mode(i2c_master_port, I2C_DATA_MODE_MSB_FIRST, I2C_DATA_MODE_MSB_FIRST);
 }
-
-// Utility  Functions //////////////////////////////////////////////////////////
 
 // Utility function to test for I2C device address -- not used in deploy
 int testConnection(uint8_t devAddr, int32_t timeout)
@@ -172,7 +184,7 @@ static void i2c_scanner()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// ADXL343 Functions ///////////////////////////////////////////////////////////
+//------------------------ADXL343 inits---------------------------------//
 
 // Get Device ID
 int getDeviceID(uint8_t *data)
@@ -275,8 +287,6 @@ dataRate_t getDataRate(void)
     return (dataRate_t)(rate & 0x0F);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 static void Accel_init()
 {
     // Check for ADXL343
@@ -376,7 +386,7 @@ static void Accel_init()
     writeRegister(ADXL343_REG_POWER_CTL, 0x08);
 }
 
-//Wifi funtions
+//-------------------------Wifi Inits---------------------------------//
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
 {
@@ -472,6 +482,11 @@ void wifi_init_sta(void)
     vEventGroupDelete(s_wifi_event_group);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//--------------------------TASK FUNCTIONS-----------------------------------//
+///////////////////////////////////////////////////////////////////////////////
+
+//Thermistor for temperature
 static void thermistor()
 {
     while (1)
@@ -537,7 +552,7 @@ void getAccel(float *xp, float *yp, float *zp)
     //printf("X: %.2f \t Y: %.2f \t Z: %.2f\n", *xp, *yp, *zp);
 }
 
-// Task to continuously poll acceleration and calculate roll and pitch
+// Task to continuously poll acceleration, and average the data over a second
 static void test_adxl343()
 {
     printf("\n>> Polling ADAXL343\n");
@@ -560,6 +575,7 @@ static void test_adxl343()
     }
 }
 
+//toggle LED based on UDP response
 static void toggle_LED()
 {
     gpio_pad_select_gpio(BLINK_GPIO);
@@ -572,6 +588,10 @@ static void toggle_LED()
     }
 }
 
+/*
+Send sensor data to PORT on HOST_IP_ADDR as "payload". Get a response from the raspberry pi which includes
+the button state which is assigned to the global toggle variable.
+*/
 static void udp_client_task(void *pvParameters)
 {
     char rx_buffer[128];
@@ -657,6 +677,7 @@ static void udp_client_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+//Print time, sensor data to console
 static void printstate()
 {
 
@@ -676,6 +697,7 @@ static void printstate()
     }
 }
 
+// App main initializes the ADC, accelerometer, wifi, udp protocol and then start running tasks
 void app_main()
 {
     //Wifi inits
