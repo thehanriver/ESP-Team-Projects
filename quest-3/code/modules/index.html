@@ -183,10 +183,10 @@
 		// 	}]
 		// });
 
-		chart1.data[0].dataPoints = therm_dps;
-		chart2.data[0].dataPoints = x_dps;
-		chart2.data[1].dataPoints = y_dps;
-		chart2.data[2].dataPoints = z_dps;
+		chart1.options.data[0].dataPoints = therm_dps;
+		chart2.options.data[0].dataPoints = x_dps;
+		chart2.options.data[1].dataPoints = y_dps;
+		chart2.options.data[2].dataPoints = z_dps;
 
 		chart1.render();
 		chart2.render();
