@@ -109,9 +109,14 @@ server.on('message', function (message, remote) {
     {
       lastNMessages.push(lastMessage);
       lastTime = time;
+      if (lastNMessages.length > N)
+      {
+        lastNMessages.shift();
+      }
     }
     else
     {
+      console.log('clearing')
       lastNMessages = [];
       lastNMessages.push(lastMessage);
       lastTime = time;
