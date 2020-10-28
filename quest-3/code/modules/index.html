@@ -10,7 +10,7 @@
 
 	//"Global" variables
 	var updateInterval = 1000;
-	var updateStatusInterval = 100;
+	var updateStatusInterval = 500;
 	var dataLength = 25; // number of dataPoints visible at any point
 	var lastTime = -1;
 	var x_dps = [];
@@ -164,7 +164,8 @@
 
 	var updateStatus = function () {
 		$.ajax({url: "/status", success: function(result){
-			led_status = parseInt(result);
+			led_status = parseInt(result[0]);
+			console.log(led_status);
 		}});
 
 		};
@@ -197,7 +198,21 @@
 			  style=" height:50px; width:200px ">
   		Webcam
   	</button>
-  	<b>This is: <span id="changing">status</span><b></b>
+  	<b>This is: <span id="changing">status</span></b>
+  	<script>
+	// Array of words
+	var words = ['On', 'Off'];
+
+	// Function that executes every 2000 milliseconds
+	var t = setInterval(function() {
+	
+	// Change the word in the span for a random one in the array of words
+	$('#changing').html( words[ randomNumber ] );
+	}, updateStatusInterval);
+  	</script>
+
+
+
   	//Ajax call for /status seeing if it is on or off
   	<script type="text/javascript">function sendOn() {
 		$.post('/status',{led_status: 1},function(data,status){
