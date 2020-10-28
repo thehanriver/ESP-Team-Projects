@@ -144,6 +144,7 @@
 			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
 			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
 			therm_dps.push({ x: parseInt(result[0]), y: parseFloat(result[1]) });
+			console.log("X dps length is " + x_dps.length.toString());
 
 			if (x_dps.length > dataLength) {
 				x_dps.shift();
