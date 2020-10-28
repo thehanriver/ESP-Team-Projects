@@ -34,26 +34,10 @@ app.post('/status', (req,res) => {
 });
 
 
-// // request data at http://localhost:8080/data or just "/data"
-// app.get('/data', function(req, res) {
-//   var data = [];  // Array to hold all csv data
-//   var last_row = "";
-//   fs.createReadStream('../data/sensors.csv')  // path to csv
-//   .pipe(csv())
-//   .on('data', (row) => {
-//     // add thing to check time on row to check if it is a new row. push to data only if it is new
-//     if (row === last_row){
-//       return;
-//     } else {
-//       // console.log(row);
-//       data.push(row);  // Add row of data to array
-//       last_row = row;
-//     }
-//   })
-//   .on('end', () => {
-//     res.send(data);  // Send array of data back to requestor
-//   });
-// });
+// request data at http://localhost:8080/data or just "/data"
+app.get('/data', function(req, res) {
+  res.send(lastNMessages);  // Send array of data back to requestor
+});
 
 // // request data at http://localhost:8080/data or just "/data"
 // app.get('/data/last', function(req, res) {
