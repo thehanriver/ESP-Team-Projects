@@ -68,6 +68,9 @@ Improvements:
 Fixed:
 
 1. Z acceleration fixed. Takes 50 readings and averages it out. More consistent with 9.8 M/S^2
+2. Reduced LED lag - we are now sending UDP packets every 1 second, so plotting is done every one second and LED on/off switching only takes up to one second.
+3. No need to refresh browser - when ESP32 is reset, the plot will pause and once values are being received again, it will clear and start plotting those points. If you do refresh the browser, the graph will still be displaying the latest 25 data points.
+4. Fixed single LED on/off button issue - now we have separate on and off buttons and we display the current LED status below. The status that is displayed is based on a value that is retreived from the server every 500 milliseconds indicating whether the LED is on or off. You can now open our page on multiple browsers and control the LED from both without the displayed status desynchronizing with the actual LED status.
 
 ## Sketches and Photos
 
