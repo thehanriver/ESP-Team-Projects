@@ -18,7 +18,220 @@
 	var z_dps = [];
 	var therm_dps = [];
 
-	var chart1 = new CanvasJS.Chart("chartContainer1", {
+	// var chart1 = new CanvasJS.Chart("chartContainer1", {
+	// 		title :{
+	// 			text: "Dynamic Sensor Data"
+	// 		},
+	// 		axisX:  {
+	// 			title: "Time Since Flash (s)"
+	// 		},
+	// 		axisY: {
+	// 			title: "Temperature (°C)"
+	// 		},
+	// 		toolTip: {
+	// 			shared: true
+	// 		},
+	// 		legend: {
+	// 			cursor: "pointer",
+	// 			verticalAlign: "top",
+	// 			horizontalAlign: "center",
+	// 		},
+	// 		data: [{
+	// 			type:"line",
+	// 			name: "Thermistor",
+	// 			showInLegend: true,
+	// 			markerSize: 0,
+	// 			yValueFormatString: "#,###.00°C",
+	// 			dataPoints: therm_dps
+	// 		}, {
+
+	// 		}]
+	// 	});
+
+	// 	var chart2 = new CanvasJS.Chart("chartContainer2", {
+	// 		title :{
+	// 			text: "Dynamic Sensor Data"
+	// 		},
+	// 		axisX:  {
+	// 			title: "Time Since Flash (s)"
+	// 		},
+	// 		axisY: {
+	// 			title: "Acceleration (m/s^2)"
+	// 		},
+	// 		toolTip: {
+	// 			shared: true
+	// 		},
+	// 		legend: {
+	// 			cursor: "pointer",
+	// 			verticalAlign: "top",
+	// 			horizontalAlign: "center",
+	// 		},
+	// 		data: [{
+	// 			type:"line",
+	// 			name: "X Acceleration",
+	// 			showInLegend: true,
+	// 			markerSize: 0,
+	// 			yValueFormatString: "#,###.00",
+	// 			dataPoints: x_dps
+	// 		}, {
+	// 			type:"line",
+	// 			name: "Y Acceleration",
+	// 			showInLegend: true,
+	// 			markerSize: 0,
+	// 			yValueFormatString: "#,###.00",
+	// 			dataPoints: y_dps
+	// 		}, {
+	// 			type:"line",
+	// 			name: "Z Acceleration",
+	// 			showInLegend: true,
+	// 			markerSize: 0,
+	// 			yValueFormatString: "#,###.00",
+	// 			dataPoints: z_dps
+	// 		}]
+	// 	});
+
+
+	$.ajax({url: "/data", success: function(result){
+
+		jQuery.each(result, function(i, val) {
+
+			message = val.split(',');
+			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
+			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
+			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
+			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
+
+			// if (x_dps.length > dataLength) {
+			// 	x_dps.shift();
+			// 	y_dps.shift();
+			// 	z_dps.shift();
+			// 	therm_dps.shift();
+			// }
+
+		});
+
+
+		var chart1 = new CanvasJS.Chart("chartContainer1", {
+			title :{
+				text: "Dynamic Sensor Data"
+			},
+			axisX:  {
+				title: "Time Since Flash (s)"
+			},
+			axisY: {
+				title: "Temperature (°C)"
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor: "pointer",
+				verticalAlign: "top",
+				horizontalAlign: "center",
+			},
+			data: [{
+				type:"line",
+				name: "Thermistor",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00°C",
+				dataPoints: therm_dps
+			}, {
+
+			}]
+		});
+
+		var chart2 = new CanvasJS.Chart("chartContainer2", {
+			title :{
+				text: "Dynamic Sensor Data"
+			},
+			axisX:  {
+				title: "Time Since Flash (s)"
+			},
+			axisY: {
+				title: "Acceleration (m/s^2)"
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor: "pointer",
+				verticalAlign: "top",
+				horizontalAlign: "center",
+			},
+			data: [{
+				type:"line",
+				name: "X Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: x_dps
+			}, {
+				type:"line",
+				name: "Y Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: y_dps
+			}, {
+				type:"line",
+				name: "Z Acceleration",
+				showInLegend: true,
+				markerSize: 0,
+				yValueFormatString: "#,###.00",
+				dataPoints: z_dps
+			}]
+		});
+
+		chart1.render();
+		chart2.render();
+	}});
+
+
+
+
+	var updateChart = function () {
+
+
+		$.ajax({url: "/data/last", success: function(result){
+			time = parseInt(result[0]);
+			console.log("time is " + time.toString());
+			if (time>lastTime)
+			{
+				lastTime = time;
+			}
+			else if (time==lastTime)
+			{
+				return;
+			}
+			else
+			{
+				x_dps = [];
+				y_dps = [];
+				z_dps = [];
+				therm_dps = [];
+				lastTime = time;
+			}
+
+			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
+			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
+			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
+			therm_dps.push({ x: parseInt(result[0]), y: parseFloat(result[1]) });
+			console.log("therm dps length is " + therm_dps.length.toString());
+
+			if (x_dps.length > dataLength) {
+				x_dps.shift();
+				y_dps.shift();
+				z_dps.shift();
+				therm_dps.shift();
+			}
+
+		}});
+		console.log('rendering')
+		console.log(therm_dps);
+
+
+		var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
 				text: "Dynamic Sensor Data"
 			},
@@ -91,71 +304,6 @@
 		});
 
 
-	$.ajax({url: "/data", success: function(result){
-
-		jQuery.each(result, function(i, val) {
-
-			message = val.split(',');
-			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
-			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
-			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
-			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
-
-			// if (x_dps.length > dataLength) {
-			// 	x_dps.shift();
-			// 	y_dps.shift();
-			// 	z_dps.shift();
-			// 	therm_dps.shift();
-			// }
-
-		});
-
-		chart1.render();
-		chart2.render();
-	}});
-
-
-
-
-	var updateChart = function () {
-
-
-		$.ajax({url: "/data/last", success: function(result){
-			time = parseInt(result[0]);
-			console.log("time is " + time.toString());
-			if (time>lastTime)
-			{
-				lastTime = time;
-			}
-			else if (time==lastTime)
-			{
-				return;
-			}
-			else
-			{
-				x_dps = [];
-				y_dps = [];
-				z_dps = [];
-				therm_dps = [];
-				lastTime = time;
-			}
-
-			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
-			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
-			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
-			therm_dps.push({ x: parseInt(result[0]), y: parseFloat(result[1]) });
-			console.log("therm dps length is " + therm_dps.length.toString());
-
-			if (x_dps.length > dataLength) {
-				x_dps.shift();
-				y_dps.shift();
-				z_dps.shift();
-				therm_dps.shift();
-			}
-
-		}});
-		console.log('rendering')
-		console.log(therm_dps);
 		chart1.render();
 		chart2.render();
 
