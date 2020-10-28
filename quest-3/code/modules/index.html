@@ -6,18 +6,20 @@
   <body>
   	<div id="div1"></div>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  	
   	<script>window.onload = function () {
 
-
+	//"Global" variables
 	var updateInterval = 1000;
+	var updateStatusInterval = 500;
 	var dataLength = 25; // number of dataPoints visible at any point
-	var last_time = "-1";
+	var lastTime = -1;
 	var x_dps = [];
 	var y_dps = [];
 	var z_dps = [];
 	var therm_dps = [];
+	var led_status;
 
+	//Chart for Temperature
 	var chart1 = new CanvasJS.Chart("chartContainer1", {
 			title :{
 				text: "Dynamic Sensor Data"
@@ -48,6 +50,7 @@
 			}]
 		});
 
+		//Code for Temperature
 		var chart2 = new CanvasJS.Chart("chartContainer2", {
 			title :{
 				text: "Dynamic Sensor Data"
@@ -90,60 +93,53 @@
 			}]
 		});
 
+	//Ajax call for first few data incoming
+	$.ajax({url: "/data", success: function(result){
 
-	// $.ajax({url: "/data", success: function(result){
+		jQuery.each(result, function(i, val) {
 
-	// 	jQuery.each(result, function(i, val) {
+			message = val.split(',');
+			x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
+			y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
+			z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[4]) });
+			therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
 
-	// 		// fix
-	// 		x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-	// 		y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+		});
 
-	// 		if (x_dps.length > dataLength) {
-	// 			x_dps.shift();
-	// 			y_dps.shift();
-	// 			z_dps.shift();
-	// 			therm_dps.shift();
-	// 		}
+		chart1.render();
+		chart2.render();
+	}});
 
-	// 	});
-
-	// 	chart1.render();
-	// 	chart2.render();
-	// }});
-
-
-
-
-	var updateChart = function (ultrasound_dp,ir_dp,therm_dp) {
+	//Updating chart and checking if reset button is pressed on ESP
+	//If reset button is pressed, charts re renders back to 0
+	var updateChart = function () {
 
 
 		$.ajax({url: "/data/last", success: function(result){
+			time = parseInt(result[0]);
+			console.log("time is " + time.toString());
+			if (time>lastTime)
+			{
+				lastTime = time;
+			}
+			else if (time==lastTime)
+			{
+				return;
+			}
+			else
+			{
+				x_dps = [];
+				y_dps = [];
+				z_dps = [];
+				therm_dps = [];
+				lastTime = time;
+			}
 
-			// jQuery.each(result, function(i, val) {
-
-			// 	// fix
-			// 	x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-			// 	y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
-
-			// 	if (x_dps.length > dataLength) {
-			// 		x_dps.shift();
-			// 		y_dps.shift();
-			// 		z_dps.shift();
-			// 		therm_dps.shift();
-			// 	}
-
-			// });
-
-			// fix
 			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
 			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
 			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
 			therm_dps.push({ x: parseInt(result[0]), y: parseFloat(result[1]) });
+			console.log("therm dps length is " + therm_dps.length.toString());
 
 			if (x_dps.length > dataLength) {
 				x_dps.shift();
@@ -153,61 +149,82 @@
 			}
 
 		}});
+		console.log('rendering')
+		console.log(therm_dps);
+
+		chart1.options.data[0].dataPoints = therm_dps;
+		chart2.options.data[0].dataPoints = x_dps;
+		chart2.options.data[1].dataPoints = y_dps;
+		chart2.options.data[2].dataPoints = z_dps;
 
 		chart1.render();
 		chart2.render();
 
 	};
 
+	var updateStatus = function () {
+		$.ajax({url: "/status", success: function(result){
+			led_status = parseInt(result[0]);
+			console.log(led_status);
+		}});
+
+		};
+
 	updateChart();
+	updateStatus();
 	setInterval(function(){updateChart()}, updateInterval);
+	setInterval(function(){updateStatus()}, updateStatusInterval);
 
 }</script>
 
   	<div id="chartContainer1" style="height: 300px; width: 100%;"></div>
   	<div id="chartContainer2" style="height: 300px; width: 100%;"></div>
+  	//button for On and off
   	<button id="On"
 			  type="button"
 			  onClick="sendOn()"
 			  style=" height:50px; width:200px ">
-  		Turn On
-	</button>
-	<button id="Off"
+  		Turn On LED
+  	</button>
+  	<button id="Off"
 			  type="button"
 			  onClick="sendOff()"
 			  style=" height:50px; width:200px ">
-  		Turn Off
-  	</button>  
+  		Turn Off LED
+  	</button>
   	<button type="button"
 			  id="webCam"
 			  onclick=" window.location.href='http://vivpi.ddns.net:3434/';"
-			  style=" height:50px; width:200px " >
-		Webcam
-	</button>
+			  style=" height:50px; width:200px ">
+  		Webcam
+  	</button>
+  	<b>This is: <span id="changing">status</span></b>
+  	<!-- <script>
+	// Array of words
+	var words = ['On', 'Off'];
+
+	// Function that executes every 2000 milliseconds
+	var t = setInterval(function() {
 	
-  	<script type="text/javascript">
-		function sendOn() {
-			//var name = document.getElementById("OnOff").innerText;
-			//if(name === 'Turn On'){
-				//document.getElementById("OnOff").innerText = 'Turn Off';
-				// POST request to on
+	// Change the word in the span for a random one in the array of words
+	$('#changing').html( words[ randomNumber ] );
+	}, updateStatusInterval);
+  	</script> -->
+
+
+
+  	//Ajax call for /status seeing if it is on or off
+  	<script type="text/javascript">function sendOn() {
 		$.post('/status',{led_status: 1},function(data,status){
 					console.log('turned on');
 				});
-			//}
-			//else if(name === 'Turn Off'){
-			//	document.getElementById("OnOff").innerText = 'Turn On';
-				
-			//		console.log('turned off');
-			//	});
 		}
 
 		function sendOff() {
 			$.post('/status',{led_status: 0},function(data,status){
 				console.log('turned off');
 				});
-		}
-	  </script>
+		}</script>
   	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   </body>
 </html>
