@@ -14,6 +14,9 @@ app.use(bodyParser.json());
 
 var lastMessage = "";
 var led_status = 0;
+var lastNMessages = [];
+var N =25;
+var lastTime = -1;
 
 // viewed at http://localhost:8080
 app.get('/', function(req, res) {
@@ -116,6 +119,19 @@ server.on('listening', function () {
 // On connection, print out received message
 server.on('message', function (message, remote) {
     lastMessage = message.toString();
+    time = lastMessage.split(',');
+    time = time[0];
+    if (time > lastTime)
+    {
+      lastNMessages.push(lastMessage);
+      lastTime = time;
+    }
+    else
+    {
+      lastNMessages = [];
+      lastNMessages.push(lastMessage);
+      lastTime = time;
+    }
     console.log(remote.address + ':' + remote.port +' - ' + message);
     //num = (num+1)%2;
     // Send Ok acknowledgement

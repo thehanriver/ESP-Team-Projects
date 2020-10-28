@@ -12,7 +12,7 @@
 
 	var updateInterval = 1000;
 	var dataLength = 25; // number of dataPoints visible at any point
-	var last_time = "-1";
+	var lastTime = -1;
 	var x_dps = [];
 	var y_dps = [];
 	var z_dps = [];
@@ -95,11 +95,11 @@
 
 	// 	jQuery.each(result, function(i, val) {
 
-	// 		// fix
-	// 		x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-	// 		y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-	// 		therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
+	// 		message = val.split(',');
+	// 		x_dps.push({ x: parseInt(message[0]), y: parseFloat(message[1]) });
+	// 		y_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
+	// 		z_dps.push({ x: parseInt(message[0]), y: parseFloat(message[2]) });
+	// 		therm_dps.push({ x: parseInt(message[0]), y: parseFloat(message[3]) });
 
 	// 		if (x_dps.length > dataLength) {
 	// 			x_dps.shift();
@@ -121,25 +121,8 @@
 
 
 		$.ajax({url: "/data/last", success: function(result){
+			// time = result
 
-			// jQuery.each(result, function(i, val) {
-
-			// 	// fix
-			// 	x_dps.push({ x: parseInt(val[0]), y: parseFloat(val[1]) });
-			// 	y_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	z_dps.push({ x: parseInt(val[0]), y: parseFloat(val[2]) });
-			// 	therm_dps.push({ x: parseInt(val[0]), y: parseFloat(val[3]) });
-
-			// 	if (x_dps.length > dataLength) {
-			// 		x_dps.shift();
-			// 		y_dps.shift();
-			// 		z_dps.shift();
-			// 		therm_dps.shift();
-			// 	}
-
-			// });
-
-			// fix
 			x_dps.push({ x: parseInt(result[0]), y: parseFloat(result[2]) });
 			y_dps.push({ x: parseInt(result[0]), y: parseFloat(result[3]) });
 			z_dps.push({ x: parseInt(result[0]), y: parseFloat(result[4]) });
