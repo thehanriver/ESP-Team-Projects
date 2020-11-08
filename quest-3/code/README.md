@@ -1,8 +1,3 @@
 # Code Readme
 
-Please describe what is in your code folder and subfolders. Make it
-easy for us to navigate this space.
-
-Also
-- Please provide your name and date in any code submitted
-- Indicate attributrion for any code you have adopted from elsewhere
+In ./main/ is quest3.c the C source code that is flashed onto the ESP32. To flash and monitor the program, run 'idf.py -p [port] flash monitor' in the current directory. In ./modules/ is the index.js and index.html files. In ./modules/ execute 'node index.js' to start the server on port 
