@@ -58,7 +58,7 @@ In the code, we scheduled individual modules as tasks. At first, all I2C, UDP, A
 The raspberry pi recieves ESP32 data at its port 1234.
 The Nodejs application reads the incoming data and displays it on a webpage and sends back the LED status to the ESP.
 
-Improvements:
+Improvements made since live demo/quest video:
 
 1. Z acceleration drops to 0 or goes to 20 sometimes. Should be able to average the values every 10 readings so that it will be more consistent with ~10 M/S^2
 2. Send packets for led status and data seperately with led status being 100 ms and data every 1 s. This will reduce LED_status lag.
@@ -96,7 +96,7 @@ Web Cam Webpage:
 
 ## Supporting Artifacts'
 
-- [Link to video demo]().
+- [Link to video demo](https://drive.google.com/file/d/1gyUoaOwLAesO4bNsB-IcHPQ4nw7KMyvq/view?usp=sharing).
 
 Script:
 ![Screenshot (193)](https://user-images.githubusercontent.com/45515930/97356600-e311dd00-186e-11eb-8550-d28df7b23589.png)
