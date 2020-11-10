@@ -91,6 +91,8 @@
 #define TIMER_INTERVAL_10_SEC (10)
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
 
+#define UDP_TIMEOUT_SECONDS 3
+
 
 // Default ID/color
 #define ID 1
@@ -123,7 +125,6 @@ static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 
 static const char *TAG = "Client";
-static const char *payload = "Hello from the other siiiiiddddddeeeee";
 
 static int timer;
 
@@ -141,7 +142,6 @@ static char IPs[6][13] = {ESP1_IP, ESP2_IP, ESP3_IP, ESP4_IP, ESP5_IP, ESP6_IP};
 // Mutex (for resources), and Queues (for button)
 SemaphoreHandle_t mux = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
-static xQueueHandle timer_queue;
 
 // A simple structure to pass "events" to main task
 typedef struct
@@ -166,33 +166,33 @@ static const char *TAG_SYSTEM = "system"; // For debug logs
 //     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 // }
 
-// ISR handler
-void IRAM_ATTR timer_group0_isr(void *para)
-{
+// // ISR handler
+// void IRAM_ATTR timer_group0_isr(void *para)
+// {
 
-    // Prepare basic event data, aka set flag
-    timer_event_t evt;
-    evt.flag = 1;
+//     // Prepare basic event data, aka set flag
+//     timer_event_t evt;
+//     evt.flag = 1;
 
-    // blue is shorter
-    if (myColor == 'G')
-    {
-        timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE);
-    }
-    else
-    {
-        timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
-    }
+//     // blue is shorter
+//     if (myColor == 'G')
+//     {
+//         timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE);
+//     }
+//     else
+//     {
+//         timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
+//     }
 
-    // Clear the interrupt, Timer 0 in group 0
-    TIMERG0.int_clr_timers.t0 = 1;
+//     // Clear the interrupt, Timer 0 in group 0
+//     TIMERG0.int_clr_timers.t0 = 1;
 
-    // After the alarm triggers, we need to re-enable it to trigger it next time
-    TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
+//     // After the alarm triggers, we need to re-enable it to trigger it next time
+//     TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
 
-    // Send the event data back to the main program task
-    xQueueSendFromISR(timer_queue, &evt, NULL);
-}
+//     // Send the event data back to the main program task
+//     xQueueSendFromISR(timer_queue, &evt, NULL);
+// }
 
 // Utility  Functions //////////////////////////////////////////////////////////
 
@@ -275,43 +275,41 @@ bool checkCheckSum(uint8_t *p, int len)
 //     uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
 // }
 
-// GPIO init for LEDs
-static void led_init()
-{
-    gpio_pad_select_gpio(BLUEPIN);
-    gpio_pad_select_gpio(GREENPIN);
-    gpio_pad_select_gpio(REDPIN);
-    gpio_pad_select_gpio(ONBOARD);
-    gpio_set_direction(BLUEPIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
-}
+// // GPIO init for LEDs
+// static void led_init()
+// {
+//     gpio_pad_select_gpio(BLUEPIN);
+//     gpio_pad_select_gpio(GREENPIN);
+//     gpio_pad_select_gpio(REDPIN);
+//     gpio_pad_select_gpio(ONBOARD);
+//     gpio_set_direction(BLUEPIN, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
+// }
 
-//Configure timer
-static void alarm_init()
-{
-    // Select and initialize basic parameters of the timer
-    timer_config_t config;
-    config.divider = TIMER_DIVIDER;
-    config.counter_dir = TIMER_COUNT_UP;
-    config.counter_en = TIMER_PAUSE;
-    config.alarm_en = TIMER_ALARM_EN;
-    config.intr_type = TIMER_INTR_LEVEL;
-    config.auto_reload = TEST_WITH_RELOAD;
-    timer_init(TIMER_GROUP_0, TIMER_0, &config);
+// // Initialize timer 0 in group 0 for 1 sec alarm interval and auto reload
+// static void alarm_init() {
+//     /* Select and initialize basic parameters of the timer */
+//     timer_config_t config;
+//     config.divider = TIMER_DIVIDER;
+//     config.counter_dir = TIMER_COUNT_DOWN;
+//     config.counter_en = TIMER_PAUSE;
+//     config.alarm_en = TIMER_ALARM_EN;
+//     config.intr_type = TIMER_INTR_LEVEL;
+//     config.auto_reload = 1;
+//     timer_init(TIMER_GROUP_0, TIMER_0, &config);
 
-    // Timer's counter will initially start from value below
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0x00000000ULL);
+//     // Timer's counter will initially start from value below
+//     timer_set_counter_value(TIMER_GROUP_0, TIMER_0, UDP_TIMEOUT_SECONDS * TIMER_SCALE);
 
-    // Configure the alarm value and the interrupt on alarm
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
-    timer_enable_intr(TIMER_GROUP_0, TIMER_0);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr,
-                       (void *)TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
+//     // Configure the alarm value and the interrupt on alarm
+//     timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 0);
 
-    
-}
+//     timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr,(void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
+//     timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+
+// }
 
 // Button interrupt init
 static void button_init()
@@ -451,105 +449,105 @@ void wifi_init_sta(void)
 
 // }
 
-// Receives task -- looks for Start byte then stores received values
-void recv_task()
-{
-    // Buffer for input data
-    uint8_t *data_in = (uint8_t *)malloc(BUF_SIZE);
-    while (1)
-    {
-        int len_in = uart_read_bytes(UART_NUM_1, data_in, BUF_SIZE, 20 / portTICK_RATE_MS);
-        if (len_in > 0)
-        {
-            if (data_in[0] == start)
-            {
-                if (checkCheckSum(data_in, len_out))
-                {
-                    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
-                    printf("Received data_in: %u\n", data_in[1]);
-                    switch (data_in[1])
-                    {
-                    case 82:
-                        myColor = 'R';
-                        break;
-                    case 71:
-                        myColor = 'G';
-                        break;
-                    case 66:
-                        myColor = 'B';
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            //printf("Nothing received.\n");
-        }
-        vTaskDelay(5 / portTICK_PERIOD_MS);
-    }
-    free(data_in);
-}
+// // Receives task -- looks for Start byte then stores received values
+// void recv_task()
+// {
+//     // Buffer for input data
+//     uint8_t *data_in = (uint8_t *)malloc(BUF_SIZE);
+//     while (1)
+//     {
+//         int len_in = uart_read_bytes(UART_NUM_1, data_in, BUF_SIZE, 20 / portTICK_RATE_MS);
+//         if (len_in > 0)
+//         {
+//             if (data_in[0] == start)
+//             {
+//                 if (checkCheckSum(data_in, len_out))
+//                 {
+//                     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
+//                     printf("Received data_in: %u\n", data_in[1]);
+//                     switch (data_in[1])
+//                     {
+//                     case 82:
+//                         myColor = 'R';
+//                         break;
+//                     case 71:
+//                         myColor = 'G';
+//                         break;
+//                     case 66:
+//                         myColor = 'B';
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//         else
+//         {
+//             //printf("Nothing received.\n");
+//         }
+//         vTaskDelay(5 / portTICK_PERIOD_MS);
+//     }
+//     free(data_in);
+// }
 
-// Button task -- rotate through myIDs
-void button_task()
-{
-    uint32_t io_num;
-    while (1)
-    {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
-        {
-            xSemaphoreTake(mux, portMAX_DELAY);
+// // Button task -- rotate through myIDs
+// void button_task()
+// {
+//     uint32_t io_num;
+//     while (1)
+//     {
+//         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+//         {
+//             xSemaphoreTake(mux, portMAX_DELAY);
 
-            xSemaphoreGive(mux);
-            printf("Button pressed.\n");
-            send_task();
-        }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
+//             xSemaphoreGive(mux);
+//             printf("Button pressed.\n");
+//             send_task();
+//         }
+//         vTaskDelay(1000 / portTICK_PERIOD_MS);
+//     }
+// }
 
-// LED task to light LED based on traffic state
-void led_task()
-{
-    while (1)
-    {
-        switch (myState)
-        {
-        case START:
-            gpio_set_level(GREENPIN, 0);
-            gpio_set_level(REDPIN, 0);
-            gpio_set_level(BLUEPIN, 0);
-            // printf("Current state: %c\n",status);
-            break;
-        case LEADER: // Green
-            gpio_set_level(GREENPIN, 1);
-            gpio_set_level(REDPIN, 0);
-            gpio_set_level(BLUEPIN, 0);
-            // printf("Current state: %c\n",status);
-            break;
-        case LEADERNT: // blue
-            gpio_set_level(GREENPIN, 0);
-            gpio_set_level(REDPIN, 0);
-            gpio_set_level(BLUEPIN, 1);
-            // printf("Current state: %c\n",status);
-            break;
-        case ELECTION: // red
-            gpio_set_level(GREENPIN, 0);
-            gpio_set_level(REDPIN, 1);
-            gpio_set_level(BLUEPIN, 0);
-            // printf("Current state: %c\n",status);
-            break;
-        case WAIT: // red & blue
-            gpio_set_level(GREENPIN, 0);
-            gpio_set_level(REDPIN, 1);
-            gpio_set_level(BLUEPIN, 1);
-            // printf("Current state: %c\n",status);
-            break;
-        }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-}
+// // LED task to light LED based on traffic state
+// void led_task()
+// {
+//     while (1)
+//     {
+//         switch (myState)
+//         {
+//         case START:
+//             gpio_set_level(GREENPIN, 0);
+//             gpio_set_level(REDPIN, 0);
+//             gpio_set_level(BLUEPIN, 0);
+//             // printf("Current state: %c\n",status);
+//             break;
+//         case LEADER: // Green
+//             gpio_set_level(GREENPIN, 1);
+//             gpio_set_level(REDPIN, 0);
+//             gpio_set_level(BLUEPIN, 0);
+//             // printf("Current state: %c\n",status);
+//             break;
+//         case LEADERNT: // blue
+//             gpio_set_level(GREENPIN, 0);
+//             gpio_set_level(REDPIN, 0);
+//             gpio_set_level(BLUEPIN, 1);
+//             // printf("Current state: %c\n",status);
+//             break;
+//         case ELECTION: // red
+//             gpio_set_level(GREENPIN, 0);
+//             gpio_set_level(REDPIN, 1);
+//             gpio_set_level(BLUEPIN, 0);
+//             // printf("Current state: %c\n",status);
+//             break;
+//         case WAIT: // red & blue
+//             gpio_set_level(GREENPIN, 0);
+//             gpio_set_level(REDPIN, 1);
+//             gpio_set_level(BLUEPIN, 1);
+//             // printf("Current state: %c\n",status);
+//             break;
+//         }
+//         vTaskDelay(100 / portTICK_PERIOD_MS);
+//     }
+// }
 
 // Timer task -- R (10 seconds), G (10 seconds), Y (2 seconds)
 // static void timer_evt_task(void *arg)
@@ -598,23 +596,131 @@ void id_task()
     }
 }
 
-//UDP client
-static void udp_client_task(char[] esp_ip)
+/* Server task, i.e. receiving task */
+static void udp_server_task(void *pvParameters)
 {
-    char rx_buffer[4];
-    char host_ip[] = esp_ip;
-    int addr_family = 0;
+    char addr_str[128];
+    int addr_family = (int)AF_INET;
     int ip_protocol = 0;
+    struct sockaddr_in6 dest_addr;
+    //uint8_t* data_in = (uint8_t*)malloc(BUF_SIZE);
+    //uint8_t* data_out = (uint8_t*)malloc(BUF_SIZE);
+    //rx_buffer[len] = 0;
+    char rx_buffer[128];
+    printf("Started udp server\n");
 
+    while (1)
+    {
 
-        char addr_str[128];
-        int addr_family;
-        int ip_protocol;
+        /* Create socket */
+        struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
+        dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
+        dest_addr_ip4->sin_family = AF_INET;
+        dest_addr_ip4->sin_port = htons(port);
+        ip_protocol = IPPROTO_IP;
+
+        int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+        if (sock < 0)
+        {
+            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+            break;
+        }
+        ESP_LOGI(TAG, "Socket created");
+
+        /* Bind to socket */
+        int err = bind(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+        if (err < 0)
+        {
+            ESP_LOGE(TAG, "Socket unable to bind: errno %d", errno);
+        }
+        ESP_LOGI(TAG, "Socket bound, port %d", port);
+
+        while (1)
+        {
+
+            ESP_LOGI(TAG, "Waiting for data");
+            struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
+            socklen_t socklen = sizeof(source_addr);
+            int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
+
+            // Error occurred during receiving
+            if (len < 0)
+            {
+                ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
+                break;
+            }
+            // Data received
+            else
+            {
+                // Get the sender's ip address as string
+                if (source_addr.sin6_family == PF_INET)
+                {
+                    inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                }
+
+                else if (source_addr.sin6_family == PF_INET6)
+                {
+                    inet6_ntoa_r(source_addr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+                }
+
+                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
+                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                ESP_LOGI(TAG, "%s", rx_buffer);
+
+                char resp[] = "ACK"
+                int err = sendto(sock, resp, strlen(resp), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+                if (err < 0)
+                {
+                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                    break;
+                }
+                printf("Recieved: %s\n",rx_buffer);
+                if (rx_buffer[2] == '0')
+                {
+                    OK = 1;
+                }
+                else if (rx_buffer[2] == '1')
+                {
+                    E = 1;
+                }
+                else if (rx_buffer[2] == '2')
+                {
+                    leaderID = rx_buffer[0];
+                    WIN = 1;
+                }
+            }
+        }
+
+        if (sock != -1)
+        {
+            ESP_LOGE(TAG, "Shutting down socket and restarting...");
+            shutdown(sock, 0);
+            close(sock);
+        }
+    }
+    //free(data_in);
+    //free(data_out);
+    vTaskDelete(NULL);
+}
+
+/* Client function, i.e. sending task */
+static void udp_client_fn(int targetID, int signal)
+{
+    char addr_str[128];
+    int addr_family;
+    int ip_protocol;
+
+    for (int i = 1; i <= DEVICE_NUM; i++)
+    {
+
+        /* Skips configuring socket for itself */
+        if (i == ID)
+            continue;
 
         struct sockaddr_in dest_addr;
-        dest_addr.sin_addr.s_addr = inet_addr(esp_ip);
+        dest_addr.sin_addr.s_addr = inet_addr(ip_addrs[i]);
         dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port = htons(PORT);
+        dest_addr.sin_port = htons(port);
         addr_family = AF_INET;
         ip_protocol = IPPROTO_IP;
         inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
@@ -625,130 +731,163 @@ static void udp_client_task(char[] esp_ip)
             ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
             break;
         }
-        ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
+        printf("Socket created, sending to %s:%d\n", ip_addrs[i], port);
+        struct timeval read_timeout;
+        read_timeout.tv_sec = 0;
+        read_timeout.tv_usec = 100000;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof read_timeout);
+        sockets[i] = sock;
+        addrs[i] = dest_addr;
+    }
 
-        
-        char buffer2[128];
-        int status;
-        status = sprintf(buffer2, "%d:%d", myID, signal);
-        payload = buffer2;
+    
+    if (targetID != ID)
+    {
+        char payload[BUF_SIZE];
+        snprintf(paylosendtoad,4,"%d:%d", myID, signal);
+        int err1 = fcntl( sockets[targetID], F_SETFL, fcntl(sockets[targetID], F_GETFL, 0 ) | O_NONBLOCK );
+        if (err1 < 0)
+        {
+            ESP_LOGE(TAG, "Error occurred while making UDP socket non-blocking: errno %d", errno);
+        }
 
-
-        int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-        if (err < 0)
+        int err2 = sendto(sockets[targetID], payload, BUF_SIZE, 0, (struct sockaddr *)&(addrs[targetID]), sizeof(addrs[targetID]));
+        if (err2 < 0)
         {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
             break;
         }
-        ESP_LOGI(TAG, "Message sent");
-
-        struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
-        socklen_t socklen = sizeof(source_addr);
-        int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
-
-        // Error occurred during receiving
-        if (len < 0)
-        {
-            ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
-            break;
-        }
-        // Data received
-        else
-        {
-            rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-            ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
-            ESP_LOGI(TAG, "%s", rx_buffer);
-
-            if (rx_buffer[2] == '0')
-            {
-                OK = 1;
-            }
-            else if (rx_buffer[2] == '1')
-            {
-                E = 1;
-            }
-            else if (rx_buffer[2] == '2')
-            {
-                leaderID = rx_buffer[0];
-                WIN = 1;
-            }
-        } 
-
-    if (sock != -1)
-    {
-        ESP_LOGE(TAG, "Shutting down socket and restarting...");
-        shutdown(sock, 0);
-        close(sock);
     }
 }
+void switch_state(int* state_ptr, int to_state, int* delay_count_ptr)
+{
+    *state_ptr = to_state;
+    *delay_count_ptr = 0;
+    OK=0;
+    WIN=0;
+    E=0;
+}
 
-void voting_fsm()
+void voting_fsm_task()
 {
     int delay_count = 0;    // number of delays that has occurred; inc before each vTaskDelay, set to 0 when switching states
-    int state = ELECTION;
+    int state = NOT_LEADER;
     while (1)
     {
         switch (state)
         {
             case ELECTION:
 
+                // reset extraneous signals
+                if (E)
+                {
+                    E = 0; // don't print attention here because this is normal
+                }
+                if (OK) // switch to WAIT_WIN bc a higher esp is taking care of it
+                {
+                    OK = 0;
+                    printf('Attention: OK signal received in ELECTION state. Moving to WAIT_WIN\n');
+                    switch_state(&state, WAIT_WIN, &delay_count);
+                    break;
+                }
+                if (WIN)
+                {
+                    WIN = 0;
+                    printf('Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n');
+                    switch_state(&state, NOT_LEADER, &delay_count);
+                    break;
+                }
+
                 // send OK to lower ids
                 int id = myID - 1;
                 for (id; id>0; i--)
                 {
-                    send_signal(IPs[i-1],OK_SIGNAL);
+                    udp_client_fn(id,OK_SIGNAL);
                 }
 
                 // send E to higher ids
                 id = myID+1;
                 for (id; id<maxID; id++)
                 {
-                    send_signal(IPs[i-1],E_SIGNAL);
+                    udp_client_fn(id,E_SIGNAL);
                 }
+
+                
+
                 // switch to WAIT_OK state, reset delay count
-                state = WAIT_OK;
-                delay_count = 0; 
+                switch_state(&state, WAIT_OK, &delay_count);
                 break;
 
             case WAIT_OK:
+
+                // reset extraneous signals
+                if (E)
+                {
+                    E = 0;  // not printing attention cuz this is normal
+
+                }
+                if (WIN)
+                {
+                    WIN = 0;
+                    printf('Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n');
+                    switch_state(&state, NOT_LEADER, &delay_count);
+                    break;
+                }
+
                 // send OK to lower ids while waiting for OK 
                 int id = myID - 1;
                 for (id; id>0; i--)
                 {
-                    send_signal(IPs[i-1],OK_SIGNAL);
+                    udp_client_fn(id,OK_SIGNAL);
                 }
 
                 // If OK is received, switch to WAIT_WIN
                 if (OK = 1)
                 {
                     OK = 0;
-                    delay_count = 0;
-                    state = WAIT_WIN;
+                    switch_state(&state, WAIT_WIN, &delay_count);
+                    break;
                 }
+
 
                 // if timeout occurs, switch to LEADER
                 if (delay_count == 10)  // set to appropriate value
                 {
-                    delay_count = 0;
-                    state = LEADER
+                    switch_state(&state, LEADER, &delay_count);
+                    break;
                 }
                 delay_count++;
                 vTaskDelay(100 / portTICK_PERIOD_MS);
                 break;
 
             case WAIT_WIN:
+
+                // reset extraneous signals
+                if (OK)
+                {
+                    OK = 0; // don't print attention this is normal
+                }
+
+                // if E is received, another election was started, switch to ELECTION
+                if (E)
+                {
+                    E = 0;
+                    switch_state(&state, ELECTION, &delay_count);
+                    break;
+                }
+
                 // if WIN is received, switch to NOT_LEADER
-                if (WIN = 1)
+                if (WIN)
                 {
                     WIN=0; // reset
-                    delay_count = 0;
-                    state = NOT_LEADER;
+                    switch_state(&state, NOT_LEADER, &delay_count);
+                    break;
                 }
-                // if timeout occurs, switch to ELECTION
-                if (delay_count == 10)  // set to appropriate value
+                // if timeout occurs in 20 delay_counts, switch to ELECTION
+                if (delay_count == 20)  // set to appropriate value
                 {
-                    delay_count = 0;
-                    state = ELECTION
+                    switch_state(&state, ELECTION, &delay_count);
+                    break;
                 }
                 delay_count++;
                 vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -756,42 +895,91 @@ void voting_fsm()
 
             case LEADER:
 
+                // reset extraneous signals, and print 'error'
+                if (E)
+                {
+                    E = 0;
+                    printf('Attention: E signal received in LEADER state\n');
+
+                }
+                
+                if (WIN)
+                {
+                    WIN = 0;
+                    printf('Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n');
+                    switch_state(&state, NOT_LEADER, &delay_count);
+                    break;
+                }
+
+                // if OK is received, it means a new ESP with a higher id entered, didn't received a WIN, so it started an election and sent OK's to lower id's
+                // switch to WAIT_WIN
+                if (OK)
+                {
+                    OK = 0;
+                    switch_state(&state, WAIT_WIN, &delay_count);
+                    break;
+                }
+
                 // Send WIN to lower
                 int id = myID - 1;
                 for (id; id>0; i--)
                 {
-                    send_signal(IPs[i-1],WIN_SIGNAL);
+                    udp_client_fn(id,WIN_SIGNAL);
                 }
 
+                if (delay_count==10)
+                {
+                    printf("I am the leader.\n");
+                }
+                delay_count++;
                 vTaskDelay(100 / portTICK_PERIOD_MS);
                 break;
 
             case NOT_LEADER:
 
+                if (E)
+                {
+                    E = 0;
+                    switch_state(&state, ELECTION, &delay_count);
+                    break;
+                }
+
                 // if WIN is received, reset and stay in NOT_LEADER
-                if (WIN = 1)
+                if (WIN)
                 {
                     WIN = 0;
+                    break;  // because we stay in same state don't reset delay_count
                 }
                 // if OK is received switch to WAIT_WIN
-                else if (OK==1)
+                if (OK)
                 {
-                    delay_count = 0;
-                    state = WAIT_WIN;
+                    OK = 0;
+                    switch_state(&state, WAIT_WIN, &delay_count);
+                    break;
                 }
-                // if neither is received, check if second highest. If so, become LEADER. If not, move to ELECTION
-                else if (myID == leaderID-1)
+                // if neither is received in 30 delay counts, the leader has died. check if second highest. If so, become LEADER. If not, move to ELECTION
+                if (delay_count>=30)
                 {
-                    delay_count = 0;
-                    state = LEADER;
+                    // set OK to lower id's
+                    int id = myID - 1;
+                    for (id; id>0; i--)
+                    {
+                        udp_client_fn(id,OK_SIGNAL);
+                    }
+                    if (myID == leaderID-1)
+                    {
+                        switch_state(&state, LEADER, &delay_count);
+                        break;
+                    }
+                    else
+                    {
+                        switch_state(&state, ELECTION, &delay_count);
+                        break;
+                    }
                 }
-                else
-                {
-                    delay_count = 0;
-                    state = ELECTION;
-                }
+                
 
-
+                delay_count++;
                 vTaskDelay(100 / portTICK_PERIOD_MS);
                 break;
         }
@@ -818,24 +1006,23 @@ void app_main()
     // Mutex for current values when sending
     mux = xSemaphoreCreateMutex();
 
-    // Create a FIFO queue for timer-based events
-    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
-
     // Create task to handle timer-based events
     //xTaskCreate(timer_evt_task, "timer_evt_task", 2048, NULL, 5, NULL);
 
     // Initialize all the things
-    rmt_tx_init();
+    // rmt_tx_init();
     uart_init();
-    led_init();
+    // led_init();
     //alarm_init();
-    button_init();
+    // button_init();
 
-    xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
+
     // Create Task to print out values received
-    xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
+    // xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
     //xTaskCreate(send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
-    xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    // xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     //xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
-    xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    // xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
+    xTaskCreate(voting_fsm_task, "voting_fsm", 4096, NULL, 5, NULL);
 }

@@ -28,7 +28,7 @@
 // UDP
 #define ID 1
 #define DEVICE_NUM 3
-#define BUF_SIZE (1024)
+#define BUF_SIZE 4
 
 #define CLIENT_INPUT 15 //pin 15
 
@@ -50,7 +50,6 @@ char start = 0x1B;
 char myID = (char)ID;
 static const char *TAG = "Quest 4";
 static const char payload[35] = "Payload Message from ID 1 :";
-static const char *resp = "This is response from ID 1 ";
 
 int sockets[DEVICE_NUM + 1];
 struct sockaddr_in addrs[DEVICE_NUM + 1];
@@ -141,7 +140,8 @@ static void udp_server_task(void *pvParameters)
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGI(TAG, "%s", rx_buffer);
 
-                int err = sendto(sock, resp, BUF_SIZE, 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
+                char resp[] = "ACK"
+                int err = sendto(sock, resp, strlen(resp), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
                 if (err < 0)
                 {
                     ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
@@ -164,14 +164,12 @@ static void udp_server_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-/* Client task, i.e. sending task */
-static void udp_client_task()
+/* Client function, i.e. sending task */
+static void udp_client_fn(int targetID, int signal)
 {
     char addr_str[128];
     int addr_family;
     int ip_protocol;
-    uint8_t *data_in = (uint8_t *)malloc(BUF_SIZE);
-    uint8_t *data_out = (uint8_t *)malloc(BUF_SIZE);
 
     for (int i = 1; i <= DEVICE_NUM; i++)
     {
@@ -203,24 +201,18 @@ static void udp_client_task()
         addrs[i] = dest_addr;
     }
 
-    for (int j = 1; j <= DEVICE_NUM; j++)
+    
+    if (targetID != ID)
     {
-        if (j != ID)
+        char payload[BUF_SIZE];
+        snprintf(payload,4,"%d:%d", myID, signal);
+        int err = sendto(sockets[targetID], payload, BUF_SIZE, 0, (struct sockaddr *)&(addrs[targetID]), sizeof(addrs[targetID]));
+        if (err < 0)
         {
-            int err = sendto(sockets[j], payload, BUF_SIZE, 0, (struct sockaddr *)&(addrs[j]), sizeof(addrs[j]));
-            if (err < 0)
-            {
-                ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-                break;
-            }
+            ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+            break;
         }
     }
-
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-
-    //free(data_out);
-    //free(data_in);
-    vTaskDelete(NULL);
 }
 
 static void Toggle_client()
@@ -230,7 +222,7 @@ static void Toggle_client()
         if (gpio_get_level(CLIENT_INPUT))
         {
             printf("Button pressed\n");
-            udp_client_task();
+            udp_client_fn();
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -249,7 +241,7 @@ void app_main(void)
     gpio_set_direction(CLIENT_INPUT, GPIO_MODE_INPUT);
 
     //xTaskCreate(led, "led", 4096, NULL, configMAX_PRIORITIES - 2, NULL);
-    //xTaskCreate(udp_client_task, "udp_client", 4096, NULL, configMAX_PRIORITIES - 3, NULL);
+    //xTaskCreate(udp_client_fn, "udp_client", 4096, NULL, configMAX_PRIORITIES - 3, NULL);
     xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
     xTaskCreate(Toggle_client, "Toggle_client", 4096, NULL, 7, NULL);
 
