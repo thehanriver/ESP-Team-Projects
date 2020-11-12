@@ -118,13 +118,13 @@ if(clear_flag == 1 ){
   console.log("cleared");
   clear_flag == 0;
 }
-app.listen(8080);
+app.listen(4000);
 
 // Required module
 var dgram = require('dgram');
 
 // Port and IP
-var PORT = 1234;
+var PORT = 1111;
 var HOST = '192.168.1.111';
 
 // Create socket

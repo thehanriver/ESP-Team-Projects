@@ -1,3 +1,5 @@
+//Quest 4
+//Mario Han, Vivek Cherian, Hussain Valiuddin
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,7 +84,7 @@
 
 // Default ID/color
 #define FLASH_THIS_ID 6
-#define COLOR 'R'
+#define DEFAULT_COLOR '3'   // RED
 #define MAX_ID 6
 
 // States
@@ -96,6 +98,9 @@
 #define OKIE_SIGNAL 0
 #define E_SIGNAL 1
 #define WIN_SIGNAL 2
+#define R_SIGNAL 3
+#define G_SIGNAL 4
+#define B_SIGNAL 5
 
 // Signal flag
 static int OKIE = 0;
@@ -119,7 +124,7 @@ static int timer;
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
 int myID = FLASH_THIS_ID;
-// char myColor = (char)COLOR;
+char myVote = DEFAULT_COLOR;  // myVote is a char number
 int len_out = 4;
 
 char ip_addrs[MAX_ID + 1][20] = {
@@ -172,7 +177,7 @@ static const char *TAG_SYSTEM = "system"; // For debug logs
 //     evt.flag = 1;
 
 //     // blue is shorter
-//     if (myColor == 'G')
+//     if (myVote == 'G')
 //     {
 //         timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE);
 //     }
@@ -308,28 +313,28 @@ static void led_init()
 
 // }
 
-// // Button interrupt init
-// static void button_init()
-// {
-//     gpio_config_t io_conf;
-//     //interrupt of rising edge
-//     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-//     //bit mask of the pins, use GPIO4 here
-//     io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
-//     //set as input mode
-//     io_conf.mode = GPIO_MODE_INPUT;
-//     //enable pull-up mode
-//     io_conf.pull_up_en = 1;
-//     gpio_config(&io_conf);
-//     gpio_intr_enable(GPIO_INPUT_IO_1);
-//     //install gpio isr service
-//     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
-//     //hook isr handler for specific gpio pin
-//     gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)GPIO_INPUT_IO_1);
-//     //create a queue to handle gpio event from isr
-//     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-//     //start gpio task
-// }
+// Button interrupt init
+static void button_init()
+{
+    gpio_config_t io_conf;
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+    //bit mask of the pins, use GPIO4 here
+    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+    //set as input mode
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = 1;
+    gpio_config(&io_conf);
+    gpio_intr_enable(GPIO_INPUT_IO_1);
+    //install gpio isr service
+    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
+    //hook isr handler for specific gpio pin
+    gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)GPIO_INPUT_IO_1);
+    //create a queue to handle gpio event from isr
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    //start gpio task
+}
 
 //Wifi funtions
 static void event_handler(void *arg, esp_event_base_t event_base,
@@ -428,63 +433,66 @@ void wifi_init_sta(void)
 }
 
 // Tasks ///////////////////////////////////////////////////////////////////////
-// // Send task -- sends payload | Start | myID | Start | myID
-// static void send_task(char signal)
-// {
+// Send task -- sends payload | Start | myVote | myID | checkSum
+static void ir_send_task()   // send myID and myVote
+{
 
-//     printf("Sent payload\n");
-//     char *data_out = (char *)malloc(len_out);
-//     xSemaphoreTake(mux, portMAX_DELAY);
-//     data_out[0] = start;
-//     data_out[1] = signal; 
-//     data_out[2] = (char)myID;
-//     data_out[3] = genCheckSum(data_out, len_out - 1);
-//     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
+    printf("Sent payload\n");
+    char *data_out = (char *)malloc(len_out);
+    xSemaphoreTake(mux, portMAX_DELAY);
+    data_out[0] = start;
+    data_out[1] = (char)(myID + '0'); 
+    data_out[2] = myVote;
+    data_out[3] = genCheckSum(data_out, len_out - 1);
+    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
 
-//     uart_write_bytes(UART_NUM_1, data_out, len_out);
-//     xSemaphoreGive(mux);
+    uart_write_bytes(UART_NUM_1, data_out, len_out);
+    xSemaphoreGive(mux);
 
-// }
+}
 
-// // Receives task -- looks for Start byte then stores received values
-// void recv_task()
-// {
-//     // Buffer for input data
-//     uint8_t *data_in = (uint8_t *)malloc(BUF_SIZE);
-//     while (1)
-//     {
-//         int len_in = uart_read_bytes(UART_NUM_1, data_in, BUF_SIZE, 20 / portTICK_RATE_MS);
-//         if (len_in > 0)
-//         {
-//             if (data_in[0] == start)
-//             {
-//                 if (checkCheckSum(data_in, len_out))
-//                 {
-//                     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
-//                     printf("Received data_in: %u\n", data_in[1]);
-//                     switch (data_in[1])
-//                     {
-//                     case 82:
-//                         myColor = 'R';
-//                         break;
-//                     case 71:
-//                         myColor = 'G';
-//                         break;
-//                     case 66:
-//                         myColor = 'B';
-//                         break;
-//                     }
-//                 }
-//             }
-//         }
-//         else
-//         {
-//             //printf("Nothing received.\n");
-//         }
-//         vTaskDelay(5 / portTICK_PERIOD_MS);
-//     }
-//     free(data_in);
-// }
+// Receives task -- looks for Start byte then stores received values
+void ir_receive_task()
+{
+    // Buffer for input data
+    uint8_t *data_in = (uint8_t *)malloc(BUF_SIZE);
+    while (1)
+    {
+        int len_in = uart_read_bytes(UART_NUM_1, data_in, BUF_SIZE, 20 / portTICK_RATE_MS);
+        if (len_in > 0)
+        {
+            if (data_in[0] == start)
+            {
+                if (checkCheckSum(data_in, len_out))
+                {
+                    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
+                    printf("Received data_in: %u\n", data_in[2]);
+                    // switch (data_in[2])  // fix to temporarily display received vote
+                    // {
+                    // case 82:
+                    //     myVote = 'R';
+                    //     break;
+                    // case 71:
+                    //     myVote = 'G';
+                    //     break;
+                    // case 66:
+                    //     myVote = 'B';
+                    //     break;
+                    // }
+                    int from_id = (int) (data_in[1] - '0');    // convert char number to int number
+                    int vote = (int) (data_in[2]-'0'); // convert char number to int number
+                    udp_client_fn(from_id,leaderID,vote);
+                }
+            }
+        }
+        else
+        {
+            //printf("Nothing received.\n");
+        }
+        vTaskDelay(5 / portTICK_PERIOD_MS);
+    }
+    free(data_in);
+}
 
 // // Button task -- rotate through myIDs
 // void button_task()
@@ -561,17 +569,17 @@ void led_task()
 //     if (evt.flag == 1)
 //     {
 //       printf("Action!\n");
-//       if (myColor == 'R')
+//       if (myVote == 'R')
 //       {
-//         myColor = 'G';
+//         myVote = 'G';
 //       }
-//       else if (myColor == 'G')
+//       else if (myVote == 'G')
 //       {
-//         myColor = 'B';
+//         myVote = 'B';
 //       }
-//       else if (myColor == 'B')
+//       else if (myVote == 'B')
 //       {
-//         myColor = 'R';
+//         myVote = 'R';
 //       }
 //     }
 //   }
@@ -685,6 +693,18 @@ static void udp_server_task(void *pvParameters)
                     leaderID = rx_buffer[0];
                     WIN = 1;
                 }
+                else if (rx_buffer[2] == '3')   // R_SIGNAL as character
+                {
+                    udp_client_fn(rx_buffer[0], 0, R_SIGNAL);
+                }
+                else if (rx_buffer[2] == '4')   // G_SIGNAL as character
+                {
+                    udp_client_fn(rx_buffer[0], 0, G_SIGNAL);
+                }
+                else if (rx_buffer[2] == '5')   // B_SIGNAL as character
+                {
+                    udp_client_fn(rx_buffer[0], 0, B_SIGNAL);
+                }
             }
         }
 
@@ -701,7 +721,7 @@ static void udp_server_task(void *pvParameters)
 }
 
 /* Client function, i.e. sending task */
-static void udp_client_fn(int targetID, int signal)
+static void udp_client_fn(int fromID, int targetID, int signal)
 {
     switch (signal)
     {
@@ -713,6 +733,15 @@ static void udp_client_fn(int targetID, int signal)
             break;
         case WIN_SIGNAL:
             printf("sending WIN to %d\n",targetID);
+            break;
+        case R_SIGNAL:
+            printf("sending R to %d\n",targetID);
+            break;
+        case G_SIGNAL:
+            printf("sending G to %d\n",targetID);
+            break;
+        case B_SIGNAL:
+            printf("sending B to %d\n",targetID);
             break;
     }
     char addr_str[128];
@@ -750,7 +779,7 @@ static void udp_client_fn(int targetID, int signal)
 
 
     char payload[BUF_SIZE];
-    snprintf(payload,BUF_SIZE,"%d:%d", myID, signal);
+    snprintf(payload,BUF_SIZE,"%d:%d", fromID, signal);
     int err1 = fcntl( sock, F_SETFL, fcntl(sock, F_GETFL, 0 ) | O_NONBLOCK );
     if (err1 < 0)
     {
@@ -820,13 +849,13 @@ void voting_fsm_task()
                 // send OKIE to lower ids
                 for (id=myID-1; id>0; id--)
                 {
-                    udp_client_fn(id,OKIE_SIGNAL);
+                    udp_client_fn(myID,id,OKIE_SIGNAL);
                 }
 
                 // send E to higher ids
                 for (id=myID+1; id<=MAX_ID; id++)
                 {
-                    udp_client_fn(id,E_SIGNAL);
+                    udp_client_fn(myID,id,E_SIGNAL);
                 }
 
                 
@@ -859,7 +888,7 @@ void voting_fsm_task()
                 // send OKIE to lower ids while waiting for OKIE 
                 for (id=myID-1; id>0; id--)
                 {
-                    udp_client_fn(id,OKIE_SIGNAL);
+                    udp_client_fn(myID,id,OKIE_SIGNAL);
                 }
 
                 // If OKIE is received, switch to WAIT_WIN
@@ -952,7 +981,7 @@ void voting_fsm_task()
                 // Send WIN to lower
                 for (id=myID-1; id>0; id--)
                 {
-                    udp_client_fn(id,WIN_SIGNAL);
+                    udp_client_fn(myID,id,WIN_SIGNAL);
                 }
 
                 if (delay_count%10==0)
@@ -996,7 +1025,7 @@ void voting_fsm_task()
                     // set OKIE to lower id's
                     for (id=myID-1; id>0; id--)
                     {
-                        udp_client_fn(id,OKIE_SIGNAL);
+                        udp_client_fn(myID,id,OKIE_SIGNAL);
                     }
                     if (myID == leaderID-1)
                     {
@@ -1042,16 +1071,16 @@ void app_main()
     //xTaskCreate(timer_evt_task, "timer_evt_task", 2048, NULL, 5, NULL);
 
     // Initialize all the things
-    // rmt_tx_init();
-    // uart_init();
+    rmt_tx_init();
+    uart_init();
     led_init();
     //alarm_init();
     // button_init();
 
 
     // Create Task to print out values received
-    // xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
-    //xTaskCreate(send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    xTaskCreate(ir_receive_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
+    xTaskCreate(ir_send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     // xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
