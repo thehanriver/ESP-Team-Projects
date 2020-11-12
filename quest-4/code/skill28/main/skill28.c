@@ -38,8 +38,6 @@
 #include "soc/rmt_reg.h"
 #include "sdkconfig.h"
 
-//all esps and their IP
-#define MAX_ID 3
 
 // LED Output pins definitions
 #define BLUEPIN 14
@@ -78,14 +76,14 @@
 #define TIMER_INTERVAL_10_SEC (10)
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
 
-#define UDP_TIMEOUT_SECONDS 3
+// #define UDP_TIMEOUT_SECONDS 3
 #define UDP_PORT 1111
 
 
 // Default ID/color
-#define FLASH_THIS_ID 2
+#define FLASH_THIS_ID 6
 #define COLOR 'R'
-#define DEVICE_NUM 3
+#define MAX_ID 6
 
 // States
 #define ELECTION 0
@@ -121,18 +119,21 @@ static int timer;
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
 int myID = FLASH_THIS_ID;
-char myColor = (char)COLOR;
+// char myColor = (char)COLOR;
 int len_out = 4;
 
-char ip_addrs[DEVICE_NUM + 1][20] = {
+char ip_addrs[MAX_ID + 1][20] = {
     "0",
-    "192.168.1.106", //ID 1 //COM4
-    "192.168.1.100", //ID 2 //COM5
-    "192.168.1.130", //ID 3 //COM6
+    "192.168.1.101", //ID 1 //COM4
+    "192.168.1.102", //ID 2 //COM5
+    "192.168.1.103", //ID 3 //COM6
+    "192.168.1.104", //ID 4 //COM8
+    "192.168.1.105", //ID 5 //COM10
+    "192.168.1.106", //ID 6 //COM9
 };
 
-int sockets[DEVICE_NUM + 1];
-struct sockaddr_in addrs[DEVICE_NUM + 1];
+int sockets[MAX_ID + 1];
+struct sockaddr_in addrs[MAX_ID + 1];
 
 
 // Mutex (for resources), and Queues (for button)
@@ -979,6 +980,7 @@ void voting_fsm_task()
                 if (WIN)
                 {
                     WIN = 0;
+                    delay_count = 0;
                     break;  // because we stay in same state don't reset delay_count
                 }
                 // if OKIE is received switch to WAIT_WIN
@@ -988,8 +990,8 @@ void voting_fsm_task()
                     switch_state(&state, WAIT_WIN, &delay_count);
                     break;
                 }
-                // if neither is received in 30 delay counts, the leader has died. check if second highest. If so, become LEADER. If not, move to ELECTION
-                if (delay_count>=30)
+                // if neither is received in 4 delay counts, the leader has died. check if second highest. If so, become LEADER. If not, move to ELECTION
+                if (delay_count>=4)
                 {
                     // set OKIE to lower id's
                     for (id=myID-1; id>0; id--)
@@ -1051,7 +1053,7 @@ void app_main()
     // xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
     //xTaskCreate(send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
-    //xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     // xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
     xTaskCreate(voting_fsm_task, "voting_fsm", 4096, NULL, 5, NULL);
