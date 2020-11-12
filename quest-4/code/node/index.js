@@ -6,10 +6,9 @@ var http = require('http').Server(app);
 
 
 const bodyParser = require('body-parser');
-
-const uri = "mongodb+srv://mario:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
-const MongoClient = require('mongodb').MongoClient;
-const client = new MongoClient(uri, {useUnifiedTopology: true, useNewUrlParser: true});
+//useUnifiedTopology: true, 
+var MongoClient = require('mongodb').MongoClient;
+var url = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
 
 var clear_flag = 0;
 var all;
@@ -211,17 +210,16 @@ server.on('message', function (message, remote) {
         break;
     }
     myObj = {fob_ID: id, vote: vote, date_time: dateTime};
-
-    client.connect(function(err, db) {
+    
+    MongoClient.connect(url, function(err, db) {
+      if (err) throw err;
+      var dbo = db.db("Election");
+      dbo.collection("Voters").insertOne(myObj, function(err, res) {
         if (err) throw err;
-        var dbo = db.db("Election");
-        // var myobj = { fob_ID: "1", vote: "R", time: "10:28pm" };
-        dbo.collection("Voters").insertOne(myObj, function(err, res) {
-          if (err) throw err;
-          console.log("1 document inserted");
-          db.close();
-        });
+        console.log("1 document inserted");
+        db.close();
       });
+    });
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
@@ -234,6 +232,19 @@ server.on('message', function (message, remote) {
     });
 
 });
+
+
+// // insert a document into 'customers'
+// MongoClient.connect(url, function(err, db) {
+//   if (err) throw err;
+//   var dbo = db.db("mydb");
+//   var myobj = { name: "Company Inc", address: "Highway 37" };
+//   dbo.collection("customers").insertOne(myobj, function(err, res) {
+//     if (err) throw err;
+//     console.log("1 document inserted");
+//     db.close();
+//   });
+// });
 
 // Bind server to port and IP
 server.bind(PORT, HOST);
