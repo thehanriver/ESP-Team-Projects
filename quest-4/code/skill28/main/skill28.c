@@ -33,26 +33,13 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/sockets.h"
-#include "./ADXL343.h"
 #include "protocol_examples_common.h"
 #include "addr_from_stdin.h"
 #include "soc/rmt_reg.h"
 #include "sdkconfig.h"
 
-//IP defines
-#define HOST_IP_ADDR "192.168.1.111"
-#define PORT 1234
-
 //all esps and their IP
-//create array ESP_IPs with the myid -1 as index
-#define ESP1_IP // myID = 1
-#define ESP2_IP // myID = 2
-#define ESP3_IP // myID = 3
-#define ESP4_IP // myID = 4
-#define ESP5_IP // myID = 5
-#define ESP6_IP // myID = 6
-#define PORT 1234
-#define maxID 6
+#define MAX_ID 3
 
 // LED Output pins definitions
 #define BLUEPIN 14
@@ -92,11 +79,13 @@
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
 
 #define UDP_TIMEOUT_SECONDS 3
+#define UDP_PORT 1111
 
 
 // Default ID/color
-#define ID 1
+#define FLASH_THIS_ID 2
 #define COLOR 'R'
+#define DEVICE_NUM 3
 
 // States
 #define ELECTION 0
@@ -106,38 +95,45 @@
 #define NOT_LEADER 4
 
 // signals
-#define OK_SIGNAL '0'
-#define E_SIGNAL '1'
-#define WIN_SIGNAL '2'
+#define OKIE_SIGNAL 0
+#define E_SIGNAL 1
+#define WIN_SIGNAL 2
 
 // Signal flag
-static int OK = 0;
+static int OKIE = 0;
 static int WIN = 0;
 static int E = 0;
 
 
 
 static int leaderID = -1;
+static int state = NOT_LEADER;
 
 
 //Wifi
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 
-static const char *TAG = "Client";
+static const char *TAG = "Quest 4";
 
 static int timer;
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
-char myID = (char)ID;
+int myID = FLASH_THIS_ID;
 char myColor = (char)COLOR;
 int len_out = 4;
 
-static int myState = START;
+char ip_addrs[DEVICE_NUM + 1][20] = {
+    "0",
+    "192.168.1.106", //ID 1 //COM4
+    "192.168.1.100", //ID 2 //COM5
+    "192.168.1.130", //ID 3 //COM6
+};
 
-//array of all IPs;
-static char IPs[6][13] = {ESP1_IP, ESP2_IP, ESP3_IP, ESP4_IP, ESP5_IP, ESP6_IP};
+int sockets[DEVICE_NUM + 1];
+struct sockaddr_in addrs[DEVICE_NUM + 1];
+
 
 // Mutex (for resources), and Queues (for button)
 SemaphoreHandle_t mux = NULL;
@@ -275,18 +271,18 @@ bool checkCheckSum(uint8_t *p, int len)
 //     uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
 // }
 
-// // GPIO init for LEDs
-// static void led_init()
-// {
-//     gpio_pad_select_gpio(BLUEPIN);
-//     gpio_pad_select_gpio(GREENPIN);
-//     gpio_pad_select_gpio(REDPIN);
-//     gpio_pad_select_gpio(ONBOARD);
-//     gpio_set_direction(BLUEPIN, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
-// }
+// GPIO init for LEDs
+static void led_init()
+{
+    gpio_pad_select_gpio(BLUEPIN);
+    gpio_pad_select_gpio(GREENPIN);
+    gpio_pad_select_gpio(REDPIN);
+    gpio_pad_select_gpio(ONBOARD);
+    gpio_set_direction(BLUEPIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
+}
 
 // // Initialize timer 0 in group 0 for 1 sec alarm interval and auto reload
 // static void alarm_init() {
@@ -311,28 +307,28 @@ bool checkCheckSum(uint8_t *p, int len)
 
 // }
 
-// Button interrupt init
-static void button_init()
-{
-    gpio_config_t io_conf;
-    //interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4 here
-    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
-    //set as input mode
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
-    gpio_config(&io_conf);
-    gpio_intr_enable(GPIO_INPUT_IO_1);
-    //install gpio isr service
-    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
-    //hook isr handler for specific gpio pin
-    gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)GPIO_INPUT_IO_1);
-    //create a queue to handle gpio event from isr
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    //start gpio task
-}
+// // Button interrupt init
+// static void button_init()
+// {
+//     gpio_config_t io_conf;
+//     //interrupt of rising edge
+//     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+//     //bit mask of the pins, use GPIO4 here
+//     io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+//     //set as input mode
+//     io_conf.mode = GPIO_MODE_INPUT;
+//     //enable pull-up mode
+//     io_conf.pull_up_en = 1;
+//     gpio_config(&io_conf);
+//     gpio_intr_enable(GPIO_INPUT_IO_1);
+//     //install gpio isr service
+//     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
+//     //hook isr handler for specific gpio pin
+//     gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)GPIO_INPUT_IO_1);
+//     //create a queue to handle gpio event from isr
+//     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+//     //start gpio task
+// }
 
 //Wifi funtions
 static void event_handler(void *arg, esp_event_base_t event_base,
@@ -507,47 +503,47 @@ void wifi_init_sta(void)
 //     }
 // }
 
-// // LED task to light LED based on traffic state
-// void led_task()
-// {
-//     while (1)
-//     {
-//         switch (myState)
-//         {
-//         case START:
-//             gpio_set_level(GREENPIN, 0);
-//             gpio_set_level(REDPIN, 0);
-//             gpio_set_level(BLUEPIN, 0);
-//             // printf("Current state: %c\n",status);
-//             break;
-//         case LEADER: // Green
-//             gpio_set_level(GREENPIN, 1);
-//             gpio_set_level(REDPIN, 0);
-//             gpio_set_level(BLUEPIN, 0);
-//             // printf("Current state: %c\n",status);
-//             break;
-//         case LEADERNT: // blue
-//             gpio_set_level(GREENPIN, 0);
-//             gpio_set_level(REDPIN, 0);
-//             gpio_set_level(BLUEPIN, 1);
-//             // printf("Current state: %c\n",status);
-//             break;
-//         case ELECTION: // red
-//             gpio_set_level(GREENPIN, 0);
-//             gpio_set_level(REDPIN, 1);
-//             gpio_set_level(BLUEPIN, 0);
-//             // printf("Current state: %c\n",status);
-//             break;
-//         case WAIT: // red & blue
-//             gpio_set_level(GREENPIN, 0);
-//             gpio_set_level(REDPIN, 1);
-//             gpio_set_level(BLUEPIN, 1);
-//             // printf("Current state: %c\n",status);
-//             break;
-//         }
-//         vTaskDelay(100 / portTICK_PERIOD_MS);
-//     }
-// }
+// LED task to light LED based on traffic state
+void led_task()
+{
+    while (1)
+    {
+        switch (state)
+        {
+        case LEADER: // Green
+            gpio_set_level(GREENPIN, 1);
+            gpio_set_level(REDPIN, 0);
+            gpio_set_level(BLUEPIN, 0);
+            // printf("Current state: %c\n",status);
+            break;
+        case NOT_LEADER: // blue
+            gpio_set_level(GREENPIN, 0);
+            gpio_set_level(REDPIN, 0);
+            gpio_set_level(BLUEPIN, 1);
+            // printf("Current state: %c\n",status);
+            break;
+        case ELECTION: // red
+            gpio_set_level(GREENPIN, 0);
+            gpio_set_level(REDPIN, 1);
+            gpio_set_level(BLUEPIN, 0);
+            // printf("Current state: %c\n",status);
+            break;
+        case WAIT_OK: // red & blue
+            gpio_set_level(GREENPIN, 0);
+            gpio_set_level(REDPIN, 1);
+            gpio_set_level(BLUEPIN, 0);
+            // printf("Current state: %c\n",status);
+            break;
+        case WAIT_WIN: // red & blue
+            gpio_set_level(GREENPIN, 0);
+            gpio_set_level(REDPIN, 1);
+            gpio_set_level(BLUEPIN, 0);
+            // printf("Current state: %c\n",status);
+            break;
+        }
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
 
 // Timer task -- R (10 seconds), G (10 seconds), Y (2 seconds)
 // static void timer_evt_task(void *arg)
@@ -616,13 +612,13 @@ static void udp_server_task(void *pvParameters)
         struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
         dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
         dest_addr_ip4->sin_family = AF_INET;
-        dest_addr_ip4->sin_port = htons(port);
+        dest_addr_ip4->sin_port = htons(UDP_PORT);
         ip_protocol = IPPROTO_IP;
 
         int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
         if (sock < 0)
         {
-            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+            ESP_LOGE(TAG, "Unable to create socket in server: errno %d", errno);
             break;
         }
         ESP_LOGI(TAG, "Socket created");
@@ -633,7 +629,7 @@ static void udp_server_task(void *pvParameters)
         {
             ESP_LOGE(TAG, "Socket unable to bind: errno %d", errno);
         }
-        ESP_LOGI(TAG, "Socket bound, port %d", port);
+        ESP_LOGI(TAG, "Socket bound, UDP_PORT %d", UDP_PORT);
 
         while (1)
         {
@@ -667,17 +663,17 @@ static void udp_server_task(void *pvParameters)
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGI(TAG, "%s", rx_buffer);
 
-                char resp[] = "ACK"
+                char resp[] = "ACK";
                 int err = sendto(sock, resp, strlen(resp), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
                 if (err < 0)
                 {
-                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                    ESP_LOGE(TAG, "Error occurred during sending in server: errno %d", errno);
                     break;
                 }
                 printf("Recieved: %s\n",rx_buffer);
                 if (rx_buffer[2] == '0')
                 {
-                    OK = 1;
+                    OKIE = 1;
                 }
                 else if (rx_buffer[2] == '1')
                 {
@@ -706,64 +702,81 @@ static void udp_server_task(void *pvParameters)
 /* Client function, i.e. sending task */
 static void udp_client_fn(int targetID, int signal)
 {
+    switch (signal)
+    {
+        case OKIE_SIGNAL:
+            printf("sending OKIE to %d\n",targetID);
+            break;
+        case E_SIGNAL:
+            printf("sending E to %d\n",targetID);
+            break;
+        case WIN_SIGNAL:
+            printf("sending WIN to %d\n",targetID);
+            break;
+    }
     char addr_str[128];
     int addr_family;
     int ip_protocol;
 
-    for (int i = 1; i <= DEVICE_NUM; i++)
+
+
+    /* Skips configuring socket for itself */
+    if (targetID == FLASH_THIS_ID)
     {
-
-        /* Skips configuring socket for itself */
-        if (i == ID)
-            continue;
-
-        struct sockaddr_in dest_addr;
-        dest_addr.sin_addr.s_addr = inet_addr(ip_addrs[i]);
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port = htons(port);
-        addr_family = AF_INET;
-        ip_protocol = IPPROTO_IP;
-        inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
-
-        int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
-        if (sock < 0)
-        {
-            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-            break;
-        }
-        printf("Socket created, sending to %s:%d\n", ip_addrs[i], port);
-        struct timeval read_timeout;
-        read_timeout.tv_sec = 0;
-        read_timeout.tv_usec = 100000;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof read_timeout);
-        sockets[i] = sock;
-        addrs[i] = dest_addr;
+        return;
     }
 
+    struct sockaddr_in dest_addr;
+    dest_addr.sin_addr.s_addr = inet_addr(ip_addrs[targetID]);
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(UDP_PORT);
+    addr_family = AF_INET;
+    ip_protocol = IPPROTO_IP;
+    inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
+
+    int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+    if (sock < 0)
+    {
+        ESP_LOGE(TAG, "Unable to create socket in client: errno %d", errno);
+        return;
+    }
+    printf("Socket created, sending to %s:%d\n", ip_addrs[targetID], UDP_PORT);
+    struct timeval read_timeout;
+    read_timeout.tv_sec = 0;
+    read_timeout.tv_usec = 100000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof read_timeout);
     
-    if (targetID != ID)
-    {
-        char payload[BUF_SIZE];
-        snprintf(paylosendtoad,4,"%d:%d", myID, signal);
-        int err1 = fcntl( sockets[targetID], F_SETFL, fcntl(sockets[targetID], F_GETFL, 0 ) | O_NONBLOCK );
-        if (err1 < 0)
-        {
-            ESP_LOGE(TAG, "Error occurred while making UDP socket non-blocking: errno %d", errno);
-        }
 
-        int err2 = sendto(sockets[targetID], payload, BUF_SIZE, 0, (struct sockaddr *)&(addrs[targetID]), sizeof(addrs[targetID]));
-        if (err2 < 0)
-        {
-            ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-            break;
-        }
+
+    char payload[BUF_SIZE];
+    snprintf(payload,BUF_SIZE,"%d:%d", myID, signal);
+    int err1 = fcntl( sock, F_SETFL, fcntl(sock, F_GETFL, 0 ) | O_NONBLOCK );
+    if (err1 < 0)
+    {
+        ESP_LOGE(TAG, "Error occurred while making UDP socket non-blocking: errno %d", errno);
+        shutdown(sock, 1);
+        close(sock);
+        return;
     }
+
+    int err2 = sendto(sock, payload, BUF_SIZE, 0, (struct sockaddr *)&(dest_addr), sizeof(dest_addr));
+    if (err2 < 0)
+    {
+        ESP_LOGE(TAG, "Error occurred during sending in client: errno %d", errno);
+        shutdown(sock, 1);
+        close(sock);
+        return;
+
+    }
+    shutdown(sock, 1);
+    close(sock);
+    
 }
 void switch_state(int* state_ptr, int to_state, int* delay_count_ptr)
 {
     *state_ptr = to_state;
     *delay_count_ptr = 0;
-    OK=0;
+    OKIE=0;
     WIN=0;
     E=0;
 }
@@ -771,43 +784,46 @@ void switch_state(int* state_ptr, int to_state, int* delay_count_ptr)
 void voting_fsm_task()
 {
     int delay_count = 0;    // number of delays that has occurred; inc before each vTaskDelay, set to 0 when switching states
-    int state = NOT_LEADER;
+    state = NOT_LEADER;
+    int id; // used for loops
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("Starting fsm...\n");
     while (1)
     {
         switch (state)
         {
             case ELECTION:
 
+                printf("entered ELECTION\n");
+
                 // reset extraneous signals
                 if (E)
                 {
                     E = 0; // don't print attention here because this is normal
                 }
-                if (OK) // switch to WAIT_WIN bc a higher esp is taking care of it
+                if (OKIE) // switch to WAIT_WIN bc a higher esp is taking care of it
                 {
-                    OK = 0;
-                    printf('Attention: OK signal received in ELECTION state. Moving to WAIT_WIN\n');
+                    OKIE = 0;
+                    printf("Attention: OKIE signal received in ELECTION state. Moving to WAIT_WIN\n");
                     switch_state(&state, WAIT_WIN, &delay_count);
                     break;
                 }
                 if (WIN)
                 {
                     WIN = 0;
-                    printf('Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n');
+                    printf("Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n");
                     switch_state(&state, NOT_LEADER, &delay_count);
                     break;
                 }
 
-                // send OK to lower ids
-                int id = myID - 1;
-                for (id; id>0; i--)
+                // send OKIE to lower ids
+                for (id=myID-1; id>0; id--)
                 {
-                    udp_client_fn(id,OK_SIGNAL);
+                    udp_client_fn(id,OKIE_SIGNAL);
                 }
 
                 // send E to higher ids
-                id = myID+1;
-                for (id; id<maxID; id++)
+                for (id=myID+1; id<=MAX_ID; id++)
                 {
                     udp_client_fn(id,E_SIGNAL);
                 }
@@ -819,6 +835,11 @@ void voting_fsm_task()
                 break;
 
             case WAIT_OK:
+                if (delay_count==0)
+                {
+                    printf("entered WAIT_OK\n");
+                }
+                
 
                 // reset extraneous signals
                 if (E)
@@ -829,22 +850,21 @@ void voting_fsm_task()
                 if (WIN)
                 {
                     WIN = 0;
-                    printf('Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n');
+                    printf("Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n");
                     switch_state(&state, NOT_LEADER, &delay_count);
                     break;
                 }
 
-                // send OK to lower ids while waiting for OK 
-                int id = myID - 1;
-                for (id; id>0; i--)
+                // send OKIE to lower ids while waiting for OKIE 
+                for (id=myID-1; id>0; id--)
                 {
-                    udp_client_fn(id,OK_SIGNAL);
+                    udp_client_fn(id,OKIE_SIGNAL);
                 }
 
-                // If OK is received, switch to WAIT_WIN
-                if (OK = 1)
+                // If OKIE is received, switch to WAIT_WIN
+                if (OKIE)
                 {
-                    OK = 0;
+                    OKIE = 0;
                     switch_state(&state, WAIT_WIN, &delay_count);
                     break;
                 }
@@ -861,11 +881,15 @@ void voting_fsm_task()
                 break;
 
             case WAIT_WIN:
+                if (delay_count==0)
+                {
+                    printf("entered WAIT_WIN\n");
+                }
 
                 // reset extraneous signals
-                if (OK)
+                if (OKIE)
                 {
-                    OK = 0; // don't print attention this is normal
+                    OKIE = 0; // don't print attention this is normal
                 }
 
                 // if E is received, another election was started, switch to ELECTION
@@ -894,40 +918,43 @@ void voting_fsm_task()
                 break;
 
             case LEADER:
+                if (delay_count==0)
+                {
+                    printf("entered LEADER\n");
+                }
 
                 // reset extraneous signals, and print 'error'
                 if (E)
                 {
                     E = 0;
-                    printf('Attention: E signal received in LEADER state\n');
+                    printf("Attention: E signal received in LEADER state\n");
 
                 }
                 
                 if (WIN)
                 {
                     WIN = 0;
-                    printf('Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n');
+                    printf("Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n");
                     switch_state(&state, NOT_LEADER, &delay_count);
                     break;
                 }
 
-                // if OK is received, it means a new ESP with a higher id entered, didn't received a WIN, so it started an election and sent OK's to lower id's
+                // if OKIE is received, it means a new ESP with a higher id entered, didn't received a WIN, so it started an election and sent OKIE's to lower id's
                 // switch to WAIT_WIN
-                if (OK)
+                if (OKIE)
                 {
-                    OK = 0;
+                    OKIE = 0;
                     switch_state(&state, WAIT_WIN, &delay_count);
                     break;
                 }
 
                 // Send WIN to lower
-                int id = myID - 1;
-                for (id; id>0; i--)
+                for (id=myID-1; id>0; id--)
                 {
                     udp_client_fn(id,WIN_SIGNAL);
                 }
 
-                if (delay_count==10)
+                if (delay_count%10==0)
                 {
                     printf("I am the leader.\n");
                 }
@@ -936,6 +963,10 @@ void voting_fsm_task()
                 break;
 
             case NOT_LEADER:
+                if (delay_count==0)
+                {
+                    printf("entered NOT_LEADER\n");
+                }
 
                 if (E)
                 {
@@ -950,21 +981,20 @@ void voting_fsm_task()
                     WIN = 0;
                     break;  // because we stay in same state don't reset delay_count
                 }
-                // if OK is received switch to WAIT_WIN
-                if (OK)
+                // if OKIE is received switch to WAIT_WIN
+                if (OKIE)
                 {
-                    OK = 0;
+                    OKIE = 0;
                     switch_state(&state, WAIT_WIN, &delay_count);
                     break;
                 }
                 // if neither is received in 30 delay counts, the leader has died. check if second highest. If so, become LEADER. If not, move to ELECTION
                 if (delay_count>=30)
                 {
-                    // set OK to lower id's
-                    int id = myID - 1;
-                    for (id; id>0; i--)
+                    // set OKIE to lower id's
+                    for (id=myID-1; id>0; id--)
                     {
-                        udp_client_fn(id,OK_SIGNAL);
+                        udp_client_fn(id,OKIE_SIGNAL);
                     }
                     if (myID == leaderID-1)
                     {
@@ -1011,8 +1041,8 @@ void app_main()
 
     // Initialize all the things
     // rmt_tx_init();
-    uart_init();
-    // led_init();
+    // uart_init();
+    led_init();
     //alarm_init();
     // button_init();
 
@@ -1020,7 +1050,7 @@ void app_main()
     // Create Task to print out values received
     // xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
     //xTaskCreate(send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
-    // xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+    xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     //xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     // xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
     xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
