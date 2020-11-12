@@ -60,7 +60,8 @@
 #define BUF_SIZE (1024)
 
 // Hardware interrupt definitions
-#define GPIO_INPUT_IO_1 4 //Button pin A5
+#define GPIO_INPUT_IO_1 4 //Button pin A5 //Button for changing vote
+#define GPIO_INPUT_IO_2 39 //Button pin A3 // Button for sending IR Task
 #define ESP_INTR_FLAG_DEFAULT 0
 #define GPIO_INPUT_PIN_SEL 1ULL << GPIO_INPUT_IO_1
 

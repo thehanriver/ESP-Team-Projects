@@ -22,46 +22,46 @@ var red;
 var blue;
 var green;
 
-function candVotes(){
-    client.connect(function(err, db) {
-      if (err) throw err;
-      var dbo = db.db("Election");
-      var query = { vote: /^R/ };
-      dbo.collection("Voters").find(query).toArray(function(err, result) {
-        if (err) throw err;
-        red = result;
-        console.log(result);
-        db.close();
-      });
-      var query = { vote: /^G/ };
-      dbo.collection("Voters").find(query).toArray(function(err, result) {
-        if (err) throw err;
-        green = result;
-        console.log(result);
-        db.close();
-      });
-      var query = { vote: /^B/ };
-      dbo.collection("Voters").find(query).toArray(function(err, result) {
-        if (err) throw err;
-        blue = result;
-        console.log(result);
-        db.close();
-      });
-    });
-}
+// function candVotes(){
+//     client.connect(function(err, db) {
+//       if (err) throw err;
+//       var dbo = db.db("Election");
+//       var query = { vote: /^R/ };
+//       dbo.collection("Voters").find(query).toArray(function(err, result) {
+//         if (err) throw err;
+//         red = result;
+//         console.log(result);
+//         db.close();
+//       });
+//       var query = { vote: /^G/ };
+//       dbo.collection("Voters").find(query).toArray(function(err, result) {
+//         if (err) throw err;
+//         green = result;
+//         console.log(result);
+//         db.close();
+//       });
+//       var query = { vote: /^B/ };
+//       dbo.collection("Voters").find(query).toArray(function(err, result) {
+//         if (err) throw err;
+//         blue = result;
+//         console.log(result);
+//         db.close();
+//       });
+//     });
+// }
 
-function readAll(){
-  client.connect(function(err, db) {
-      if (err) throw err;
-      var dbo = db.db("Election");
-      dbo.collection("Voters").find({}).toArray(function(err, result) {
-        if (err) throw err;
-        all = result;
-        console.log(result);
-        db.close();
-      });
-    });
-}
+// function readAll(){
+//   client.connect(function(err, db) {
+//       if (err) throw err;
+//       var dbo = db.db("Election");
+//       dbo.collection("Voters").find({}).toArray(function(err, result) {
+//         if (err) throw err;
+//         all = result;
+//         console.log(result);
+//         db.close();
+//       });
+//     });
+// }
 
 function clearData(){
     client.connect(function(err, db) {
@@ -90,19 +90,64 @@ app.get('/', function(req, res) {
 });
 
 app.get('/all', function(req, res) {
+  client.connect(function(err, db) {
+    if (err) throw err;
+    var dbo = db.db("Election");
+    dbo.collection("Voters").find({}).toArray(function(err, result) {
+      if (err) throw err;
+      all = result;
+      console.log(result);
+      db.close();
+    });
+  });
   res.send(all);  // Send array of data back to requestor
 });
 
+app.get('/all/red', function(req, res) {
+  client.connect(function(err, db) {
+    if (err) throw err;
+    var dbo = db.db("Election");
+    var query = { vote: /^R/ };
+    dbo.collection("Voters").find(query).toArray(function(err, result) {
+      if (err) throw err;
+      red = result;
+      console.log(result);
+      db.close();
+    });
+  });
+  res.send(red);
+});
+
 app.get('/all/green', function(req, res) {
-  res.send(green)
+  client.connect(function(err, db) {
+    if (err) throw err;
+    var dbo = db.db("Election");
+    var query = { vote: /^G/ };
+    dbo.collection("Voters").find(query).toArray(function(err, result) {
+      if (err) throw err;
+      green = result;
+      console.log(result);
+      db.close();
+    });
+  });
+  res.send(green);
 });
 
 app.get('/all/blue', function(req, res) {
-  res.send(blue;
+  client.connect(function(err, db) {
+    if (err) throw err;
+    var dbo = db.db("Election");
+    var query = { vote: /^B/ };
+    dbo.collection("Voters").find(query).toArray(function(err, result) {
+      if (err) throw err;
+      blue = result;
+      console.log(result);
+      db.close();
+    });
+  });
+  res.send(blue);
 });
-app.get('/all/red', function(req, res) {
-  res.send(red);
-});
+
 
 app.post('/clear', (req,res) => {
   clear_flag = req.body.clear;
@@ -113,12 +158,21 @@ app.get('/clear', function(req,res) {
   res.send(clear_flag);
 })
 
-if(clear_flag == 1 ){
-  clearData();
-  console.log("cleared");
-  clear_flag == 0;
-}
+
 app.listen(4000);
+
+
+function checkClear() {
+  if(clear_flag == 1 ){
+    clearData();
+    console.log("cleared");
+    clear_flag == 0;
+  }
+}
+
+
+
+setInterval(function(){checkClear()}, 50);
 
 // Required module
 var dgram = require('dgram');
@@ -147,16 +201,27 @@ server.on('message', function (message, remote) {
     var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     var dateTime = date+' '+time;
     buffer = message.toString();
-    buffer = buffer.split(',');
+    buffer = buffer.split(':');
     id = parseInt(buffer[0]);
-    vote = buffer[1];
-    myObj = {id: id, vote: vote, date: dateTime};
+    vote = parseInt(buffer[1]);
+    switch (vote) {
+      case 3:
+        vote = 'R';
+        break;
+      case 4:
+        vote = 'G';
+        break;
+      case 5:
+        vote = 'B';
+        break;
+    }
+    myObj = {fob_ID: id, vote: vote, date_time: dateTime};
 
     client.connect(function(err, db) {
         if (err) throw err;
         var dbo = db.db("Election");
-        var myobj = { fob_ID: "1", vote: "R", time: "10:28pm" };
-        dbo.collection("Voters").insertOne(myobj, function(err, res) {
+        // var myobj = { fob_ID: "1", vote: "R", time: "10:28pm" };
+        dbo.collection("Voters").insertOne(myObj, function(err, res) {
           if (err) throw err;
           console.log("1 document inserted");
           db.close();
@@ -164,13 +229,12 @@ server.on('message', function (message, remote) {
       });
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
-
-    server.send(led_status.toString(),remote.port,remote.address,function(error){
+    server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
       if(error){
-        console.log('MEH!');
+        console.log('Error: could not reply');
       }
       else {
-        console.log('Sent: ' + );
+        console.log('Sent: ' + "vote " + vote.toString() + " from fob " + id.toString() + " recorded");
       }
     });
 

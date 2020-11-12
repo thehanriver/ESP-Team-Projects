@@ -7,71 +7,6 @@
   	<div id="div1"></div>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <h> Quest 4 </h>
-    <script>
-    window.onload = function () {
-
-    function readAll(){
-    $.ajax({url: "/all", success: function(result){
-    var contents ="";
-    jQuery.each(result, function(i, val) {
-        contents += val[0] + ", " + val[1] + ", " + val[2] + " <br />";
-      });
-      $("#div1").remove(contents_G);
-      $("#div1").remove(contents_B);
-      $("#div1").remove(contents_R);
-      $("#div1").remove(contents);
-
-    //We add contents HTML content to page
-      $("#div1").html(contents);
-    }});
-    }
-
-    function candVotes(){
-      $.ajax({url: "/all/red", success: function(result){
-      var contents_R ="";
-      jQuery.each(result, function(i, val) {
-          contents_R += val[0] + ", " + val[1] + +  " <br />";
-        });
-        $("#div1").remove(contents_G);
-        $("#div1").remove(contents_B);
-        $("#div1").remove(contents);
-        $("#div1").html(contents_R);
-      }});
-      $.ajax({url: "/all/blue", success: function(result){
-      var contents_B ="";
-      jQuery.each(result, function(i, val) {
-          contents_B += val[0] + ", " + val[1] + +  " <br />";
-      });
-        $("#div1").remove(contents_G);
-        $("#div1").remove(contents_R);
-        $("#div1").remove(contents);
-        $("#div1").html(contents_B);
-      }});
-      $.ajax({url: "/all/green", success: function(result){
-      var contents_G ="";
-      jQuery.each(result, function(i, val) {
-          contents_G+= val[0] + ", " + val[1] + +  " <br />";
-      });
-      $("#div1").remove(contents_R);
-      $("#div1").remove(contents_B);
-      $("#div1").remove(contents);
-      $("#div1").html(contents_G);
-      }});
-    }
-
-    function sendClear() {
-			$.post('/clear',{clear: 1},function(data,clear){
-				console.log('cleared');
-        $("#div1").remove(contents_G);
-        $("#div1").remove(contents_B);
-        $("#div1").remove(contents_R);
-        $("#div1").remove(contents);
-				});
-		}
-  }
-
-    </script>
-
     <button id="All"
 			  type="button"
 			  onClick=readAll()
@@ -92,6 +27,76 @@
 			  style=" height:50px; width:200px ">
   	   Votes by Candidates
   	</button>
+    <script>
+
+      var contents;
+      var contents_R;
+      var contents_G;
+      var contents_B;
+
+      function readAll(){
+      $.ajax({url: "/all", success: function(result){
+      contents ="";
+      jQuery.each(result, function(i, val) {
+          contents += val[0] + ", " + val[1] + ", " + val[2] + " <br />";
+        });
+        $("#div1").remove(contents_G);
+        $("#div1").remove(contents_B);
+        $("#div1").remove(contents_R);
+        $("#div1").remove(contents);
+
+      //We add contents HTML content to page
+        $("#div1").html(contents);
+      }});
+      }
+
+      function candVotes(){
+        $.ajax({url: "/all/red", success: function(result){
+        contents_R ="";
+        jQuery.each(result, function(i, val) {
+            contents_R += val[0] + ", " + val[1] + +  " <br />";
+          });
+          $("#div1").remove(contents_G);
+          $("#div1").remove(contents_B);
+          $("#div1").remove(contents);
+          $("#div1").html(contents_R);
+        }});
+        $.ajax({url: "/all/green", success: function(result){
+        var contents_G ="";
+        jQuery.each(result, function(i, val) {
+            contents_G+= val[0] + ", " + val[1] + +  " <br />";
+        });
+        $("#div1").remove(contents_R);
+        $("#div1").remove(contents_B);
+        $("#div1").remove(contents);
+        $("#div1").html(contents_G);
+        }});
+        $.ajax({url: "/all/blue", success: function(result){
+        var contents_B ="";
+        jQuery.each(result, function(i, val) {
+            contents_B += val[0] + ", " + val[1] + +  " <br />";
+        });
+          $("#div1").remove(contents_G);
+          $("#div1").remove(contents_R);
+          $("#div1").remove(contents);
+          $("#div1").html(contents_B);
+        }});
+        
+      }
+
+      function sendClear() {
+        $.post('/clear',{clear: 1},function(data,clear){
+          console.log('cleared');
+          $("#div1").remove(contents_G);
+          $("#div1").remove(contents_B);
+          $("#div1").remove(contents_R);
+          $("#div1").remove(contents);
+          });
+      }
+
+    </script>
+
+    
 
   </body>
 </html>
