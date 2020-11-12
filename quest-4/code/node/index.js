@@ -3,18 +3,13 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var mongo = require('mongodb');
 
-const readline = require('readline');
-const Stream = require('stream');
+
 const bodyParser = require('body-parser');
-const router = express.Router();
 
 const uri = "mongodb+srv://mario:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
 const MongoClient = require('mongodb').MongoClient;
 const client = new MongoClient(uri, {useUnifiedTopology: true, useNewUrlParser: true});
-const fs = require('fs');
 
 var clear_flag = 0;
 var all;
