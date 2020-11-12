@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 //useUnifiedTopology: true, 
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba";
-const client = new MongoClient(uri, { useNewUrlParser: true });
+const client = new MongoClient(url, { useNewUrlParser: true });
 
 var clear_flag = 0;
 var all;
