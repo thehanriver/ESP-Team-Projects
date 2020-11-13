@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	  <title>Quest 4</title>
+  </head>
+  <body>
+    <div><h> Quest 4 </h></div>
+  	<div id="div1">
+      <button id="All"
+  			  type="button"
+  			  onClick=readAll()
+  			  style=" height:50px; width:200px ">
+    		All Candidates
+    	</button>
+
+    	<button  id="Cands"
+          type="button"
+  			  onClick=candVotes()
+  			  style=" height:50px; width:200px ">
+    	   Votes by Candidates
+      </button>
+
+      <button id="Clear"
+  			  type="button"
+  			  onClick=sendClear();
+  			  style=" height:50px; width:200px ">
+    		Clear Database
+    	</button>
+</div>
+    <div id = "all"> All </div>
+    <div id = "red"> Red </div>
+    <div id = "green"> Green </div>
+    <div id = "blue"> Blue </div>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script>
+      var contents;
+      var contents_R;
+      var contents_G;
+      var contents_B;
+
+      function sendRead() {
+        $.post('/read',{read: 1},function(data,clear){
+          console.log('read');
+          });
+      }
+
+      function readAll(){
+      sendRead();
+      console.log("im in read");
+      $.ajax({url: "/all", success: function(result){
+      contents ="";
+      jQuery.each( result , function(i, val) {
+          contents += "id: " + val.id + " vote: " + val.vote + " time: " +val.date_time + " <br />";
+        });
+        console.log("here results: ",contents);
+      //We add contents HTML content to page
+      document.getElementById('all').innerHTML="<b> All </b><br />" + contents;
+        //
+        // $("#all").html(contents);
+      }});
+      }
+
+      function candVotes(){
+        sendRead();
+        console.log("im in cand");
+        $.ajax({url: "/all/red", success: function(result){
+        contents_R ="";
+        jQuery.each( result , function(i, val) {
+            contents_R += "id: " + val.id + " time: " +val.date_time + " <br />";
+          });
+          console.log("here results for red: ",contents_R);
+        //We add contents HTML content to page
+        document.getElementById('all').innerHTML=" All <br />" ;
+        document.getElementById('red').innerHTML="<b> Red </b><br />" + contents_R;
+        }});
+
+        $.ajax({url: "/all/blue", success: function(result){
+        contents_B ="";
+        jQuery.each( result , function(i, val) {
+            contents_B += "id: " + val.id + " time: " +val.date_time + " <br />";
+          });
+          console.log("here results for blue: ",contents_B);
+        //We add contents HTML content to page
+        document.getElementById('all').innerHTML=" All <br />" ;
+        document.getElementById('blue').innerHTML="<b> Blue </b><br />" + contents_B;
+        }});
+
+        $.ajax({url: "/all/green", success: function(result){
+        contents_G ="";
+        jQuery.each( result , function(i, val) {
+            contents_G += "id: " + val.id + " time: " +val.date_time + " <br />";
+          });
+          console.log("here results for G: ",contents_G);
+        //We add contents HTML content to page
+        document.getElementById('all').innerHTML=" All <br />" ;
+        document.getElementById('green').innerHTML="<b> Green </b><br />" + contents_G;
+        }});
+      }
+
+      function sendClear() {
+        $.post('/clear',{clear: 1},function(data,clear){
+          document.getElementById('all').innerHTML=" All <br />" ;
+          document.getElementById('red').innerHTML=" Red <br />" ;
+          document.getElementById('blue').innerHTML=" Blue <br />" ;
+          document.getElementById('green').innerHTML=" Green <br />" ;
+
+          console.log('cleared');
+
+          });
+
+      }
+    </script>
+  </body>
+</html>
