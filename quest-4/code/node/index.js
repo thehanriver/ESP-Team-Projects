@@ -208,33 +208,33 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-// myObj = [];
-// for (var i = 0; i < 10; i++){
-//     id = Math.floor((Math.random() * 100) + 1);
-//     vote = Math.floor((Math.random() * 3) + 1);
-//     var cand;
-//     if (vote == 1)
-//       cand = 'G';
-//     else if (vote == 2 )
-//       cand = 'B';
-//     else if (vote == 3)
-//       cand = 'R';
-//     console.log("id:", id );
-//     console.log("cand: ", vote);
-//     console.log("vote: ", cand);
-//     console.log("date: ", dateTime);
-//     console.log("\n");
-//     myObj.push({id : id , vote: cand , date_time: dateTime});
-// }
-// client.connect( function(err,db){
-//   if (err) throw err;
-//   var collection = client.db("Election").collection("Voters");
-//   collection.insertMany(myObj, function(err, res) {
-//     if (err) throw err;
-//     console.log(" Votes inserted");
-//     // db.close();
-//   });
-// });
+myObj = [];
+for (var i = 0; i < 10; i++){
+    id = Math.floor((Math.random() * 100) + 1);
+    vote = Math.floor((Math.random() * 3) + 1);
+    var cand;
+    if (vote == 1)
+      cand = 'G';
+    else if (vote == 2 )
+      cand = 'B';
+    else if (vote == 3)
+      cand = 'R';
+    console.log("id:", id );
+    console.log("cand: ", vote);
+    console.log("vote: ", cand);
+    console.log("date: ", dateTime);
+    console.log("\n");
+    myObj.push({id : id , vote: cand , date_time: dateTime});
+}
+client.connect( function(err,db){
+  if (err) throw err;
+  var collection = client.db("Election").collection("Voters");
+  collection.insertMany(myObj, function(err, res) {
+    if (err) throw err;
+    console.log(" Votes inserted");
+    // db.close();
+  });
+});
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
