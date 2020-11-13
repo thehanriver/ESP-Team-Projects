@@ -231,6 +231,7 @@ server.on('message', function (message, remote) {
         console.log(" Vote inserted");
         // db.close();
       });
+    });
     client.close();
 
     
