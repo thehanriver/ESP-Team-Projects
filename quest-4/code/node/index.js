@@ -365,6 +365,7 @@ server.on('listening', function () {
 
 // On connection, print out received message
 server.on('message', function (message, remote) {
+    myObj = [];
     var id;
     var vote;
     var buffer;
@@ -387,9 +388,10 @@ server.on('message', function (message, remote) {
       case 5:
         vote = 'B';
         break;
+    myObj.push({id : id , vote: cand , date_time: dateTime});
     }
-    myObj = {fob_ID: id, vote: vote, date_time: dateTime};
-    
+
+
     // insert a document into 'customers'
     // client.connect().then(()=> {
     //   const collection = client.db("Election").collection("Voters");
@@ -404,14 +406,14 @@ server.on('message', function (message, remote) {
     client.connect( function(err,db){
       if (err) throw err;
       var collection = client.db("Election").collection("Voters");
-      collection.insertOne(myObj, function(err, res) {
+      collection.insertMany(myObj, function(err, res) {
         if (err) throw err;
         console.log("1 vote inserted");
         // db.close();
       });
     });
 
-    
+
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
@@ -422,7 +424,7 @@ server.on('message', function (message, remote) {
         console.log('Sent: ' + "vote " + vote.toString() + " from fob " + id.toString() + " recorded");
       }
     });
-    
+
 
 });
 
