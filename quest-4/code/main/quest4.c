@@ -40,6 +40,14 @@
 #include "soc/rmt_reg.h"
 #include "sdkconfig.h"
 
+//
+//CHANGE ID HERE
+//
+// Default ID/color
+#define FLASH_THIS_ID 6
+#define DEFAULT_COLOR '3' // RED
+#define MAX_ID 6
+
 // LED Output pins definitions
 #define BLUEPIN 14
 #define GREENPIN 32
@@ -80,11 +88,6 @@
 
 // #define UDP_TIMEOUT_SECONDS 3
 #define UDP_PORT 1111
-
-// Default ID/color
-#define FLASH_THIS_ID 6
-#define DEFAULT_COLOR '3' // RED
-#define MAX_ID 6
 
 // States
 #define ELECTION 0
@@ -288,6 +291,7 @@ static void led_init()
     gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
     gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
     gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_INPUT_IO_2_SEND, GPIO_MODE_INPUT);
 }
 
 // Button interrupt init
@@ -577,7 +581,7 @@ static void udp_client_fn(int fromID, int targetID, int signal)
         ESP_LOGE(TAG, "Unable to create socket in client: errno %d", errno);
         return;
     }
-    printf("Socket created, sending to %s:%d\n", ip_addrs[targetID], UDP_PORT);
+    //printf("Socket created, sending to %s:%d\n", ip_addrs[targetID], UDP_PORT);
     struct timeval read_timeout;
     read_timeout.tv_sec = 0;
     read_timeout.tv_usec = 100000;
@@ -597,7 +601,7 @@ static void udp_client_fn(int fromID, int targetID, int signal)
     int err2 = sendto(sock, payload, BUF_SIZE, 0, (struct sockaddr *)&(dest_addr), sizeof(dest_addr));
     if (err2 < 0)
     {
-        ESP_LOGE(TAG, "Error occurred during sending in client: errno %d", errno);
+        //ESP_LOGE(TAG, "Error occurred during sending in client: errno %d", errno);
         shutdown(sock, 1);
         close(sock);
         return;
@@ -640,6 +644,10 @@ void ir_receive_task()
                     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
                     printf("Received data_in: %u\n", data_in[2]);
                     rec_vote = 0;
+                    gpio_set_level(GREENPIN, 0);
+                    gpio_set_level(REDPIN, 0);
+                    gpio_set_level(BLUEPIN, 0);
+                    vTaskDelay(200 / portTICK_PERIOD_MS);
                     switch (data_in[2]) // fix to temporarily display received vote
                     {
                     case '3': // red
@@ -704,7 +712,7 @@ void change_vote()
             }
             xSemaphoreGive(mux);
             printf("Button pressed.\n");
-            ir_send_task();
+            // ir_send_task();
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -713,11 +721,12 @@ static void send_vote()
 {
     while (1)
     {
-        if (gpio_get_level(GPIO_INPUT_IO_2_SEND))
+        if (!gpio_get_level(GPIO_INPUT_IO_2_SEND))
         {
+            printf("Sending vote");
             ir_send_task();
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 // LED task to light LED based on vote
@@ -1042,5 +1051,5 @@ void app_main()
     xTaskCreate(change_vote, "change_vote", 1024 * 2, NULL, 5, NULL);
     xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
     xTaskCreate(voting_fsm_task, "voting_fsm", 4096, NULL, 5, NULL);
-    xTaskCreate(send_vote, "send_vote", 1024 * 1, NULL, 5, NULL);
+    xTaskCreate(send_vote, "send_vote", 1024 * 2, NULL, 5, NULL);
 }
