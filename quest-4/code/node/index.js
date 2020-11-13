@@ -60,22 +60,22 @@ var green;
 // }
 
 function clearData(){
-    client.connect(function(err, db) {
-      if (err) throw err;
-      var dbo = db.db("Election");
-      dbo.collection("Voters").drop(function(err, delOK) {
-        if (err) throw err;
-        if (delOK)
-        {
-          all = [];
-          red = [];
-          blue = [];
-          green = [];
-          console.log("Collection deleted");
-        }
-        db.close();
-      });
-    });
+    // client.connect(function(err, db) {
+    //   if (err) throw err;
+    //   var dbo = db.db("Election");
+    //   dbo.collection("Voters").drop(function(err, delOK) {
+    //     if (err) throw err;
+    //     if (delOK)
+    //     {
+    //       all = [];
+    //       red = [];
+    //       blue = [];
+    //       green = [];
+    //       console.log("Collection deleted");
+    //     }
+    //     db.close();
+    //   });
+    // });
 }
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -86,61 +86,61 @@ app.get('/', function(req, res) {
 });
 
 app.get('/all', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    dbo.collection("Voters").find({}).toArray(function(err, result) {
-      if (err) throw err;
-      all = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   dbo.collection("Voters").find({}).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     all = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(all);  // Send array of data back to requestor
 });
 
 app.get('/all/red', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^R/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      red = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^R/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     red = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(red);
 });
 
 app.get('/all/green', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^G/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      green = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^G/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     green = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(green);
 });
 
 app.get('/all/blue', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^B/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      blue = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^B/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     blue = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(blue);
 });
 
@@ -232,7 +232,6 @@ server.on('message', function (message, remote) {
         // db.close();
       });
     });
-    client.close();
 
     
 
