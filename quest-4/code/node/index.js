@@ -7,9 +7,11 @@ var http = require('http').Server(app);
 
 const bodyParser = require('body-parser');
 
-const MongoClient = require('mongodb').MongoClient;
+var MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true,  useUnifiedTopology: true });
+// useUnifiedTopology: true,
+const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
+
 var clear_flag = 0;
 var all;
 var red;
@@ -221,16 +223,17 @@ server.on('message', function (message, remote) {
     //     return client.close();
     //   });
     // });
-    client.connect(err => {
-      const collection = client.db("Election").collection("Voters");
+    client.connect( function(err,db){
+      if (err) throw err;
+      var collection = client.db("Election").collection("Voters");
       collection.insertOne(myObj, function(err, res) {
-            if (err) throw err;
-            console.log("1 document inserted");
-            db.close();
-          });
-      
-    });
+        if (err) throw err;
+        console.log(" Vote inserted");
+        // db.close();
+      });
     client.close();
+
+    
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
