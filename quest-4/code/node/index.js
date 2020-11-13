@@ -9,7 +9,8 @@ const bodyParser = require('body-parser');
 
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true });var clear_flag = 0;
+const client = new MongoClient(uri, { useNewUrlParser: true,  useUnifiedTopology: true });
+var clear_flag = 0;
 var all;
 var red;
 var blue;
