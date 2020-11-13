@@ -7,9 +7,10 @@ var http = require('http').Server(app);
 
 const bodyParser = require('body-parser');
 
-const uri = "mongodb+srv://mario:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
-const MongoClient = require('mongodb').MongoClient;
-const client = new MongoClient(uri, {useUnifiedTopology: true, useNewUrlParser: true});
+var MongoClient = require('mongodb').MongoClient;
+const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
+// useUnifiedTopology: true,
+const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
 var clear_flag = 0;
 var all;
@@ -59,22 +60,22 @@ var green;
 // }
 
 function clearData(){
-    client.connect(function(err, db) {
-      if (err) throw err;
-      var dbo = db.db("Election");
-      dbo.collection("Voters").drop(function(err, delOK) {
-        if (err) throw err;
-        if (delOK)
-        {
-          all = [];
-          red = [];
-          blue = [];
-          green = [];
-          console.log("Collection deleted");
-        }
-        db.close();
-      });
-    });
+    // client.connect(function(err, db) {
+    //   if (err) throw err;
+    //   var dbo = db.db("Election");
+    //   dbo.collection("Voters").drop(function(err, delOK) {
+    //     if (err) throw err;
+    //     if (delOK)
+    //     {
+    //       all = [];
+    //       red = [];
+    //       blue = [];
+    //       green = [];
+    //       console.log("Collection deleted");
+    //     }
+    //     db.close();
+    //   });
+    // });
 }
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -85,61 +86,61 @@ app.get('/', function(req, res) {
 });
 
 app.get('/all', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    dbo.collection("Voters").find({}).toArray(function(err, result) {
-      if (err) throw err;
-      all = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   dbo.collection("Voters").find({}).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     all = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(all);  // Send array of data back to requestor
 });
 
 app.get('/all/red', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^R/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      red = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^R/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     red = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(red);
 });
 
 app.get('/all/green', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^G/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      green = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^G/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     green = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(green);
 });
 
 app.get('/all/blue', function(req, res) {
-  client.connect(function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("Election");
-    var query = { vote: /^B/ };
-    dbo.collection("Voters").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      blue = result;
-      console.log(result);
-      db.close();
-    });
-  });
+  // client.connect(function(err, db) {
+  //   if (err) throw err;
+  //   var dbo = db.db("Election");
+  //   var query = { vote: /^B/ };
+  //   dbo.collection("Voters").find(query).toArray(function(err, result) {
+  //     if (err) throw err;
+  //     blue = result;
+  //     console.log(result);
+  //     db.close();
+  //   });
+  // });
   res.send(blue);
 });
 
@@ -211,17 +212,28 @@ server.on('message', function (message, remote) {
         break;
     }
     myObj = {fob_ID: id, vote: vote, date_time: dateTime};
-
-    client.connect(function(err, db) {
+    
+    // insert a document into 'customers'
+    // client.connect().then(()=> {
+    //   const collection = client.db("Election").collection("Voters");
+    //   collection.insertOne(myObj, function(err, res) {
+    //     if (err) throw err;
+    //     console.log("1 document inserted");
+    //   }).then(()=>{
+    //     return client.close();
+    //   });
+    // });
+    client.connect( function(err,db){
+      if (err) throw err;
+      var collection = client.db("Election").collection("Voters");
+      collection.insertOne(myObj, function(err, res) {
         if (err) throw err;
-        var dbo = db.db("Election");
-        // var myobj = { fob_ID: "1", vote: "R", time: "10:28pm" };
-        dbo.collection("Voters").insertOne(myObj, function(err, res) {
-          if (err) throw err;
-          console.log("1 document inserted");
-          db.close();
-        });
+        console.log(" Vote inserted");
+        // db.close();
       });
+    });
+
+    
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
@@ -232,8 +244,24 @@ server.on('message', function (message, remote) {
         console.log('Sent: ' + "vote " + vote.toString() + " from fob " + id.toString() + " recorded");
       }
     });
+    
 
 });
+
+
+
+
+// // insert a document into 'customers'
+// MongoClient.connect(url, function(err, db) {
+//   if (err) throw err;
+//   var dbo = db.db("mydb");
+//   var myobj = { name: "Company Inc", address: "Highway 37" };
+//   dbo.collection("customers").insertOne(myobj, function(err, res) {
+//     if (err) throw err;
+//     console.log("1 document inserted");
+//     db.close();
+//   });
+// });
 
 // Bind server to port and IP
 server.bind(PORT, HOST);
