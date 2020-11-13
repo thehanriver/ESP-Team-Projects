@@ -221,15 +221,15 @@ server.on('message', function (message, remote) {
     //     return client.close();
     //   });
     // });
-    client.connect(err => {
-      const collection = client.db("Election").collection("Voters");
-      collection.insertOne(myObj, function(err, res) {
-            if (err) throw err;
-            console.log("1 document inserted");
-            db.close();
-          });
+    // client.connect(err => {
+    //   const collection = client.db("Election").collection("Voters");
+    //   collection.insertOne(myObj, function(err, res) {
+    //         if (err) throw err;
+    //         console.log("1 document inserted");
+    //         db.close();
+    //       });
       
-    });
+    // });
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
@@ -240,7 +240,7 @@ server.on('message', function (message, remote) {
         console.log('Sent: ' + "vote " + vote.toString() + " from fob " + id.toString() + " recorded");
       }
     });
-    client.close();
+    // client.close();
 
 });
 
