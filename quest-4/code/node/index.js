@@ -212,13 +212,22 @@ server.on('message', function (message, remote) {
     myObj = {fob_ID: id, vote: vote, date_time: dateTime};
     
     // insert a document into 'customers'
-    client.connect(err=> {
-      const collection = client.db("Election").collection("Voters");
-      collection.insertOne(myObj, function(err, res) {
-        if (err) throw err;
-        console.log("1 document inserted");
-        db.close();
-      });
+    // client.connect().then(()=> {
+    //   const collection = client.db("Election").collection("Voters");
+    //   collection.insertOne(myObj, function(err, res) {
+    //     if (err) throw err;
+    //     console.log("1 document inserted");
+    //   }).then(()=>{
+    //     return client.close();
+    //   });
+    // });
+    client.connect().then(() => {
+      // client is now connected.
+      return client.db('Election').collection('Voters').insertOne(myObj)
+    }).then(() => {
+      // client is still connected.
+    
+      return client.close();
     });
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
@@ -232,6 +241,8 @@ server.on('message', function (message, remote) {
     });
 
 });
+
+
 
 
 // // insert a document into 'customers'
