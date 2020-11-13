@@ -193,15 +193,14 @@ var all ;
 var red;
 var blue;
 var green;
-var dateTime;
+
 //dummy
 ////////////////////////////////////////////////////////////////////////////////////////
-function getTime(){
 var today = new Date();
 var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-dateTime = date+' '+time;
-}
+var dateTime = date+' '+time;
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -344,7 +343,6 @@ console.log("clear_flag: ", clear_flag);
 console.log("read_flag: ", read_flag);
 setInterval(function(){checkClear()}, 50);
 setInterval(function(){checkRead()}, 50);
-setInterval(function(){getTime()}, 50);
 app.listen(4000);
 
 
@@ -364,7 +362,6 @@ server.on('listening', function () {
     var address = server.address();
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
 });
-
 
 // On connection, print out received message
 server.on('message', function (message, remote) {
@@ -425,8 +422,6 @@ server.on('message', function (message, remote) {
       assert.equal(null, err);
       console.log("CONNECTED");
       var collection = client.db("Election").collection("Voters");
-      var dbo = db.db("Election");
-    
       collection.insertMany(myObj, function(err, res) {
         if (err) throw err;
         console.log("1 vote inserted");
@@ -434,18 +429,8 @@ server.on('message', function (message, remote) {
       });
       client.close();
     });
-    // //Replace example
-    // MongoClient.connect(uri, function(err, db) {
-    //   if (err) throw err;
-    //   var dbo = db.db("mydb");
-    //   var myquery = { address: "Valley 345" };
-    //   var newvalues = { $set: {name: "Mickey", address: "Canyon 123" } };
-    //   dbo.collection("customers").updateOne(myquery, newvalues, function(err, res) {
-    //     if (err) throw err;
-    //     console.log("1 document updated");
-    //     db.close();
-    //   });
-    // });
+
+
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
     server.send("vote " + vote.toString() + " from fob " + id.toString() + " recorded",remote.port,remote.address,function(error){
