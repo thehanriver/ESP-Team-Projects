@@ -228,7 +228,7 @@ server.on('message', function (message, remote) {
             console.log("1 document inserted");
             db.close();
           });
-      client.close();
+      
     });
 
     console.log(remote.address + ':' + remote.port +' - ' + message);
@@ -240,6 +240,7 @@ server.on('message', function (message, remote) {
         console.log('Sent: ' + "vote " + vote.toString() + " from fob " + id.toString() + " recorded");
       }
     });
+    client.close();
 
 });
 
