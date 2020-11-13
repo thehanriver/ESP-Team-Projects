@@ -365,6 +365,7 @@ server.on('listening', function () {
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
 });
 
+
 // On connection, print out received message
 server.on('message', function (message, remote) {
     var myObj = [];
@@ -425,7 +426,7 @@ server.on('message', function (message, remote) {
       console.log("CONNECTED");
       var collection = client.db("Election").collection("Voters");
       var dbo = db.db("Election");
-      if(collection.find()
+    
       collection.insertMany(myObj, function(err, res) {
         if (err) throw err;
         console.log("1 vote inserted");
