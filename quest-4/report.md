@@ -1,12 +1,14 @@
-# Quest Name
-Authors: FirstName1 LastName1, FirstName2 LastName2, FirstName3 LastName 3
+# Quest 4: Electronic Voting
+Authors: Mario Han, Vivek Cherian, Hussain Valiuddin
 
-Date: YYYY-MM-DD
+Date: 2020-11-13
 -----
-
 ## Summary
 
-
+  For showing the votes on the webpage, we used flags with POST and GET just like the previous quest. This allowed us to "run" certain functions in index.js based on a timer. These functions would constantly check for when the flag is raised to read the database which is set at 50ms timer. The flag is raised when the button is clicked and gives enough time to load all data points to /all, /all/red, /all/green, /all/blue. This is then displayed in the main page of Quest 4.
+  
+  One problem we are trying to fix is the data doesn't load on the first click but the second click. For example, clicking All Candidates when the website is loaded won't show anything. Clicking it again will show it. This follows the same pattern when Clear database is clicked.
+        
 ## Self-Assessment
 
 ### Objective Criteria
