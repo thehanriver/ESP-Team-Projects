@@ -8,8 +8,7 @@ var http = require('http').Server(app);
 const bodyParser = require('body-parser');
 //useUnifiedTopology: true, 
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba";
-const client = new MongoClient(url, { useNewUrlParser: true });
+var url = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
 
 var clear_flag = 0;
 var all;
@@ -212,10 +211,11 @@ server.on('message', function (message, remote) {
     }
     myObj = {fob_ID: id, vote: vote, date_time: dateTime};
     
-    client.connect( err => {
+    // insert a document into 'customers'
+    MongoClient.connect(url, function(err, db) {
       if (err) throw err;
-      var collection = client.db("Election").collection("Voters");
-      collection.insertOne(myObj, function(err, res) {
+      var dbo = db.db("Election");
+      dbo.collection("Voters").insertOne(myObj, function(err, res) {
         if (err) throw err;
         console.log("1 document inserted");
         db.close();
