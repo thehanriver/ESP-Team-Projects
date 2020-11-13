@@ -27,7 +27,7 @@
 #include <lwip/netdb.h>
 #include "addr_from_stdin.h"
 
-#define HOST_IP_ADDR "192.168.1.111"
+#define HOST_IP_ADDR "192.168.1.139"
 
 #define PORT 1111
 
