@@ -175,12 +175,16 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var http = require('http').Server(app);
+const assert = require('assert');
 
 
 const bodyParser = require('body-parser');
 //useUnifiedTopology: true,
 var MongoClient = require('mongodb').MongoClient;
+// const uri = "mongodb+srv://viv:1GBSt0rage%21@cluster0.zottf.mongodb.net/Election?retryWrites=true&w=majority";
+
 const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
+
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
 var clear_flag = '0';
@@ -192,10 +196,6 @@ var green;
 
 //dummy
 ////////////////////////////////////////////////////////////////////////////////////////
-var id;
-var vote;
-var buffer;
-var myObj;
 var today = new Date();
 var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
@@ -208,33 +208,33 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-myObj = [];
-for (var i = 0; i < 10; i++){
-    id = Math.floor((Math.random() * 100) + 1);
-    vote = Math.floor((Math.random() * 3) + 1);
-    var cand;
-    if (vote == 1)
-      cand = 'G';
-    else if (vote == 2 )
-      cand = 'B';
-    else if (vote == 3)
-      cand = 'R';
-    console.log("id:", id );
-    console.log("cand: ", vote);
-    console.log("vote: ", cand);
-    console.log("date: ", dateTime);
-    console.log("\n");
-    myObj.push({id : id , vote: cand , date_time: dateTime});
-}
-client.connect( function(err,db){
-  if (err) throw err;
-  var collection = client.db("Election").collection("Voters");
-  collection.insertMany(myObj, function(err, res) {
-    if (err) throw err;
-    console.log(" Votes inserted");
-    // db.close();
-  });
-});
+// myObj = [];
+// for (var i = 0; i < 10; i++){
+//     id = Math.floor((Math.random() * 100) + 1);
+//     vote = Math.floor((Math.random() * 3) + 1);
+//     var cand;
+//     if (vote == 1)
+//       cand = 'G';
+//     else if (vote == 2 )
+//       cand = 'B';
+//     else if (vote == 3)
+//       cand = 'R';
+//     console.log("id:", id );
+//     console.log("cand: ", vote);
+//     console.log("vote: ", cand);
+//     console.log("date: ", dateTime);
+//     console.log("\n");
+//     myObj.push({id : id , vote: cand , date_time: dateTime});
+// }
+// client.connect( function(err,db){
+//   if (err) throw err;
+//   var collection = client.db("Election").collection("Voters");
+//   collection.insertMany(myObj, function(err, res) {
+//     if (err) throw err;
+//     console.log(" Votes inserted");
+//     // db.close();
+//   });
+// });
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -365,15 +365,15 @@ server.on('listening', function () {
 
 // On connection, print out received message
 server.on('message', function (message, remote) {
-    myObj = [];
+    var myObj = [];
     var id;
     var vote;
     var buffer;
     var myObj;
-    var today = new Date();
-    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    var dateTime = date+' '+time;
+    // var today = new Date();
+    // var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    // var dateTime = date+' '+time;
     buffer = message.toString();
     buffer = buffer.split(':');
     id = parseInt(buffer[0]);
@@ -388,8 +388,9 @@ server.on('message', function (message, remote) {
       case 5:
         vote = 'B';
         break;
-    myObj.push({id : id , vote: cand , date_time: dateTime});
     }
+    myObj.push({id : id , vote: vote , date_time: dateTime});
+    
 
 
     // insert a document into 'customers'
@@ -402,15 +403,31 @@ server.on('message', function (message, remote) {
     //     return client.close();
     //   });
     // });
+    // client.close();
 
-    client.connect( function(err,db){
-      if (err) throw err;
+    // client.connect( function(err,db){
+    //   console.log("CONNECTED");
+    //   if (err) throw err;
+    //   var collection = client.db("Election").collection("Voters");
+    //   collection.insertMany(myObj, function(err, res) {
+    //     if (err) throw err;
+    //     console.log("1 vote inserted");
+    //     // db.close();
+    //   });
+    // });
+
+    // client.close();
+
+    MongoClient.connect(uri, function(err, client) {
+      assert.equal(null, err);
+      console.log("CONNECTED");
       var collection = client.db("Election").collection("Voters");
       collection.insertMany(myObj, function(err, res) {
         if (err) throw err;
         console.log("1 vote inserted");
         // db.close();
       });
+      client.close();
     });
 
 
