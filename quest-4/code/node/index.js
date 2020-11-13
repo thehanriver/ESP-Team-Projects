@@ -6,10 +6,10 @@ var http = require('http').Server(app);
 
 
 const bodyParser = require('body-parser');
-//useUnifiedTopology: true, 
+
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://<username>:<password>@vivcluster.h5rba.mongodb.net/<dbname>?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true });
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true,  });
 var clear_flag = 0;
 var all;
 var red;
