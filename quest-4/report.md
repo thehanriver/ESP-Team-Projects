@@ -64,6 +64,7 @@ Date: 2020-11-13
 
 ## Supporting Artifacts
 [Link to video demo](https://drive.google.com/file/d/1WpJoVRbTkN6g01KtaSGgSiEpxQG6eAr2/view?usp=sharing)
+[Link to live demo](https://drive.google.com/file/d/1mVZF6cYRMd_NstcBDO2VIoN4aNwKVbPO/view?usp=sharing)
 
 
 ## Modules, Tools, Source Used Including Attribution
