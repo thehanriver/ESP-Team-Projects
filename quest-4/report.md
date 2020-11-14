@@ -15,7 +15,9 @@ Date: 2020-11-13
   2. Fake vote can be sent to any ESPs UDP server as long as the hacker has an ESP IP and the server port.
   3. An ESPs UDP server can be bombarded with bad data so that the ESP can never read the actual votes since the ESP may be busy dealing with another package.
   4. Anyone can access the website and clear the database and delete all votes
-  5. Anyone can view the incoming votes on the website, see which ESP voted for which color.
+  5. Anyone can view the votes while they are being send from one device to another through UDP packets and intercept the packets themselves.
+  
+  First step would be to use a much secure method of data transfer especially when dealing with votes. IR transmittors and receivers can be easily obstructed or manipulated. UDP packets just send and receive to a particular port of a device and anyone with the device IP and open PORT number can communicate with the system. Data transfer can be made a bit secure using encryption of all messages being sent and received, leading to fake votes not being read due to lack of encryption.
   
   
         
