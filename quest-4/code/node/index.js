@@ -181,9 +181,9 @@ const assert = require('assert');
 const bodyParser = require('body-parser');
 //useUnifiedTopology: true,
 var MongoClient = require('mongodb').MongoClient;
-// const uri = "mongodb+srv://viv:1GBSt0rage%21@cluster0.zottf.mongodb.net/Election?retryWrites=true&w=majority";
+const uri = "mongodb+srv://viv:1GBSt0rage%21@cluster0.zottf.mongodb.net/Election?retryWrites=true&w=majority";
 
-const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
+//const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/Election?retryWrites=true&w=majority";
 
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
