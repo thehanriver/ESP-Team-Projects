@@ -61,8 +61,8 @@ Date: 2020-11-13
 
 ## Sketches and Photos
 Wiring of ESPs on big and small breadboard
-![Screenshot (206)](./images/Image_1.JPG)
-![Screenshot (207)](./images/Image_2.JPG)
+![Screenshot (206)](../images/Image_1.JPG)
+![Screenshot (207)](../images/Image_2.JPG)
 
 <center><img src="./images/ece444.png" width="25%" /></center>  
 <center> </center>
