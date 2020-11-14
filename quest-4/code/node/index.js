@@ -345,7 +345,7 @@ console.log("clear_flag: ", clear_flag);
 console.log("read_flag: ", read_flag);
 setInterval(function(){checkClear()}, 50);
 setInterval(function(){checkRead()}, 50);
-app.listen(4000);
+app.listen(4440);
 
 
 
