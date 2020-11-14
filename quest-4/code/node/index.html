@@ -55,6 +55,12 @@
       function readAll(){
       sendRead();
       console.log("im in read");
+      buffer_1 = [" "];
+      buffer_2 = [" "];
+      buffer_3 = [" "];
+      buffer_4 = [" "];
+      buffer_5 = [" "];
+      buffer_6 = [" "];
       $.ajax({url: "/all", success: function(result){
 
       jQuery.each( result , function(i, val) {
