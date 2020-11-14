@@ -48,7 +48,9 @@ Date: 2020-11-13
 
 ## Solution Design
 
-
+  The Bully algorithm is borrowed from Skill 28 to determine which ESP will be the leader. The ESP with the highest ID becomes the leader. When it gets disconnected, the next highest ID ESP successfully takes its place after a successful election. This is important since the leader is responsible for communicating with the node server.
+  This design includes 2 buttons being used, one to change votes and one to transmit the vote and FobID through IR communication. The IR communication code was taken from skill25 and modified to work for two buttons.
+  When an ESP receives a package through its IR receiver, if that ESP is not the Leader it sends this package over to the leader through a UDP packet. When the ESP receives this package, it sends it over to the Node.js server running on the raspberry pi using UDP communication.
   For showing the votes on the webpage, we used flags with POST and GET just like the previous quest. This allowed us to "run" certain functions in index.js based on a timer. These functions would constantly check for when the flag is raised to read the database which is set at 50ms timer. The flag is raised when the button is clicked and gives enough time to load all data points to /all, /all/red, /all/green, /all/blue. This is then displayed in the main page of Quest 4.
   
 
