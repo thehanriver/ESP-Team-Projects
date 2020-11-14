@@ -44,7 +44,7 @@
 //CHANGE ID HERE
 //
 // Default ID/color
-#define FLASH_THIS_ID 6
+#define FLASH_THIS_ID 6   //1,2,3,4,5
 #define DEFAULT_COLOR '3' // RED
 #define MAX_ID 6
 
@@ -128,7 +128,7 @@ char myVote = DEFAULT_COLOR; // myVote is a char number
 int len_out = 4;
 
 char ip_addrs[MAX_ID + 1][20] = {
-    "192.168.1.111", // vpi
+    "192.168.1.131", // vpi
     "192.168.1.101", //ID 1 //COM4
     "192.168.1.102", //ID 2 //COM5
     "192.168.1.103", //ID 3 //COM6
@@ -456,7 +456,7 @@ static void udp_server_task(void *pvParameters)
         while (1)
         {
 
-            ESP_LOGI(TAG, "Waiting for data");
+            // ESP_LOGI(TAG, "Waiting for data");
             struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(source_addr);
             int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
@@ -482,8 +482,9 @@ static void udp_server_task(void *pvParameters)
                 }
 
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGI(TAG, "%s", rx_buffer);
+                // ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                // ESP_LOGI(TAG, "%s", rx_buffer);
+                // printf("0:%c 1:%c 2:%c", rx_buffer[0], rx_buffer[1], rx_buffer[2]);
 
                 char resp[] = "ACK";
                 int err = sendto(sock, resp, strlen(resp), 0, (struct sockaddr *)&source_addr, sizeof(source_addr));
@@ -492,7 +493,7 @@ static void udp_server_task(void *pvParameters)
                     ESP_LOGE(TAG, "Error occurred during sending in server: errno %d", errno);
                     break;
                 }
-                printf("Recieved: %s\n", rx_buffer);
+                //printf("Recieved: %s\n", rx_buffer);
                 if (rx_buffer[2] == '0')
                 {
                     OKIE = 1;
@@ -503,20 +504,21 @@ static void udp_server_task(void *pvParameters)
                 }
                 else if (rx_buffer[2] == '2')
                 {
-                    leaderID = rx_buffer[0];
+                    // printf("rx_buffer: %d\n", (int)rx_buffer[0]);
+                    leaderID = (int)rx_buffer[0];
                     WIN = 1;
                 }
                 else if (rx_buffer[2] == '3') // R_SIGNAL as character
                 {
-                    udp_client_fn(rx_buffer[0], 0, R_SIGNAL);
+                    udp_client_fn(((int)rx_buffer[0] - 48), 0, R_SIGNAL);
                 }
                 else if (rx_buffer[2] == '4') // G_SIGNAL as character
                 {
-                    udp_client_fn(rx_buffer[0], 0, G_SIGNAL);
+                    udp_client_fn(((int)rx_buffer[0] - 48), 0, G_SIGNAL);
                 }
                 else if (rx_buffer[2] == '5') // B_SIGNAL as character
                 {
-                    udp_client_fn(rx_buffer[0], 0, B_SIGNAL);
+                    udp_client_fn(((int)rx_buffer[0] - 48), 0, B_SIGNAL);
                 }
             }
         }
@@ -539,13 +541,13 @@ static void udp_client_fn(int fromID, int targetID, int signal)
     switch (signal)
     {
     case OKIE_SIGNAL:
-        printf("sending OKIE to %d\n", targetID);
+        // printf("sending OKIE to %d\n", targetID);
         break;
     case E_SIGNAL:
-        printf("sending E to %d\n", targetID);
+        // printf("sending E to %d\n", targetID);
         break;
     case WIN_SIGNAL:
-        printf("sending WIN to %d\n", targetID);
+        // printf("sending WIN to %d\n", targetID);
         break;
     case R_SIGNAL:
         printf("sending R to %d\n", targetID);
@@ -589,6 +591,11 @@ static void udp_client_fn(int fromID, int targetID, int signal)
 
     char payload[BUF_SIZE];
     snprintf(payload, BUF_SIZE, "%d:%d", fromID, signal);
+
+    if (signal > 2)
+    {
+        printf("payload %s \n", payload);
+    }
     int err1 = fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
     if (err1 < 0)
     {
@@ -642,7 +649,7 @@ void ir_receive_task()
                 if (checkCheckSum(data_in, len_out))
                 {
                     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
-                    printf("Received data_in: %u\n", data_in[2]);
+                    printf("Received data_in from myid: %c  vote: %c\n", data_in[1], data_in[2]);
                     rec_vote = 0;
                     gpio_set_level(GREENPIN, 0);
                     gpio_set_level(REDPIN, 0);
@@ -670,7 +677,25 @@ void ir_receive_task()
                     }
                     int from_id = (int)(data_in[1] - '0'); // convert char number to int number
                     int vote = (int)(data_in[2] - '0');    // convert char number to int number
-                    udp_client_fn(from_id, leaderID, vote);
+                    // printf("Before udp call: from_id %d, leaderID %d, vote %d", from_id, leaderID, vote);
+                    int temp_leader_id = leaderID;
+                    if (from_id > 10)
+                    {
+                        from_id -= 48;
+                    }
+                    if (leaderID > 10)
+                    {
+                        temp_leader_id -= 48;
+                    }
+
+                    if (state == LEADER)
+                    {
+                        udp_client_fn(from_id, 0, vote);
+                    }
+                    else
+                    {
+                        udp_client_fn(from_id, temp_leader_id, vote);
+                    }
                     vTaskDelay(1000 / portTICK_PERIOD_MS);
                     rec_vote = 1;
                 }
@@ -766,6 +791,7 @@ void id_task()
 {
     while (1)
     {
+
         for (int i = 0; i < (int)myID; i++)
         {
             gpio_set_level(ONBOARD, 1);
@@ -773,6 +799,7 @@ void id_task()
             gpio_set_level(ONBOARD, 0);
             vTaskDelay(200 / portTICK_PERIOD_MS);
         }
+
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
@@ -799,7 +826,7 @@ void voting_fsm_task()
         {
         case ELECTION:
 
-            printf("entered ELECTION\n");
+            // printf("entered ELECTION\n");
 
             // reset extraneous signals
             if (E)
@@ -809,14 +836,14 @@ void voting_fsm_task()
             if (OKIE) // switch to WAIT_WIN bc a higher esp is taking care of it
             {
                 OKIE = 0;
-                printf("Attention: OKIE signal received in ELECTION state. Moving to WAIT_WIN\n");
+                // printf("Attention: OKIE signal received in ELECTION state. Moving to WAIT_WIN\n");
                 switch_state(&state, WAIT_WIN, &delay_count);
                 break;
             }
             if (WIN)
             {
                 WIN = 0;
-                printf("Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n");
+                // printf("Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n");
                 switch_state(&state, NOT_LEADER, &delay_count);
                 break;
             }
@@ -840,7 +867,7 @@ void voting_fsm_task()
         case WAIT_OK:
             if (delay_count == 0)
             {
-                printf("entered WAIT_OK\n");
+                //printf("entered WAIT_OK\n");
             }
 
             // reset extraneous signals
@@ -851,7 +878,7 @@ void voting_fsm_task()
             if (WIN)
             {
                 WIN = 0;
-                printf("Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n");
+                // printf("Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n");
                 switch_state(&state, NOT_LEADER, &delay_count);
                 break;
             }
@@ -883,7 +910,7 @@ void voting_fsm_task()
         case WAIT_WIN:
             if (delay_count == 0)
             {
-                printf("entered WAIT_WIN\n");
+                // printf("entered WAIT_WIN\n");
             }
 
             // reset extraneous signals
@@ -918,22 +945,23 @@ void voting_fsm_task()
             break;
 
         case LEADER:
+            leaderID = myID;
             if (delay_count == 0)
             {
-                printf("entered LEADER\n");
+                // printf("entered LEADER\n");
             }
 
             // reset extraneous signals, and print 'error'
             if (E)
             {
                 E = 0;
-                printf("Attention: E signal received in LEADER state\n");
+                // printf("Attention: E signal received in LEADER state\n");
             }
 
             if (WIN)
             {
                 WIN = 0;
-                printf("Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n");
+                // printf("Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n");
                 switch_state(&state, NOT_LEADER, &delay_count);
                 break;
             }
@@ -955,7 +983,7 @@ void voting_fsm_task()
 
             if (delay_count % 10 == 0)
             {
-                printf("I am the leader.\n");
+                // printf("I am the leader.\n");
             }
             delay_count++;
             vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -964,7 +992,7 @@ void voting_fsm_task()
         case NOT_LEADER:
             if (delay_count == 0)
             {
-                printf("entered NOT_LEADER\n");
+                // printf("entered NOT_LEADER\n");
             }
 
             if (E)
