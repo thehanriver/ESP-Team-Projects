@@ -61,7 +61,7 @@ Date: 2020-11-13
 
 
 ## Supporting Artifacts
-- [Link to video demo](). Not to exceed 120s
+[Link to video demo](https://drive.google.com/file/d/1WpJoVRbTkN6g01KtaSGgSiEpxQG6eAr2/view?usp=sharing)
 
 
 ## Modules, Tools, Source Used Including Attribution
