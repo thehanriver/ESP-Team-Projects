@@ -372,6 +372,7 @@ server.on('message', function (message, remote) {
     var vote;
     var buffer;
     var myObj;
+    console.log("Message: ",message);
     getDate();
     // var today = new Date();
     // var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
