@@ -30,9 +30,9 @@ Date: 2020-11-13
 | Qualitative Criterion | Rating | Max Value  | 
 |---------------------------------------------|:-----------:|:---------:|
 | Quality of solution | 5 |  5     | 
-| Quality of report.md including use of graphics |  |  3     | 
-| Quality of code reporting |  |  3     | 
-| Quality of video presentation |  |  3     | 
+| Quality of report.md including use of graphics | 3 |  3     | 
+| Quality of code reporting | 2 |  3     | 
+| Quality of video presentation | 2 |  3     | 
 
 
 ## Solution Design
