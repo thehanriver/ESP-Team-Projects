@@ -196,10 +196,12 @@ var green;
 
 //dummy
 ////////////////////////////////////////////////////////////////////////////////////////
+function getDate(){
 var today = new Date();
 var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 var dateTime = date+' '+time;
+}
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -370,6 +372,7 @@ server.on('message', function (message, remote) {
     var vote;
     var buffer;
     var myObj;
+    getDate();
     // var today = new Date();
     // var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
     // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
