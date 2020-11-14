@@ -40,6 +40,11 @@ Date: 2020-11-13
 
   For showing the votes on the webpage, we used flags with POST and GET just like the previous quest. This allowed us to "run" certain functions in index.js based on a timer. These functions would constantly check for when the flag is raised to read the database which is set at 50ms timer. The flag is raised when the button is clicked and gives enough time to load all data points to /all, /all/red, /all/green, /all/blue. This is then displayed in the main page of Quest 4.
   
+  Investigative Question: List 5 different ways that you can hack the system (including influencing the vote outcome or prevenging votes via denial of service)
+  1. Data can be easily influenced by sending a fake vote over IR to any receiver. 
+  2. Fake vote can be sent to any ESPs UDP server as long as the hacker has an ESP IP and the server port
+  3. An ESPs UDP server can be bombarded with bad data so that the ESP can never read the actual votes since the ESP may be busy dealing with another package
+  
 
 ## Sketches and Photos
 <center><img src="./images/ece444.png" width="25%" /></center>  
