@@ -10,7 +10,7 @@ Date: 2020-11-13
   
   One problem we are trying to fix is the data doesn't load on the first click but the second click. For example, clicking All Candidates when the website is loaded won't show anything. Clicking it again will show it. This follows the same pattern when Clear database is clicked.
   
-    Investigative Question: List 5 different ways that you can hack the system (including influencing the vote outcome or prevenging votes via denial of service)
+ Investigative Question: List 5 different ways that you can hack the system (including influencing the vote outcome or prevenging votes via denial of service)
   1. Data can be easily influenced by sending a fake vote over IR to any receiver. 
   2. Fake vote can be sent to any ESPs UDP server as long as the hacker has an ESP IP and the server port.
   3. An ESPs UDP server can be bombarded with bad data so that the ESP can never read the actual votes since the ESP may be busy dealing with another package.
@@ -50,7 +50,8 @@ Date: 2020-11-13
 
   The Bully algorithm is borrowed from Skill 28 to determine which ESP will be the leader. The ESP with the highest ID becomes the leader. When it gets disconnected, the next highest ID ESP successfully takes its place after a successful election. This is important since the leader is responsible for communicating with the node server.
   This design includes 2 buttons being used, one to change votes and one to transmit the vote and FobID through IR communication. The IR communication code was taken from skill25 and modified to work for two buttons.
-  When an ESP receives a package through its IR receiver, if that ESP is not the Leader it sends this package over to the leader through a UDP packet. When the ESP receives this package, it sends it over to the Node.js server running on the raspberry pi using UDP communication.
+  The Vote is indicated on the LEDs using an LED Task and the ESPs ID is blinked on the internal LED using ID_task.
+  When an ESP receives a package through its IR receiver, the LEDs on the receiving fob change to the color of the incoming vote, to indicate that the second fob has successfully received the vote. If that ESP is not the Leader it sends this package over to the leader through a UDP packet. When the leader ESP receives this package, it sends it over to the Node.js server running on the raspberry pi using UDP communication. No ESP stores the vote data of any other esp indefinitely. When a vote is received, it is quickly transferred over to the next device until this information reaches the raspberry pi node server.All ESPs and the raspberry pi open their UDP servers to recieve packets on the same port 1111. This makes sending packets through the UDP client easier. The website is hosted on the pi's localhost port 4440 which through port forwarding can be viewed from anywhere using the link vivpi.ddns.net:4545. 
   For showing the votes on the webpage, we used flags with POST and GET just like the previous quest. This allowed us to "run" certain functions in index.js based on a timer. These functions would constantly check for when the flag is raised to read the database which is set at 50ms timer. The flag is raised when the button is clicked and gives enough time to load all data points to /all, /all/red, /all/green, /all/blue. This is then displayed in the main page of Quest 4.
   
 
