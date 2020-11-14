@@ -39,6 +39,13 @@
       var contents_G;
       var contents_B;
 
+      var buffer_1 = [" "];
+      var buffer_2 = [" "];
+      var buffer_3 = [" "];
+      var buffer_4 = [" "];
+      var buffer_5 = [" "];
+      var buffer_6 = [" "];
+
       function sendRead() {
         $.post('/read',{read: 1},function(data,clear){
           console.log('read');
@@ -49,10 +56,40 @@
       sendRead();
       console.log("im in read");
       $.ajax({url: "/all", success: function(result){
-      contents ="";
+
       jQuery.each( result , function(i, val) {
-          contents += "id: " + val.id + " vote: " + val.vote + " time: " +val.date_time + " <br />";
+        contents ="";
+        contents += "id: " + val.id + " vote: " + val.vote + " time: " +val.date_time + " <br />";
+        if(val.id == 1){
+          buffer_1.shift();
+          buffer_1.push(contents);
+          console.log("I am buffer 1 ", buffer_1);
+        }
+        else if(val.id == 2){
+          buffer_2.shift();
+          buffer_2.push(contents);
+        }
+        else if(val.id == 3){
+          buffer_3.shift();
+          buffer_3.push(contents);
+        }
+        else if(val.id == 4){
+          buffer_4.shift();
+          buffer_4.push(contents);
+        }
+        else if(val.id == 5){
+          buffer_5.shift();
+          buffer_5.push(contents);
+        }
+        else if(val.id == 6){
+          buffer_6.shift();
+          buffer_6.push(contents);
+        }
         });
+      contents = "";
+
+      contents += buffer_1[0] + " <br />" + buffer_2[0] + " <br />" + buffer_3[0] + " <br />" + buffer_4[0] + " <br />"
+      + buffer_5[0] + " <br />" + buffer_6[0] + " <br />";
       console.log("here results: ",contents);
       //We add contents HTML content to page
       document.getElementById('all').innerHTML="<b> All </b><br />" + contents;
