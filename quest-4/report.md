@@ -66,6 +66,10 @@ Date: 2020-11-13
 
 ## Modules, Tools, Source Used Including Attribution
 
+[Traffic Light IR example](https://github.com/BU-EC444/code-examples/tree/master/traffic-light-ir-example)
+[UDP Client example](https://github.com/espressif/esp-idf/tree/master/examples/protocols/sockets/udp_client)
+[UDP Server example](https://github.com/espressif/esp-idf/tree/master/examples/protocols/sockets/udp_server)
+
 ## References
 
 -----
