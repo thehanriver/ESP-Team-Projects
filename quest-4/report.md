@@ -17,7 +17,7 @@ Date: 2020-11-13
   4. Anyone can access the website and clear the database and delete all votes
   5. Anyone can view the votes while they are being send from one device to another through UDP packets and intercept the packets themselves.
   
-  First step would be to use a much secure method of data transfer especially when dealing with votes. IR transmittors and receivers can be easily obstructed or manipulated. UDP packets just send and receive to a particular port of a device and anyone with the device IP and open PORT number can communicate with the system. Data transfer can be made a bit secure using encryption of all messages being sent and received, leading to fake votes not being read due to lack of encryption.
+  First step would be to use a much secure method of data transfer especially when dealing with votes. IR transmittors and receivers can be easily obstructed or manipulated. UDP packets just send and receive to a particular port of a device and anyone with the device IP and open PORT number can communicate with the system. Data transfer can be made a bit secure using encryption of all messages being sent and received, leading to fake votes not being read due to lack of encryption. Lastly, the website and database access need to be password protected so that no hacker can get access or change this data. 
   
   
         
