@@ -48,6 +48,8 @@ Date: 2020-11-13
 
 ## Solution Design
 
+  The code for this Quest is such that the same code can be flashed onto multiple esps. Each esp just needs to get a different ID but other than that, teh same code can be reused for all esps.
+  
   The Bully algorithm is borrowed from Skill 28 to determine which ESP will be the leader. The ESP with the highest ID becomes the leader. When it gets disconnected, the next highest ID ESP successfully takes its place after a successful election. This is important since the leader is responsible for communicating with the node server.
   
   This design includes 2 buttons being used, one to change votes and one to transmit the vote and FobID through IR communication. The IR communication code was taken from skill25 and modified to work for two buttons. The Vote is indicated on the LEDs using an LED Task and the ESPs ID is blinked on the internal LED using ID_task.
@@ -58,6 +60,10 @@ Date: 2020-11-13
   
 
 ## Sketches and Photos
+Wiring of ESPs on big and small breadboard
+![Screenshot (206)](./images/Image1.JPG)
+![Screenshot (207)](./images/Image2.JPG)
+
 <center><img src="./images/ece444.png" width="25%" /></center>  
 <center> </center>
 
