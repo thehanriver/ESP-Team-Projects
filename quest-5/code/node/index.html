@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	  <title>Vehicle Control</title>
+  </head>
+  <body>
+  	<div id="div1"></div>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  	<button id="On"
+			  type="button"
+			  onClick="sendStart()"
+			  style=" height:50px; width:200px ">
+  		Start
+  	</button>
+  	<button id="Off"
+			  type="button"
+			  onClick="sendStop()"
+			  style=" height:50px; width:200px ">
+  		Stop
+  	</button>
+
+	<div>
+		<b>
+			Vehicle is <span id="changing">(retreiving)</span>
+			<script>
+			//This script is for changing status text on webpage
+			// Array of words
+			var words = ['in motion', 'stopped'];
+
+			
+			var rightNow;
+			var status;
+			var updateStatusInterval = 500;
+
+			// Function that will execute every 500 milliseconds
+			var updateStatus = function () {
+			$.ajax({url: "/status", success: function(result){
+			status = parseInt(result[0]);
+			}});
+
+			if(status == 1){
+				rightNow = words[0];
+			}
+			else{
+				rightNow = words[1];
+			}
+
+			$('#changing').html( rightNow );
+
+			};
+
+			updateStatus();
+			setInterval(function(){updateStatus()}, updateStatusInterval);
+			</script>
+		</b>
+	</div>
+  	
+  	<script type="text/javascript">function sendStart() {
+	  //Ajax call for /status seeing if it is on or off
+		$.post('/status',{status: 1},function(data,status){
+					console.log('turned on');
+				});
+		}
+
+		function sendStop() {
+			$.post('/status',{status: 0},function(data,status){
+				console.log('turned off');
+				});
+		}
+	</script>
+  	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  </body>
+</html>
