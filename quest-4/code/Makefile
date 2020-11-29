@@ -3,6 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := timertest
+PROJECT_NAME := Quest4
 
 include $(IDF_PATH)/make/project.mk
+
