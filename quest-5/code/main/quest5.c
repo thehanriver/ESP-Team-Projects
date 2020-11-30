@@ -131,16 +131,15 @@ void calibrateESC();
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
-static const adc_channel_t channel2 = ADC_CHANNEL_0; //IR left GPIO 34 A4
-static const adc_channel_t channel3 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
-static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR right GPIO 32
+static const adc_channel_t channel2 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
+static const adc_channel_t channel3 = ADC_CHANNEL_0; //IR right GPIO 34 A4
+static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR left GPIO 32
 static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
 static int timer;
-static double speedC;
 static int count;
 static float rotations;
 static float measured_speed_m_per_s;
@@ -148,10 +147,10 @@ static void calc_speed();
 static int pwm_speed;    //1400 neutral
 static int pwm_steering; //1300 straight
 
-static double US_left = 0;
-static double US_right = 0;
-static double IR_left = 0;
-static double IR_right = 0;
+static float US_left = 0;
+static float US_right = 0;
+static float IR_left = 0;
+static float IR_right = 0;
 static int timer;
 static int start = 0;
 static float LIDAR_front;
@@ -237,17 +236,17 @@ static void i2c_scanner()
     int32_t scanTimeout = 1000;
     printf("\n>> I2C scanning ..."
            "\n");
-    uint8_t count = 0;
+    uint8_t cnt = 0;
     for (uint8_t i = 1; i < 127; i++)
     {
         // printf("0x%X%s",i,"\n");
         if (testConnection(i, scanTimeout) == ESP_OK)
         {
             printf("- Device found at address: 0x%X%s", i, "\n");
-            count++;
+            cnt++;
         }
     }
-    if (count == 0)
+    if (cnt == 0)
     {
         printf("- No I2C devices found!"
                "\n");
@@ -479,37 +478,37 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
         printf("Characterized using Default Vref\n");
     }
 }
-static void init()
-{
+// static void init()
+// {
 
-    led_init();
-    periodic_timer_init();
+//     led_init();
+//     periodic_timer_init();
 
-    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0));
-    esp_vfs_dev_uart_use_driver(UART_NUM_0);
+//     ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0));
+//     esp_vfs_dev_uart_use_driver(UART_NUM_0);
 
-    //Check if Two Point or Vref are burned into eFuse
-    check_efuse();
+//     //Check if Two Point or Vref are burned into eFuse
+//     check_efuse();
 
-    //Configure ADC
-    if (unit == ADC_UNIT_1)
-    {
-        adc1_config_width(ADC_WIDTH_BIT_12);
-        adc1_config_channel_atten(channel2, atten);
-    }
-    else
-    {
-        adc2_config_channel_atten((adc2_channel_t)channel2, atten);
-    }
+//     //Configure ADC
+//     if (unit == ADC_UNIT_1)
+//     {
+//         adc1_config_width(ADC_WIDTH_BIT_12);
+//         adc1_config_channel_atten(channel2, atten);
+//     }
+//     else
+//     {
+//         adc2_config_channel_atten((adc2_channel_t)channel2, atten);
+//     }
 
-    //Characterize ADC
-    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
-    print_char_val_type(val_type);
-}
+//     //Characterize ADC
+//     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+//     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+//     print_char_val_type(val_type);
+// }
 
 // returns distances in cm
-// static double ultrasound_v_to_d(uint32_t reading)
+// static float ultrasound_v_to_d(uint32_t reading)
 // {
 //     if (reading==0)
 //     {
@@ -518,7 +517,7 @@ static void init()
 //     }
 //     else
 //     {
-//         double dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
+//         float dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
 //         // uint32_t dist = (1 / 6.4 * (reading)); // 6.4 mV per in
 //         return dist;
 //     }
@@ -577,7 +576,7 @@ static void init()
 static void ultrasound_task()
 {
     uint32_t left, right, volt_right, volt_left;
-    double dist_left, dist_right;
+    float dist_left, dist_right;
     while (1)
     {
         left = 0;
@@ -587,7 +586,7 @@ static void ultrasound_task()
         {
             if (unit == ADC_UNIT_1)
             {
-                right += adc1_get_raw((adc1_channel_t)channel4);
+                right += adc1_get_raw((adc1_channel_t)channel1);
                 left += adc1_get_raw((adc1_channel_t)channel2);
                 vTaskDelay(50 / portTICK_RATE_MS);
             }
@@ -606,7 +605,7 @@ static void ultrasound_task()
 static void IR_task()
 {
     uint32_t left, right, volt_right, volt_left;
-    double dist_left, dist_right;
+    float dist_left, dist_right;
     while (1)
     {
         left = 0;
@@ -618,8 +617,8 @@ static void IR_task()
         {
             if (unit == ADC_UNIT_1)
             {
-                right += adc1_get_raw((adc1_channel_t)channel1);
-                left += adc1_get_raw((adc1_channel_t)channel3);
+                right += adc1_get_raw((adc1_channel_t)channel3);
+                left += adc1_get_raw((adc1_channel_t)channel4);
                 vTaskDelay(50 / portTICK_RATE_MS);
             }
         }
@@ -634,10 +633,10 @@ static void IR_task()
     }
 }
 
-double IR_v_to_dist(voltage)
+float IR_v_to_dist(voltage)
 {
     int dist;
-    double temp;
+    float temp;
       if (voltage > 2)
     {
         distance = (30 / (voltage - 1));
@@ -690,7 +689,7 @@ static void PID_task()
         if (dt_complete == 1)
         {
             // distance PID
-            d_error = FRONT_SET_POINT - measured_distance;
+            d_error = FRONT_SET_POINT - LIDAR_front;
             d_integral = d_integral + d_error * dt;
             d_derivative = (d_error - d_previous_error) / dt;
             PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
@@ -863,7 +862,7 @@ static void set_pwm()
 	}
 	else
 	{
-		if (Lidar_front < FRONT_SET_POINT)
+		if (LIDAR_front < FRONT_SET_POINT)
 		{
 			pwm_speed += PID_distance;
 		}
@@ -1120,13 +1119,20 @@ void app_main(void)
 {
     timer = 0;
     printf("Testing servo motor.......\n");
+
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
+    adc1_config_channel_atten(channel2, atten);
+    adc1_config_channel_atten(channel3, atten);
+    adc1_config_channel_atten(channel4, atten);
+    adc1_config_channel_atten(channel5, atten);
+
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+
     mcpwm_example_gpio_initialize();
-    init();
+    // init();
     // Routine
     i2c_master_init();
     i2c_scanner();
@@ -1140,6 +1146,7 @@ void app_main(void)
     ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
     xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
+    xTaskCreate(IR_task, "ultrasound_task", 2048, NULL, 4, NULL);
     xTaskCreate(PID_task, "PID_task", 2048, NULL, 3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
