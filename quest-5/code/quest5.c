@@ -91,7 +91,7 @@ struct  timeval {
 
 #define GPIO_RED 12
 #define GPIO_GREEN 27
-#define GPIO_BLUE 33
+#define GPIO_BLUE 15
 
 // ultrasound defines
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
@@ -102,6 +102,10 @@ static float distance = 0;
 static float distance2 = 0;
 // Flag for dt
 int dt_complete = 0;
+
+
+static float s_PID_output;
+static float d_PID_output;
 
 //You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
 #define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
@@ -118,7 +122,7 @@ static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 
 static const adc_channel_t channel2 = ADC_CHANNEL_0; //IR left GPIO 34 A4
 static const adc_channel_t channel3 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
 static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR right GPIO 32
-static const adc_channel_t channel5 = ADC_CHANNEL_4; //IR right GPIO 32
+static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
 
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
@@ -289,7 +293,7 @@ int set_brightness_max(uint8_t val)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//LIDR
+//LIDAR
 ////////////////////////////////////////////////////////////////////////////////
 uint16_t get_Distance()
 {
@@ -374,14 +378,23 @@ int checkBit()
 
 void LIDAR_task()
 {
-  while (1)
-  {
-    if (checkBit())
+    int i;
+    int sum;
+    while (1)
     {
-      printf("Distance: %d\n", get_Distance());
+        sum = 0;
+        for (i = 0; i < 10; i++)
+        {
+            if (checkBit())
+            {
+                sum += get_Distance();
+            }
+            vTaskDelay(50 / portTICK_RATE_MS);
+        }
+        dist = (sum / 10.0) - 13;
+        LIDAR_front = dist;
+        // printf("Distance: %f\n", dist);
     }
-    vTaskDelay(1000 / portTICK_RATE_MS);
-  }
 }
 //PID
 ////////////////////////////////////////////////////////////////////////////////
