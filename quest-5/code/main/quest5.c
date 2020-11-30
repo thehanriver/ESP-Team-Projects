@@ -78,8 +78,8 @@
 
 #define FRONT_SET_POINT 0.50 // m
 #define SPEED_SET_POINT 2    // m/s
-#define RIGHT_SET_POINT 0.20 // m
-#define LEFT_SET_POINT 0.20  // m
+#define RIGHT_SET_POINT 0.25 // m
+#define LEFT_SET_POINT 0.25  // m
 #define K_p 50
 #define K_i 0
 #define K_d 0
@@ -836,21 +836,23 @@ static void set_pwm()
 {
 	if (start==0)	// if start is set to 0, move towards NEUTRAL and MIDDLE
 	{
+		// adjust speed to NEUTRAL
 		if (pwm_speed < NEUTRAL + STOP_PWM_INCREMENT)
 		{
 			pwm_speed = NEUTRAL;
 		}
 		else
 		{
-			pwm_speed-=100;
+			pwm_speed-=STOP_PWM_INCREMENT;
 		}
+		// adjust steering to middle
 		if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
 		{
-			pwm_steering+=100;
+			pwm_steering+=STOP_PWM_INCREMENT;
 		}
 		else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
 		{
-			pwm_steering-=100;
+			pwm_steering-=STOP_PWM_INCREMENT;
 		}
 		else
 		{
@@ -868,6 +870,27 @@ static void set_pwm()
 			pwm_speed += PID_speed;
 		}
 
+		if (IR_right > RIGHT_SET_POINT && IR_left > LEFT_SET_POINT)
+		{
+			// adjust steering to middle
+			if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
+			{
+				pwm_steering+=STOP_PWM_INCREMENT;
+			}
+			else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
+			{
+				pwm_steering-=STOP_PWM_INCREMENT;
+			}
+			else
+			{
+				pwm_steering = MIDDLE;
+			}
+		}
+		else
+		{
+			pwm_steering += PID_steering;
+		}
+		
 		pwm_steering += PID_steering;
 	}
 }
