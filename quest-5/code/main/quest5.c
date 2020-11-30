@@ -71,7 +71,7 @@
 #define PORT 1234
 
 
-#define TIMER_INTERVAL_SEC 0.100
+#define TIMER_INTERVAL_SEC 0.050	// 50 ms
 #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // to seconds
 #define TEST_WITH_RELOAD 1                           // Testing will be done with auto reload
@@ -103,9 +103,6 @@
 #define NEUTRAL 1400
 
 #define STOP_PWM_INCREMENT 50
-
-
-
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
@@ -682,7 +679,7 @@ static void PID_task()
     float d_error, d_derivative, d_previous_error = 0, d_integral = 0;
     float sp_error, sp_derivative, sp_previous_error = 0, sp_integral = 0;
     float st_error, st_derivative, st_previous_error = 0, st_integral = 0;
-    float dt = 0.1; // 100 ms
+    float dt = TIMER_INTERVAL_SEC; // 50 ms
 
     while (1)
     {
