@@ -679,7 +679,7 @@ static void PID_task()
         if (dt_complete == 1)
         {
             // distance PID
-            d_error = FRONT_SET_POINT - measured_distance;
+            d_error = FRONT_SET_POINT - LIDAR_front;
             d_integral = d_integral + d_error * dt;
             d_derivative = (d_error - d_previous_error) / dt;
             PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
@@ -827,7 +827,7 @@ static void PID_task()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void set_pwm()
 {
-    if (Lidar_front < FRONT_SET_POINT)
+    if (LIDAR_front < FRONT_SET_POINT)
     {
         pwm_speed += PID_distance;
     }
