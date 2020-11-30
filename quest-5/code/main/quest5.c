@@ -36,6 +36,22 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+
+#define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
+#define NO_OF_SAMPLES 20  //Multisampling
+#define E 2.718
+
+// 14-Segment Display
+#define SLAVE_DISPLAY_ADDR 0x70      // alphanumeric address
+#define OSC 0x21                     // oscillator cmd
+#define HT16K33_BLINK_DISPLAYON 0x01 // Display on cmd
+#define HT16K33_BLINK_OFF 0          // Blink off cmd
+#define HT16K33_BLINK_CMD 0x80       // Blink cmd
+#define HT16K33_CMD_BRIGHTNESS 0xE0  // Brightness cmd
+
+// LIDAR
+#define SLAVE_ADDR (0x62) // 0x53
+
 // Master I2C
 #define I2C_EXAMPLE_MASTER_SCL_IO 22        // gpio number for i2c clk
 #define I2C_EXAMPLE_MASTER_SDA_IO 23        // gpio number for i2c data
@@ -50,13 +66,10 @@
 #define ACK_VAL 0x00                        // i2c ack value
 #define NACK_VAL 0xFF                       // i2c nack value
 
-#ifdef CONFIG_EXAMPLE_IPV4
-#define HOST_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
-#else
-#define HOST_IP_ADDR CONFIG_EXAMPLE_IPV6_ADDR
-#endif
 
-#define PORT "192.168.1.139"
+//UDP
+#define HOST_IP_ADDR "192.168.1.111"
+#define PORT 1234
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
@@ -65,15 +78,6 @@ struct  timeval {
      	int tv_sec;
      	int tv_usec;
 };
-
-// LIDAR
-#define SLAVE_ADDR (0x62) // 0x53
-// #define RegisterMeasure (0x00) // Register to write to initiate ranging.
-// #define MeasureValue (0x04)    // Value to initiate ranging.
-// #define RegisterHighLowB 0x8f  // Register to get both High and Low bytes in 1 call.
-//0xC4 write, 0xC5 read
-
-static const char *TAG = "cmd_i2ctools";
 
 #define TIMER_INTERVAL_SEC 0.100
 #define TIMER_DIVIDER         16    //  Hardware timer clock divider
@@ -115,11 +119,18 @@ void calibrateESC();
 #define MAX_LEFT 2000
 #define MIDDLE 1300
 
+
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = ADC_CHANNEL_3; //Thermistor GPIO 36 A3
-static const adc_channel_t channel2 = ADC_CHANNEL_6;     //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
+static const adc_channel_t channel2 = ADC_CHANNEL_0; //IR left GPIO 34 A4
+static const adc_channel_t channel3 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
+static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR right GPIO 32
+static const adc_channel_t channel5 = ADC_CHANNEL_4; //IR right GPIO 32
+
+
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
+
 
 static int timer;
 static double speedC;
@@ -130,11 +141,37 @@ static void calc_speed();
 static int pwm_speed; //1400 neutral
 static int pwm_steering; //1300 straight
 
-static float IR_left;
-static float IR_right;
-static float US_left;
-static float US_right;
-static float Lidar_front;
+static double US_left = 0;
+static double US_right = 0;
+static double IR_left = 0;
+static double IR_right = 0;
+static int timer;
+static int start = 0;
+static float LIDAR_front;
+
+static const uint16_t alphafonttable[10] = {
+
+    0b0000110000111111, // 0
+    0b0000000000000110, // 1
+    0b0000000011011011, // 2
+    0b0000000011001111, // 3
+    0b0000000011100110, // 4
+    0b0000000011101101, // 5
+    0b0000000011111101, // 6
+    0b0000000000000111, // 7
+    0b0000000011111111, // 8
+    0b0000000011101111  // 9
+
+};
+static uint16_t displaybuffer[4];
+// Function to initiate i2c -- note the MSB declaration!
+static void alphanum_init()
+{
+    displaybuffer[0] = 0b0000000000000000; // 0
+    displaybuffer[1] = 0b0000000000000000; // 0
+    displaybuffer[2] = 0b0000000000000000; // 0
+    displaybuffer[3] = 0b0000000000000000; // 0
+}
 
 //I2c
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +246,56 @@ static void i2c_scanner()
            "\n");
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Alphanumeric Functions //////////////////////////////////////////////////////
+
+// Turn on oscillator for alpha display
+int alpha_oscillator()
+{
+    int ret;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (SLAVE_DISPLAY_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, OSC, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    vTaskDelay(200 / portTICK_RATE_MS);
+    return ret;
+}
+
+// Set blink rate to off
+int no_blink()
+{
+    int ret;
+    i2c_cmd_handle_t cmd2 = i2c_cmd_link_create();
+    i2c_master_start(cmd2);
+    i2c_master_write_byte(cmd2, (SLAVE_DISPLAY_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd2, HT16K33_BLINK_CMD | HT16K33_BLINK_DISPLAYON | (HT16K33_BLINK_OFF << 1), ACK_CHECK_EN);
+    i2c_master_stop(cmd2);
+    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd2);
+    vTaskDelay(200 / portTICK_RATE_MS);
+    return ret;
+}
+
+// Set Brightness
+int set_brightness_max(uint8_t val)
+{
+    int ret;
+    i2c_cmd_handle_t cmd3 = i2c_cmd_link_create();
+    i2c_master_start(cmd3);
+    i2c_master_write_byte(cmd3, (SLAVE_DISPLAY_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd3, HT16K33_CMD_BRIGHTNESS | val, ACK_CHECK_EN);
+    i2c_master_stop(cmd3);
+    ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd3, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd3);
+    vTaskDelay(200 / portTICK_RATE_MS);
+    return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //LIDR
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -664,7 +751,7 @@ static void calc_speed(){
       uint32_t adc_reading = 0;
           if (unit == ADC_UNIT_1)
           {
-              adc_reading = adc1_get_raw((adc1_channel_t)channel1);
+              adc_reading = adc1_get_raw((adc1_channel_t)channel5);
               vTaskDelay(10 / portTICK_PERIOD_MS);
           }
       //Convert adc_reading to voltage in mV
