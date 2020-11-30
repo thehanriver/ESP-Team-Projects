@@ -507,69 +507,133 @@ static void init()
 
 
 // returns distances in cm
-static double ultrasound_v_to_d(uint32_t reading)
-{
-    if (reading==0)
-    {
-        printf("returning 0");
-        return 0;
-    }
-    else
-    {
-        double dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
-        // uint32_t dist = (1 / 6.4 * (reading)); // 6.4 mV per in
-        return dist;
-    }
-}
+// static double ultrasound_v_to_d(uint32_t reading)
+// {
+//     if (reading==0)
+//     {
+//         printf("returning 0");
+//         return 0;
+//     }
+//     else
+//     {
+//         double dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
+//         // uint32_t dist = (1 / 6.4 * (reading)); // 6.4 mV per in
+//         return dist;
+//     }
+// }
 
+
+// static void ultrasound_task()
+// {
+//     //Continuously sample ADC1
+//     while (1) {
+//       // #1
+//         uint32_t adc_reading = 0;
+//         //Multisampling
+//         for (int i = 0; i < NO_OF_SAMPLES; i++) {
+//             if (unit == ADC_UNIT_1) {
+//                 adc_reading += adc1_get_raw((adc1_channel_t)channel2);
+//             } else {
+//                 int raw;
+//                 adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
+//                 adc_reading += raw;
+//             }
+//             vTaskDelay(100 / portTICK_PERIOD_MS);
+//         }
+//         adc_reading /= NO_OF_SAMPLES;
+//         //Convert adc_reading to voltage in mV
+//         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+
+//         // display voltage
+//         distance = ultrasound_v_to_d(voltage);
+
+//         printf("Raw: %d\tVoltage: %dmV\tDistance: %.2fm\n", adc_reading, voltage, distance);
+//         //#2
+//         uint32_t adc_reading2 = 0;
+//         //Multisampling
+//         for (int j = 0; j < NO_OF_SAMPLES; j++) {
+//           //change this HUSSAIN
+//             if (unit == ADC_UNIT_1) {
+//                 adc_reading2 += adc1_get_raw((adc1_channel_t)channel2);
+//             } else {
+//                 int raw2;
+//                 adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
+//                 adc_reading2 += raw2;
+//             }
+//             vTaskDelay(100 / portTICK_PERIOD_MS);
+//         }
+//         adc_reading2 /= NO_OF_SAMPLES;
+//         //Convert adc_reading to voltage in mV
+//         uint32_t voltage2 = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+
+//         // display voltage
+//         distance2 = ultrasound_v_to_d(voltage2);
+
+//         printf("Raw2: %d\tVoltage2: %dmV\tDistance2: %.2fm\n", adc_reading2, voltage2, distance2);
+//     }
+// }
 
 static void ultrasound_task()
 {
-    //Continuously sample ADC1
-    while (1) {
-      // #1
-        uint32_t adc_reading = 0;
+    uint32_t left, right, volt_right, volt_left;
+    double dist_left, dist_right;
+    while (1)
+    {
+        left = 0;
+        right = 0;
         //Multisampling
-        for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel2);
-            } else {
-                int raw;
-                adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
-                adc_reading += raw;
+        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        {
+            if (unit == ADC_UNIT_1)
+            {
+                right += adc1_get_raw((adc1_channel_t)channel4);
+                left += adc1_get_raw((adc1_channel_t)channel2);
+                vTaskDelay(50 / portTICK_RATE_MS);
             }
-            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
-        adc_reading /= NO_OF_SAMPLES;
-        //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+        left /= NO_OF_SAMPLES;
+        right /= NO_OF_SAMPLES;
+        volt_right = esp_adc_cal_raw_to_voltage(right, adc_chars);
+        volt_left = esp_adc_cal_raw_to_voltage(left, adc_chars);
+        dist_right = ((1 / 6.4 * (volt_right)) - 4.25) * .0254;
+        dist_left = ((1 / 6.4 * (volt_left)) - 4.25) * .0254;
+        US_right = dist_right;
+        US_left = dist_left;
+    }
+}
 
-        // display voltage
-        distance = ultrasound_v_to_d(voltage);
-
-        printf("Raw: %d\tVoltage: %dmV\tDistance: %.2fm\n", adc_reading, voltage, distance);
-        //#2
-        uint32_t adc_reading2 = 0;
+static void IR_task()
+{
+    uint32_t left, right, volt_right, volt_left;
+    double dist_left, dist_right;
+    int dist;
+    double temp;
+    while (1)
+    {
+        left = 0;
+        right = 0;
+        dist = 0;
+        temp = 0;
         //Multisampling
-        for (int j = 0; j < NO_OF_SAMPLES; j++) {
-          //change this HUSSAIN
-            if (unit == ADC_UNIT_1) {
-                adc_reading2 += adc1_get_raw((adc1_channel_t)channel2);
-            } else {
-                int raw2;
-                adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
-                adc_reading2 += raw2;
+        for (int i = 0; i < NO_OF_SAMPLES; i++)
+        {
+            if (unit == ADC_UNIT_1)
+            {
+                right += adc1_get_raw((adc1_channel_t)channel1);
+                left += adc1_get_raw((adc1_channel_t)channel3);
+                vTaskDelay(50 / portTICK_RATE_MS);
             }
-            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
-        adc_reading2 /= NO_OF_SAMPLES;
-        //Convert adc_reading to voltage in mV
-        uint32_t voltage2 = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-        // display voltage
-        distance2 = ultrasound_v_to_d(voltage2);
-
-        printf("Raw2: %d\tVoltage2: %dmV\tDistance2: %.2fm\n", adc_reading2, voltage2, distance2);
+        left /= NO_OF_SAMPLES;
+        right /= NO_OF_SAMPLES;
+        volt_right = esp_adc_cal_raw_to_voltage(right, adc_chars);
+        volt_left = esp_adc_cal_raw_to_voltage(left, adc_chars);
+        volt_right /= 1000;
+        volt_left /= 1000;
+        dist_right = ((1 / 6.4 * (volt_right)) - 4.25) * .0254;
+        dist_left = ((1 / 6.4 * (volt_left)) - 4.25) * .0254;
+        US_right = dist_right;
+        US_left = dist_left;
     }
 }
 
@@ -815,11 +879,11 @@ void steering(void *arg)
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
-    vTaskDelay(1000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
+    vTaskDelay(2000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
     while (1)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, set_pwm_steering); // Neutral signal in microseconds
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -840,14 +904,18 @@ void calibrateESC()
 static void udp_client_task(void *pvParameters)
 {
     char rx_buffer[128];
-    char addr_str[128];
-    int addr_family;
-    int ip_protocol;
-    int S;
+    char host_ip[] = HOST_IP_ADDR;
+    int addr_family = 0;
+    int ip_protocol = 0;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-    while (1) {
+    while (1)
+    {
 
-#ifdef CONFIG_EXAMPLE_IPV4
+        char addr_str[128];
+        int addr_family;
+        int ip_protocol;
+
         struct sockaddr_in dest_addr;
         dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
         dest_addr.sin_family = AF_INET;
@@ -855,87 +923,118 @@ static void udp_client_task(void *pvParameters)
         addr_family = AF_INET;
         ip_protocol = IPPROTO_IP;
         inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
-#else // IPV6
-        struct sockaddr_in6 dest_addr = { 0 };
-        inet6_aton(HOST_IP_ADDR, &dest_addr.sin6_addr);
-        dest_addr.sin6_family = AF_INET6;
-        dest_addr.sin6_port = htons(PORT);
-        // Setting scope_id to the connecting interface for correct routing if IPv6 Local Link supplied
-        dest_addr.sin6_scope_id = esp_netif_get_netif_impl_index(EXAMPLE_INTERFACE);
-        addr_family = AF_INET6;
-        ip_protocol = IPPROTO_IPV6;
-        inet6_ntoa_r(dest_addr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-#endif
 
         int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
-        if (sock < 0) {
+        if (sock < 0)
+        {
             ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
             break;
         }
         ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
 
-        while (1) {
-
+        while (1)
+        {
+            char buffer2[128];
+            int status;
+            status = sprintf(buffer2, "%d", start);
+            payload = buffer2;
             int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-            if (err < 0) {
+            if (err < 0)
+            {
                 ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                 break;
             }
             ESP_LOGI(TAG, "Message sent");
-
             struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
-            struct timeval tv;
-            tv.tv_sec = 0;
-            tv.tv_usec = 2000000;
-
             socklen_t socklen = sizeof(source_addr);
-
-            if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0){
-            	perror("error time");
-            	printf("errpr setsocket\n");
-            	break;
-            }
-
             int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
-
             // Error occurred during receiving
-            if (len <= 0) {
+            if (len < 0)
+            {
                 ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
                 break;
             }
             // Data received
-            else {
+            else
+            {
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGI(TAG, "%s", rx_buffer);
-
-                /*
-                	t = rx_buffer[0] -'0';
-                	if(t==1){
-						gpio_set_level(BLINK_GPIO, 1);
-						ESP_LOGI(TAG,"LED on");
-						S = 1;
-						printf("State is %d\n",S);
-					}
-					else{
-						gpio_set_level(BLINK_GPIO, 0);
-						ESP_LOGI(TAG,"LED off");
-						S = 0;
-						printf("State is %d\n", S)
-                	}
-											*/
+                // ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
+                // ESP_LOGI(TAG, "%s", rx_buffer);
+                if (rx_buffer[0] == '1')
+                {
+                    start = 1;
+                }
+                else
+                {
+                    start = 0;
+                }
             }
 
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        if (sock != -1) {
+        if (sock != -1)
+        {
             ESP_LOGE(TAG, "Shutting down socket and restarting...");
             shutdown(sock, 0);
             close(sock);
         }
     }
     vTaskDelete(NULL);
+}
+
+
+//alphanum prints speed
+static void alphanum_display()
+{
+
+    // Debug
+    int ret;
+    printf(">> Test Alphanumeric Display: \n");
+
+    // Set up routines
+    // Turn on alpha oscillator
+    ret = alpha_oscillator();
+    if (ret == ESP_OK)
+    {
+        printf("- oscillator: ok \n");
+    }
+    // Set display blink off
+    ret = no_blink();
+    if (ret == ESP_OK)
+    {
+        printf("- blink: off \n");
+    }
+    ret = set_brightness_max(0xF);
+    if (ret == ESP_OK)
+    {
+        printf("- brightness: max \n");
+    }
+
+    // Initiallize characters to buffer
+    while (1)
+    {
+        // Send commands characters to display over I2C
+        i2c_cmd_handle_t cmd4 = i2c_cmd_link_create();
+        i2c_master_start(cmd4);
+        i2c_master_write_byte(cmd4, (SLAVE_DISPLAY_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+        i2c_master_write_byte(cmd4, (uint8_t)0x00, ACK_CHECK_EN);
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            i2c_master_write_byte(cmd4, displaybuffer[i] & 0xFF, ACK_CHECK_EN);
+            i2c_master_write_byte(cmd4, displaybuffer[i] >> 8, ACK_CHECK_EN);
+        }
+        i2c_master_stop(cmd4);
+        ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
+        i2c_cmd_link_delete(cmd4);
+
+        displaybuffer[0] = alphafonttable[((int)dist) % 10] | (1 << 14);
+        displaybuffer[1] = alphafonttable[(int)((dist)*10) % 10];   //
+        displaybuffer[2] = alphafonttable[(int)((dist)*100) % 10];  //
+        displaybuffer[2] = alphafonttable[(int)((dist)*1000) % 10]; //
+
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -963,10 +1062,11 @@ void app_main(void)
     ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
     xTaskCreate(ultrasound_task, "button_task", 2048, NULL, 4, NULL);
+    xTaskCreate(IR_task, "button_task", 2048, NULL, 4, NULL);
     xTaskCreate(PID_task, "display_task", 2048, NULL,3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
     xTaskCreate(calc_speed, "calc_speed", 4096, NULL, 6, NULL);
     xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
-
+    xTaskCreate(alphanum_display, "alphanum_display", 2048, NULL, 4, NULL);
 }
