@@ -106,7 +106,7 @@ void calibrateESC();
 
 #define MAX_RIGHT 700
 #define MAX_LEFT 2000
-#define NEUTRAL 1300
+#define MIDDLE 1300
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Thermistor GPIO 36 A3
@@ -118,8 +118,10 @@ static int timer;
 static double speedC;
 static int count;
 static float rotations;
-static float speed_rpm;
+static float speed_m_per_s;
 static void calc_speed();
+static int car_speed; //1400 neutral
+static int car_steering; //1300 straight
 
 static float IR_left;
 static float IR_right;
@@ -479,6 +481,18 @@ static void PID_task() {
 
     while(1)
     {
+      if (Lidar_front > 50.0)
+      {
+        //PID using speed sensor
+        //make sure speed is at 2m/s
+        //get speed from speed_m_per_s
+        //change car_speed
+      }
+      else if (Lidar_front < 40.0)
+      {
+        //PID using distance sensor
+        //
+      }
         if (dt_complete == 1) {
             error = SET_POINT - distance;
             integral = integral + error * dt;
@@ -513,6 +527,76 @@ static void PID_task() {
     }
 
 }
+
+static void steering_PID_task() {
+    float error, derivative, output, previous_error, integral, dt;
+    previous_error = 0;
+    integral = 0;
+    dt = 0.1; // 100 ms
+
+    //#define MAX_RIGHT 700
+    //#define MAX_LEFT 2000
+    //#define NEUTRAL 1300
+
+    //IR_left, IR_right, US_left, US_right
+
+    if(IR_left < 25 || US_left < 25)
+    {
+
+    }
+
+    else()
+    {}
+
+
+    while(1)
+    {
+         if(IR_left < 25 || US_left < 25)
+    {
+
+    }
+
+    else()
+    {}
+
+      else
+      {
+        car_steering = MIDDLE;
+      }
+        if (dt_complete == 1) {
+            error = SET_POINT - distance;
+            integral = integral + error * dt;
+            derivative = (error - previous_error) / dt;
+            output = K_p * error + K_i * integral + K_d * derivative;
+            previous_error = error;
+
+            if (error<-0.005)
+            {
+                gpio_set_level(GPIO_RED,1);
+                gpio_set_level(GPIO_GREEN,0);
+                gpio_set_level(GPIO_BLUE,0);
+            }
+            else if (error>0.005)
+            {
+                gpio_set_level(GPIO_RED,0);
+                gpio_set_level(GPIO_GREEN,0);
+                gpio_set_level(GPIO_BLUE,1);
+            }
+            else
+            {
+                gpio_set_level(GPIO_RED,0);
+                gpio_set_level(GPIO_GREEN,1);
+                gpio_set_level(GPIO_BLUE,0);
+            }
+            dt_complete = 0;
+            // Re-enable alarm
+            TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
+        }
+
+        vTaskDelay(50 / portTICK_RATE_MS);
+    }
+
+}
 //Movement,speed,steering
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void calc_speed(){
@@ -541,8 +625,8 @@ static void calc_speed(){
       }
     }
     rotations = count / 6.0;
-    speed_rpm =  rotations * (62.0/100);
-    printf(" speed: %f\n", speed_rpm);
+    speed_m_per_s =  rotations * (62.0/100);
+    printf(" speed: %f\n", speed_m_per_s);
   }
 }
 
@@ -576,8 +660,8 @@ void movement(void *arg)
 
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 1400); // Neutral signal in microseconds
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, car_speed); // Neutral signal in microseconds
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -594,7 +678,7 @@ void steering(void *arg)
     vTaskDelay(1000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, NEUTRAL); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, car_steering); // Neutral signal in microseconds
         vTaskDelay(4000 / portTICK_PERIOD_MS);
     }
 }
