@@ -80,8 +80,9 @@ static const char *TAG = "cmd_i2ctools";
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
 #define TEST_WITH_RELOAD      1     // Testing will be done with auto reload
 
-#define SET_POINT 0.50
-#define K_p 1
+#define DISTANCE_SET_POINT 0.50 // m
+#define SPEED_SET_POINT 2 // m/s
+#define K_p 50
 #define K_i 0
 #define K_d 0
 
@@ -97,7 +98,10 @@ static const char *TAG = "cmd_i2ctools";
 static float distance = 0;
 static float distance2 = 0;
 // Flag for dt
-int dt_complete = 0;
+static int dt_complete = 0;
+
+static float s_PID_output;
+static float d_PID_output;
 
 //You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
 #define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
@@ -118,10 +122,10 @@ static int timer;
 static double speedC;
 static int count;
 static float rotations;
-static float speed_m_per_s;
+static float measured_speed_m_per_s;
 static void calc_speed();
-static int car_speed; //1400 neutral
-static int car_steering; //1300 straight
+static int set_pwm_speed; //1400 neutral
+static int set_pwm_steering; //1300 straight
 
 static float IR_left;
 static float IR_right;
@@ -473,58 +477,81 @@ static void ultrasound_task()
     }
 }
 
-static void PID_task() {
-    float error, derivative, output, previous_error, integral, dt;
-    previous_error = 0;
-    integral = 0;
-    dt = 0.1; // 100 ms
+static void PID_task()
+{
+    float d_error, d_derivative, d_previous_error, d_integral;
+	float s_error, s_derivative, s_previous_error, s_integral;
+	float dt = 0.1; // 100 ms
+    d_previous_error = 0;
+    d_integral = 0;
+	s_previous_error = 0;
+	s_integral = 0;
+    
 
 
     while(1)
     {
-      if (Lidar_front > 50.0)
-      {
-        //PID using speed sensor
-        //make sure speed is at 2m/s
-        //get speed from speed_m_per_s
-        //change car_speed
-      }
-      else if (Lidar_front < 40.0)
-      {
-        //PID using distance sensor
-        //
-      }
-        if (dt_complete == 1) {
-            error = SET_POINT - distance;
-            integral = integral + error * dt;
-            derivative = (error - previous_error) / dt;
-            output = K_p * error + K_i * integral + K_d * derivative;
-            previous_error = error;
+      if (dt_complete == 1) {
+		  // distance PID
+          d_error = DISTANCE_SET_POINT - measured_distance;
+          d_integral = d_integral + d_error * dt;
+          d_derivative = (d_error - d_previous_error) / dt;
+          d_PID_output = K_p * d_error + K_i * d_integral + K_d * d_derivative;
+          d_previous_error = d_error;
 
-            if (error<-0.005)
-            {
-                gpio_set_level(GPIO_RED,1);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,0);
-            }
-            else if (error>0.005)
-            {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,1);
-            }
-            else
-            {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,1);
-                gpio_set_level(GPIO_BLUE,0);
-            }
-            dt_complete = 0;
-            // Re-enable alarm
-            TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
-        }
+          if (d_error<-0.005)
+          {
+              gpio_set_level(GPIO_RED,1);
+              gpio_set_level(GPIO_GREEN,0);
+              gpio_set_level(GPIO_BLUE,0);
+          }
+          else if (d_error>0.005)
+          {
+              gpio_set_level(GPIO_RED,0);
+              gpio_set_level(GPIO_GREEN,0);
+              gpio_set_level(GPIO_BLUE,1);
+          }
+          else
+          {
+              gpio_set_level(GPIO_RED,0);
+              gpio_set_level(GPIO_GREEN,1);
+              gpio_set_level(GPIO_BLUE,0);
+          }
 
-        vTaskDelay(100 / portTICK_RATE_MS);
+		  // speed PID
+		  
+		  s_error = SPEED_SET_POINT - measured_speed_m_per_s;
+          s_integral = s_integral + s_error * dt;
+          s_derivative = (s_error - s_previous_error) / dt;
+          s_PID_output = K_p * s_error + K_i * s_integral + K_d * s_derivative;
+          s_previous_error = s_error;
+
+          if (s_error<-0.005)
+          {
+              gpio_set_level(GPIO_RED,1);
+              gpio_set_level(GPIO_GREEN,0);
+              gpio_set_level(GPIO_BLUE,0);
+          }
+          else if (s_error>0.005)
+          {
+              gpio_set_level(GPIO_RED,0);
+              gpio_set_level(GPIO_GREEN,0);
+              gpio_set_level(GPIO_BLUE,1);
+          }
+          else
+          {
+              gpio_set_level(GPIO_RED,0);
+              gpio_set_level(GPIO_GREEN,1);
+              gpio_set_level(GPIO_BLUE,0);
+          }
+
+
+          dt_complete = 0;
+          // Re-enable alarm
+          TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
+      }
+
+      vTaskDelay(100 / portTICK_RATE_MS);
     }
 
 }
@@ -562,7 +589,7 @@ static void steering_PID_task() {
 
       else
       {
-        car_steering = MIDDLE;
+        set_pwm_steering = MIDDLE;
       }
         if (dt_complete == 1) {
             error = SET_POINT - distance;
@@ -600,6 +627,18 @@ static void steering_PID_task() {
 }
 //Movement,speed,steering
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void control_pwm() {
+	if (Lidar_front < DISTANCE_SET_POINT)
+	{
+		set_pwm_speed += d_PID_output;
+	}
+	else
+	{
+		set_pwm_speed += s_PID_output;
+	}
+}
+
+
 static void calc_speed(){
   vTaskDelay(6000 / portTICK_PERIOD_MS);
 
@@ -626,8 +665,8 @@ static void calc_speed(){
       }
     }
     rotations = count / 6.0;
-    speed_m_per_s =  rotations * (62.0/100);
-    printf(" speed: %f\n", speed_m_per_s);
+    measured_speed_m_per_s =  rotations * (62.0/100);
+    printf(" speed: %f\n", measured_speed_m_per_s);
   }
 }
 
@@ -642,6 +681,10 @@ static void mcpwm_example_gpio_initialize(void)
 /**
  * @brief Configure MCPWM module
  */
+
+
+
+
 void movement(void *arg)
 {
     //2. initial mcpwm configuration
@@ -661,7 +704,7 @@ void movement(void *arg)
 
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, car_speed); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, set_pwm_speed); // Neutral signal in microseconds
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
@@ -679,7 +722,7 @@ void steering(void *arg)
     vTaskDelay(1000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, car_steering); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, set_pwm_steering); // Neutral signal in microseconds
         vTaskDelay(4000 / portTICK_PERIOD_MS);
     }
 }
