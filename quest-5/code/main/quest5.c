@@ -80,8 +80,10 @@ static const char *TAG = "cmd_i2ctools";
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
 #define TEST_WITH_RELOAD      1     // Testing will be done with auto reload
 
-#define DISTANCE_SET_POINT 0.50 // m
+#define FRONT_SET_POINT 0.50 // m
 #define SPEED_SET_POINT 2 // m/s
+#define RIGHT_SET_POINT 0.20 // m
+#define LEFT_SET_POINT 0.20 // m
 #define K_p 50
 #define K_i 0
 #define K_d 0
@@ -100,8 +102,9 @@ static float distance2 = 0;
 // Flag for dt
 static int dt_complete = 0;
 
-static float s_PID_output;
-static float d_PID_output;
+static float PID_speed;
+static float PID_distance;
+static float PID_steering;
 
 //You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
 #define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
@@ -124,8 +127,8 @@ static int count;
 static float rotations;
 static float measured_speed_m_per_s;
 static void calc_speed();
-static int set_pwm_speed; //1400 neutral
-static int set_pwm_steering; //1300 straight
+static int pwm_speed; //1400 neutral
+static int pwm_steering; //1300 straight
 
 static float IR_left;
 static float IR_right;
@@ -479,13 +482,10 @@ static void ultrasound_task()
 
 static void PID_task()
 {
-    float d_error, d_derivative, d_previous_error, d_integral;
-	float s_error, s_derivative, s_previous_error, s_integral;
+    float d_error, d_derivative, d_previous_error=0, d_integral=0;
+	float sp_error, sp_derivative, sp_previous_error=0, sp_integral=0;
+	float st_error, st_derivative, st_previous_error=0, st_integral=0;
 	float dt = 0.1; // 100 ms
-    d_previous_error = 0;
-    d_integral = 0;
-	s_previous_error = 0;
-	s_integral = 0;
     
 
 
@@ -493,10 +493,10 @@ static void PID_task()
     {
       if (dt_complete == 1) {
 		  // distance PID
-          d_error = DISTANCE_SET_POINT - measured_distance;
+          d_error = FRONT_SET_POINT - measured_distance;
           d_integral = d_integral + d_error * dt;
           d_derivative = (d_error - d_previous_error) / dt;
-          d_PID_output = K_p * d_error + K_i * d_integral + K_d * d_derivative;
+          PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
           d_previous_error = d_error;
 
           if (d_error<-0.005)
@@ -520,11 +520,11 @@ static void PID_task()
 
 		  // speed PID
 		  
-		  s_error = SPEED_SET_POINT - measured_speed_m_per_s;
-          s_integral = s_integral + s_error * dt;
-          s_derivative = (s_error - s_previous_error) / dt;
-          s_PID_output = K_p * s_error + K_i * s_integral + K_d * s_derivative;
-          s_previous_error = s_error;
+		  sp_error = SPEED_SET_POINT - measured_speed_m_per_s;
+          sp_integral = sp_integral + sp_error * dt;
+          sp_derivative = (sp_error - sp_previous_error) / dt;
+          PID_speed = K_p * sp_error + K_i * sp_integral + K_d * sp_derivative;
+          sp_previous_error = sp_error;
 
           if (s_error<-0.005)
           {
@@ -545,8 +545,22 @@ static void PID_task()
               gpio_set_level(GPIO_BLUE,0);
           }
 
+		  // steering PID will go here
+
+		  st_R_error = RIGHT_SET_POINT - IR_right;
+          st_R_integral = st_R_integral + st_R_error * dt;
+          st_R_derivative = (st_R_error - st_R_previous_error) / dt;
+          PID_steering = K_p * st_R_error + K_i * st_R_integral + K_d * st_R_derivative;
+          st_R_previous_error = st_R_error;
+
+		  st_L_error = LEFT_SET_POINT - IR_left;
+          st_L_integral = st_L_integral + st_L_error * dt;
+          st_L_derivative = (st_L_error - st_L_previous_error) / dt;
+          PID_steering -= K_p * st_L_error + K_i * st_L_integral + K_d * st_L_derivative;
+          st_L_previous_error = st_L_error;
 
           dt_complete = 0;
+		  set_pwm();
           // Re-enable alarm
           TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
       }
@@ -556,88 +570,89 @@ static void PID_task()
 
 }
 
-static void steering_PID_task() {
-    float error, derivative, output, previous_error, integral, dt;
-    previous_error = 0;
-    integral = 0;
-    dt = 0.1; // 100 ms
+// static void steering_PID_task() {
+//     float error, derivative, output, previous_error, integral, dt;
+//     previous_error = 0;
+//     integral = 0;
+//     dt = 0.1; // 100 ms
 
-    //#define MAX_RIGHT 700
-    //#define MAX_LEFT 2000
-    //#define NEUTRAL 1300
+//     //#define MAX_RIGHT 700
+//     //#define MAX_LEFT 2000
+//     //#define NEUTRAL 1300
 
-    //IR_left, IR_right, US_left, US_right
+//     //IR_left, IR_right, US_left, US_right
 
-    if(IR_left < 25 || US_left < 25)
-    {
+//     if(IR_left < 25 || US_left < 25)
+//     {
 
-    }
+//     }
 
-    else()
-    {}
+//     else()
+//     {}
 
 
-    while(1)
-    {
-         if(IR_left < 25 || US_left < 25)
-    {
+//     while(1)
+//     {
+//          if(IR_left < 25 || US_left < 25)
+//     {
 
-    }
+//     }
 
-    else()
-    {}
+//     else()
+//     {}
 
-      else
-      {
-        set_pwm_steering = MIDDLE;
-      }
-        if (dt_complete == 1) {
-            error = SET_POINT - distance;
-            integral = integral + error * dt;
-            derivative = (error - previous_error) / dt;
-            output = K_p * error + K_i * integral + K_d * derivative;
-            previous_error = error;
+//       else
+//       {
+//         pwm_steering = MIDDLE;
+//       }
+//         if (dt_complete == 1) {
+//             error = SET_POINT - distance;
+//             integral = integral + error * dt;
+//             derivative = (error - previous_error) / dt;
+//             output = K_p * error + K_i * integral + K_d * derivative;
+//             previous_error = error;
 
-            if (error<-0.005)
-            {
-                gpio_set_level(GPIO_RED,1);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,0);
-            }
-            else if (error>0.005)
-            {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,1);
-            }
-            else
-            {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,1);
-                gpio_set_level(GPIO_BLUE,0);
-            }
-            dt_complete = 0;
-            // Re-enable alarm
-            TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
-        }
+//             if (error<-0.005)
+//             {
+//                 gpio_set_level(GPIO_RED,1);
+//                 gpio_set_level(GPIO_GREEN,0);
+//                 gpio_set_level(GPIO_BLUE,0);
+//             }
+//             else if (error>0.005)
+//             {
+//                 gpio_set_level(GPIO_RED,0);
+//                 gpio_set_level(GPIO_GREEN,0);
+//                 gpio_set_level(GPIO_BLUE,1);
+//             }
+//             else
+//             {
+//                 gpio_set_level(GPIO_RED,0);
+//                 gpio_set_level(GPIO_GREEN,1);
+//                 gpio_set_level(GPIO_BLUE,0);
+//             }
+//             dt_complete = 0;
+//             // Re-enable alarm
+//             TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
+//         }
 
-        vTaskDelay(50 / portTICK_RATE_MS);
-    }
+//         vTaskDelay(50 / portTICK_RATE_MS);
+//     }
 
-}
+// }
 //Movement,speed,steering
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void control_pwm() {
-	if (Lidar_front < DISTANCE_SET_POINT)
+static void set_pwm() {
+	if (Lidar_front < FRONT_SET_POINT)
 	{
-		set_pwm_speed += d_PID_output;
+		pwm_speed += PID_distance;
 	}
 	else
 	{
-		set_pwm_speed += s_PID_output;
+		pwm_speed += PID_speed;
 	}
-}
 
+	pwm_steering += PID_steering;
+}
 
 static void calc_speed(){
   vTaskDelay(6000 / portTICK_PERIOD_MS);
@@ -704,7 +719,7 @@ void movement(void *arg)
 
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, set_pwm_speed); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, pwm_speed); // Neutral signal in microseconds
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
@@ -722,7 +737,7 @@ void steering(void *arg)
     vTaskDelay(1000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, set_pwm_steering); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, pwm_steering); // Neutral signal in microseconds
         vTaskDelay(4000 / portTICK_PERIOD_MS);
     }
 }
@@ -866,8 +881,8 @@ void app_main(void)
     */
     ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
-    xTaskCreate(ultrasound_task, "button_task", 2048, NULL, 4, NULL);
-    xTaskCreate(PID_task, "display_task", 2048, NULL,3, NULL);
+    xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
+    xTaskCreate(PID_task, "PID_task", 2048, NULL,3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
     xTaskCreate(calc_speed, "calc_speed", 4096, NULL, 6, NULL);
