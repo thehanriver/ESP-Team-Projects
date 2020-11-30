@@ -377,26 +377,6 @@ int checkBit()
     }
 }
 
-void LIDAR_task()
-{
-    int i;
-    int sum;
-    while (1)
-    {
-        sum = 0;
-        for (i = 0; i < 10; i++)
-        {
-            if (checkBit())
-            {
-                sum += get_Distance();
-            }
-            vTaskDelay(50 / portTICK_RATE_MS);
-        }
-        dist = (sum / 10.0) - 13;
-        LIDAR_front = dist;
-        // printf("Distance: %f\n", dist);
-    }
-}
 //PID
 ////////////////////////////////////////////////////////////////////////////////
 // Define timer interrupt handler
@@ -617,8 +597,6 @@ static void IR_task()
 {
     uint32_t left, right, volt_right, volt_left;
     double dist_left, dist_right;
-    int dist;
-    double temp;
     while (1)
     {
         left = 0;
@@ -641,10 +619,52 @@ static void IR_task()
         volt_left = esp_adc_cal_raw_to_voltage(left, adc_chars);
         volt_right /= 1000;
         volt_left /= 1000;
-        dist_right = ((1 / 6.4 * (volt_right)) - 4.25) * .0254;
-        dist_left = ((1 / 6.4 * (volt_left)) - 4.25) * .0254;
-        US_right = dist_right;
-        US_left = dist_left;
+        US_right = IR_v_to_dist(volt_right);
+        US_left = IR_v_to_dist(volt_left);;
+    }
+}
+
+double IR_v_to_dist(voltage)
+{
+    int dist;
+    double temp;
+      if (voltage > 2)
+    {
+        distance = (30 / (voltage - 1));
+    }
+    else if (voltage < 2 && voltage > 1)
+    {
+        distance = (57 / (voltage - 0.08));
+    }
+    else
+    {
+        temp = (3 - voltage) / 0.5;
+        temp = pow(E, temp);
+        temp = temp / 1.4;
+        distance = temp + 25.5;
+    }
+    distance = distance / 100.0;
+    return distance;
+}
+
+void LIDAR_task()
+{
+    int i;
+    int sum;
+    while (1)
+    {
+        sum = 0;
+        for (i = 0; i < 10; i++)
+        {
+            if (checkBit())
+            {
+                sum += get_Distance();
+            }
+            vTaskDelay(50 / portTICK_RATE_MS);
+        }
+        dist = (sum / 10.0) - 13;
+        LIDAR_front = dist;
+        // printf("Distance: %f\n", dist);
     }
 }
 
