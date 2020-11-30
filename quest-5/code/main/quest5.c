@@ -130,7 +130,6 @@ static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
 static int timer;
-static double speedC;
 static int count;
 static float rotations;
 static float measured_speed_m_per_s;
@@ -227,17 +226,17 @@ static void i2c_scanner()
     int32_t scanTimeout = 1000;
     printf("\n>> I2C scanning ..."
            "\n");
-    uint8_t count = 0;
+    uint8_t cnt = 0;
     for (uint8_t i = 1; i < 127; i++)
     {
         // printf("0x%X%s",i,"\n");
         if (testConnection(i, scanTimeout) == ESP_OK)
         {
             printf("- Device found at address: 0x%X%s", i, "\n");
-            count++;
+            cnt++;
         }
     }
-    if (count == 0)
+    if (cnt == 0)
     {
         printf("- No I2C devices found!"
                "\n");
@@ -469,34 +468,34 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
         printf("Characterized using Default Vref\n");
     }
 }
-static void init()
-{
+// static void init()
+// {
 
-    led_init();
-    periodic_timer_init();
+//     led_init();
+//     periodic_timer_init();
 
-    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0));
-    esp_vfs_dev_uart_use_driver(UART_NUM_0);
+//     ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0));
+//     esp_vfs_dev_uart_use_driver(UART_NUM_0);
 
-    //Check if Two Point or Vref are burned into eFuse
-    check_efuse();
+//     //Check if Two Point or Vref are burned into eFuse
+//     check_efuse();
 
-    //Configure ADC
-    if (unit == ADC_UNIT_1)
-    {
-        adc1_config_width(ADC_WIDTH_BIT_12);
-        adc1_config_channel_atten(channel2, atten);
-    }
-    else
-    {
-        adc2_config_channel_atten((adc2_channel_t)channel2, atten);
-    }
+//     //Configure ADC
+//     if (unit == ADC_UNIT_1)
+//     {
+//         adc1_config_width(ADC_WIDTH_BIT_12);
+//         adc1_config_channel_atten(channel2, atten);
+//     }
+//     else
+//     {
+//         adc2_config_channel_atten((adc2_channel_t)channel2, atten);
+//     }
 
-    //Characterize ADC
-    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
-    print_char_val_type(val_type);
-}
+//     //Characterize ADC
+//     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+//     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+//     print_char_val_type(val_type);
+// }
 
 // returns distances in cm
 // static double ultrasound_v_to_d(uint32_t reading)
@@ -1084,13 +1083,20 @@ void app_main(void)
 {
     timer = 0;
     printf("Testing servo motor.......\n");
+
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
+    adc1_config_channel_atten(channel2, atten);
+    adc1_config_channel_atten(channel3, atten);
+    adc1_config_channel_atten(channel4, atten);
+    adc1_config_channel_atten(channel5, atten);
+
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+
     mcpwm_example_gpio_initialize();
-    init();
+    // init();
     // Routine
     i2c_master_init();
     i2c_scanner();
@@ -1104,6 +1110,7 @@ void app_main(void)
     ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
     xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
+    xTaskCreate(IR_task, "ultrasound_task", 2048, NULL, 4, NULL);
     xTaskCreate(PID_task, "PID_task", 2048, NULL, 3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
