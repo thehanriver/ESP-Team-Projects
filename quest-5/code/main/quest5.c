@@ -66,8 +66,6 @@
 #define ACK_VAL 0x00                        // i2c ack value
 #define NACK_VAL 0xFF                       // i2c nack value
 
-
-
 //UDP
 #define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
 #define PORT 1234
@@ -75,18 +73,21 @@
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
 
-struct  timeval {
-     	int tv_sec;
-     	int tv_usec;
+struct timeval
+{
+    int tv_sec;
+    int tv_usec;
 };
 
 #define TIMER_INTERVAL_SEC 0.100
-#define TIMER_DIVIDER         16    //  Hardware timer clock divider
-#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
-#define TEST_WITH_RELOAD      1     // Testing will be done with auto reload
+#define TIMER_DIVIDER 16                             //  Hardware timer clock divider
+#define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // to seconds
+#define TEST_WITH_RELOAD 1                           // Testing will be done with auto reload
 
-#define DISTANCE_SET_POINT 0.50 // m
-#define SPEED_SET_POINT 2 // m/s
+#define FRONT_SET_POINT 0.50 // m
+#define SPEED_SET_POINT 2    // m/s
+#define RIGHT_SET_POINT 0.20 // m
+#define LEFT_SET_POINT 0.20  // m
 #define K_p 50
 #define K_i 0
 #define K_d 0
@@ -96,8 +97,8 @@ struct  timeval {
 #define GPIO_BLUE 15
 
 // ultrasound defines
-#define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES   20          //Multisampling
+#define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
+#define NO_OF_SAMPLES 20  //Multisampling
 
 // ultrasound variables
 static float distance = 0;
@@ -105,8 +106,9 @@ static float distance2 = 0;
 // Flag for dt
 static int dt_complete = 0;
 
-static float s_PID_output;
-static float d_PID_output;
+static float PID_speed;
+static float PID_distance;
+static float PID_steering;
 
 //You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
 #define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
@@ -116,7 +118,6 @@ void calibrateESC();
 #define MAX_RIGHT 700
 #define MAX_LEFT 2000
 #define MIDDLE 1300
-
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
@@ -128,15 +129,14 @@ static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
-
 static int timer;
 static double speedC;
 static int count;
 static float rotations;
 static float measured_speed_m_per_s;
 static void calc_speed();
-static int set_pwm_speed; //1400 neutral
-static int set_pwm_steering; //1300 straight
+static int pwm_speed;    //1400 neutral
+static int pwm_steering; //1300 straight
 
 static double US_left = 0;
 static double US_right = 0;
@@ -175,73 +175,73 @@ static void alphanum_init()
 // Function to initiate i2c -- note the MSB declaration!
 static void i2c_master_init()
 {
-  // Debug
-  printf("\n>> i2c Config\n");
-  int err;
+    // Debug
+    printf("\n>> i2c Config\n");
+    int err;
 
-  // Port configuration
-  int i2c_master_port = I2C_EXAMPLE_MASTER_NUM;
+    // Port configuration
+    int i2c_master_port = I2C_EXAMPLE_MASTER_NUM;
 
-  /// Define I2C configurations
-  i2c_config_t conf;
-  conf.mode = I2C_MODE_MASTER;                        // Master mode
-  conf.sda_io_num = I2C_EXAMPLE_MASTER_SDA_IO;        // Default SDA pin
-  conf.sda_pullup_en = GPIO_PULLUP_ENABLE;            // Internal pullup
-  conf.scl_io_num = I2C_EXAMPLE_MASTER_SCL_IO;        // Default SCL pin
-  conf.scl_pullup_en = GPIO_PULLUP_ENABLE;            // Internal pullup
-  conf.master.clk_speed = I2C_EXAMPLE_MASTER_FREQ_HZ; // CLK frequency
-  err = i2c_param_config(i2c_master_port, &conf);     // Configure
-  if (err == ESP_OK)
-  {
-    printf("- parameters: ok\n");
-  }
+    /// Define I2C configurations
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;                        // Master mode
+    conf.sda_io_num = I2C_EXAMPLE_MASTER_SDA_IO;        // Default SDA pin
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;            // Internal pullup
+    conf.scl_io_num = I2C_EXAMPLE_MASTER_SCL_IO;        // Default SCL pin
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;            // Internal pullup
+    conf.master.clk_speed = I2C_EXAMPLE_MASTER_FREQ_HZ; // CLK frequency
+    err = i2c_param_config(i2c_master_port, &conf);     // Configure
+    if (err == ESP_OK)
+    {
+        printf("- parameters: ok\n");
+    }
 
-  // Install I2C driver
-  err = i2c_driver_install(i2c_master_port, conf.mode,
-                           I2C_EXAMPLE_MASTER_RX_BUF_DISABLE,
-                           I2C_EXAMPLE_MASTER_TX_BUF_DISABLE, 0);
-  if (err == ESP_OK)
-  {
-    printf("- initialized: yes\n");
-  }
+    // Install I2C driver
+    err = i2c_driver_install(i2c_master_port, conf.mode,
+                             I2C_EXAMPLE_MASTER_RX_BUF_DISABLE,
+                             I2C_EXAMPLE_MASTER_TX_BUF_DISABLE, 0);
+    if (err == ESP_OK)
+    {
+        printf("- initialized: yes\n");
+    }
 
-  // Data in MSB mode
-  i2c_set_data_mode(i2c_master_port, I2C_DATA_MODE_MSB_FIRST, I2C_DATA_MODE_MSB_FIRST);
+    // Data in MSB mode
+    i2c_set_data_mode(i2c_master_port, I2C_DATA_MODE_MSB_FIRST, I2C_DATA_MODE_MSB_FIRST);
 }
 
 // Utility function to test for I2C device address -- not used in deploy
 int testConnection(uint8_t devAddr, int32_t timeout)
 {
-  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-  i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-  i2c_master_stop(cmd);
-  int err = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-  i2c_cmd_link_delete(cmd);
-  return err;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
+    int err = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return err;
 }
 
 // Utility function to scan for i2c device
 static void i2c_scanner()
 {
-  int32_t scanTimeout = 1000;
-  printf("\n>> I2C scanning ..."
-         "\n");
-  uint8_t count = 0;
-  for (uint8_t i = 1; i < 127; i++)
-  {
-    // printf("0x%X%s",i,"\n");
-    if (testConnection(i, scanTimeout) == ESP_OK)
-    {
-      printf("- Device found at address: 0x%X%s", i, "\n");
-      count++;
-    }
-  }
-  if (count == 0)
-  {
-    printf("- No I2C devices found!"
+    int32_t scanTimeout = 1000;
+    printf("\n>> I2C scanning ..."
            "\n");
-  }
+    uint8_t count = 0;
+    for (uint8_t i = 1; i < 127; i++)
+    {
+        // printf("0x%X%s",i,"\n");
+        if (testConnection(i, scanTimeout) == ESP_OK)
+        {
+            printf("- Device found at address: 0x%X%s", i, "\n");
+            count++;
+        }
+    }
+    if (count == 0)
+    {
+        printf("- No I2C devices found!"
+               "\n");
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,83 +298,83 @@ int set_brightness_max(uint8_t val)
 
 uint16_t get_Distance()
 {
-  uint8_t val1;
-  uint8_t val2;
-
-  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-  i2c_master_start(cmd);                                                   //start
-  i2c_master_write_byte(cmd, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN); //slave address + write
-  i2c_master_write_byte(cmd, 0x00, ACK_CHECK_EN);                          // register address
-  i2c_master_write_byte(cmd, 0x04, ACK_CHECK_EN);                          // data
-  i2c_master_stop(cmd);                                                    // stop
-  esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-  if (ret == ESP_OK)
-  {
-    ESP_LOGI(TAG, "Write OK");
-  }
-  else if (ret == ESP_ERR_TIMEOUT)
-  {
-    ESP_LOGW(TAG, "Bus is busy");
-  }
-  else
-  {
-    ESP_LOGW(TAG, "Write Failed");
-  }
-  printf("Wrote 0 to 4 \n");
-  vTaskDelay(20 / portTICK_RATE_MS);
-
-  i2c_cmd_handle_t cmd1 = i2c_cmd_link_create();
-  i2c_master_start(cmd1);
-  i2c_master_write_byte(cmd1, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-  i2c_master_write_byte(cmd1, 0x8F, ACK_CHECK_EN);
-  i2c_master_stop(cmd1);
-  i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd1, 1000 / portTICK_RATE_MS);
-
-  i2c_cmd_handle_t cmd2 = i2c_cmd_link_create();
-  i2c_master_start(cmd2);
-  i2c_master_write_byte(cmd2, (SLAVE_ADDR << 1) | READ_BIT, ACK_CHECK_EN);
-  i2c_master_read_byte(cmd2, &val1, ACK_VAL);
-  i2c_master_read_byte(cmd2, &val2, ACK_VAL);
-  i2c_master_stop(cmd2);
-  i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
-
-  i2c_cmd_link_delete(cmd);
-  i2c_cmd_link_delete(cmd1);
-  i2c_cmd_link_delete(cmd2);
-  printf("%d, %d\n", val1, val2);
-
-  uint16_t output = (uint16_t)((val1 << 8) | val2);
-  return output;
-}
-
-int checkBit()
-{
-  while (1)
-  {
     uint8_t val1;
+    uint8_t val2;
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, (0x01), ACK_CHECK_EN);
-    i2c_master_stop(cmd);
+    i2c_master_start(cmd);                                                   //start
+    i2c_master_write_byte(cmd, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN); //slave address + write
+    i2c_master_write_byte(cmd, 0x00, ACK_CHECK_EN);                          // register address
+    i2c_master_write_byte(cmd, 0x04, ACK_CHECK_EN);                          // data
+    i2c_master_stop(cmd);                                                    // stop
+    esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Write OK");
+    }
+    else if (ret == ESP_ERR_TIMEOUT)
+    {
+        ESP_LOGW(TAG, "Bus is busy");
+    }
+    else
+    {
+        ESP_LOGW(TAG, "Write Failed");
+    }
+    printf("Wrote 0 to 4 \n");
+    vTaskDelay(20 / portTICK_RATE_MS);
+
+    i2c_cmd_handle_t cmd1 = i2c_cmd_link_create();
+    i2c_master_start(cmd1);
+    i2c_master_write_byte(cmd1, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd1, 0x8F, ACK_CHECK_EN);
+    i2c_master_stop(cmd1);
+    i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd1, 1000 / portTICK_RATE_MS);
 
     i2c_cmd_handle_t cmd2 = i2c_cmd_link_create();
     i2c_master_start(cmd2);
     i2c_master_write_byte(cmd2, (SLAVE_ADDR << 1) | READ_BIT, ACK_CHECK_EN);
-    i2c_master_read_byte(cmd2, &val1, ACK_CHECK_DIS);
+    i2c_master_read_byte(cmd2, &val1, ACK_VAL);
+    i2c_master_read_byte(cmd2, &val2, ACK_VAL);
     i2c_master_stop(cmd2);
+    i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
 
-    i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
+    i2c_cmd_link_delete(cmd1);
     i2c_cmd_link_delete(cmd2);
+    printf("%d, %d\n", val1, val2);
 
-    if ((val1 & 1) == 0)
+    uint16_t output = (uint16_t)((val1 << 8) | val2);
+    return output;
+}
+
+int checkBit()
+{
+    while (1)
     {
-      return 1;
+        uint8_t val1;
+
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (SLAVE_ADDR << 1) | WRITE_BIT, ACK_CHECK_EN);
+        i2c_master_write_byte(cmd, (0x01), ACK_CHECK_EN);
+        i2c_master_stop(cmd);
+
+        i2c_cmd_handle_t cmd2 = i2c_cmd_link_create();
+        i2c_master_start(cmd2);
+        i2c_master_write_byte(cmd2, (SLAVE_ADDR << 1) | READ_BIT, ACK_CHECK_EN);
+        i2c_master_read_byte(cmd2, &val1, ACK_CHECK_DIS);
+        i2c_master_stop(cmd2);
+
+        i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+        esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
+        i2c_cmd_link_delete(cmd);
+        i2c_cmd_link_delete(cmd2);
+
+        if ((val1 & 1) == 0)
+        {
+            return 1;
+        }
     }
-  }
 }
 
 void LIDAR_task()
@@ -427,27 +427,26 @@ static void periodic_timer_init()
     // Configure the alarm value and the interrupt on alarm.
     timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 0);
 
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_isr,(void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
+    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_isr, (void *)TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
     timer_enable_intr(TIMER_GROUP_0, TIMER_0);
 
     // Start timer
     timer_start(TIMER_GROUP_0, TIMER_0);
 }
 
-
 static void led_init()
 {
     gpio_reset_pin(GPIO_RED);
     gpio_pad_select_gpio(GPIO_RED);
-    gpio_set_direction(GPIO_RED,GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_RED, GPIO_MODE_OUTPUT);
 
     gpio_reset_pin(GPIO_GREEN);
     gpio_pad_select_gpio(GPIO_GREEN);
-    gpio_set_direction(GPIO_GREEN,GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_GREEN, GPIO_MODE_OUTPUT);
 
     gpio_reset_pin(GPIO_BLUE);
     gpio_pad_select_gpio(GPIO_BLUE);
-    gpio_set_direction(GPIO_BLUE,GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_BLUE, GPIO_MODE_OUTPUT);
 }
 
 // BEGIN ULTRASOUND FUNCTIONS
@@ -455,27 +454,38 @@ static void led_init()
 static void check_efuse(void)
 {
     //Check TP is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK)
+    {
         printf("eFuse Two Point: Supported\n");
-    } else {
+    }
+    else
+    {
         printf("eFuse Two Point: NOT supported\n");
     }
 
     //Check Vref is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK)
+    {
         printf("eFuse Vref: Supported\n");
-    } else {
+    }
+    else
+    {
         printf("eFuse Vref: NOT supported\n");
     }
 }
 
 static void print_char_val_type(esp_adc_cal_value_t val_type)
 {
-    if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
+    if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP)
+    {
         printf("Characterized using Two Point Value\n");
-    } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
+    }
+    else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF)
+    {
         printf("Characterized using eFuse Vref\n");
-    } else {
+    }
+    else
+    {
         printf("Characterized using Default Vref\n");
     }
 }
@@ -492,10 +502,13 @@ static void init()
     check_efuse();
 
     //Configure ADC
-    if (unit == ADC_UNIT_1) {
+    if (unit == ADC_UNIT_1)
+    {
         adc1_config_width(ADC_WIDTH_BIT_12);
         adc1_config_channel_atten(channel2, atten);
-    } else {
+    }
+    else
+    {
         adc2_config_channel_atten((adc2_channel_t)channel2, atten);
     }
 
@@ -504,7 +517,6 @@ static void init()
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
     print_char_val_type(val_type);
 }
-
 
 // returns distances in cm
 // static double ultrasound_v_to_d(uint32_t reading)
@@ -521,7 +533,6 @@ static void init()
 //         return dist;
 //     }
 // }
-
 
 // static void ultrasound_task()
 // {
@@ -639,195 +650,210 @@ static void IR_task()
 
 static void PID_task()
 {
-    float d_error, d_derivative, d_previous_error, d_integral;
-	float s_error, s_derivative, s_previous_error, s_integral;
-	float dt = 0.1; // 100 ms
-    d_previous_error = 0;
-    d_integral = 0;
-	s_previous_error = 0;
-	s_integral = 0;
-    
+    float d_error, d_derivative, d_previous_error = 0, d_integral = 0;
+    float sp_error, sp_derivative, sp_previous_error = 0, sp_integral = 0;
+    float st_error, st_derivative, st_previous_error = 0, st_integral = 0;
+    float dt = 0.1; // 100 ms
 
-
-    while(1)
+    while (1)
     {
-      if (dt_complete == 1) {
-		  // distance PID
-          d_error = DISTANCE_SET_POINT - measured_distance;
-          d_integral = d_integral + d_error * dt;
-          d_derivative = (d_error - d_previous_error) / dt;
-          d_PID_output = K_p * d_error + K_i * d_integral + K_d * d_derivative;
-          d_previous_error = d_error;
+        if (dt_complete == 1)
+        {
+            // distance PID
+            d_error = FRONT_SET_POINT - measured_distance;
+            d_integral = d_integral + d_error * dt;
+            d_derivative = (d_error - d_previous_error) / dt;
+            PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
+            d_previous_error = d_error;
 
-          if (d_error<-0.005)
-          {
-              gpio_set_level(GPIO_RED,1);
-              gpio_set_level(GPIO_GREEN,0);
-              gpio_set_level(GPIO_BLUE,0);
-          }
-          else if (d_error>0.005)
-          {
-              gpio_set_level(GPIO_RED,0);
-              gpio_set_level(GPIO_GREEN,0);
-              gpio_set_level(GPIO_BLUE,1);
-          }
-          else
-          {
-              gpio_set_level(GPIO_RED,0);
-              gpio_set_level(GPIO_GREEN,1);
-              gpio_set_level(GPIO_BLUE,0);
-          }
-
-		  // speed PID
-		  
-		  s_error = SPEED_SET_POINT - measured_speed_m_per_s;
-          s_integral = s_integral + s_error * dt;
-          s_derivative = (s_error - s_previous_error) / dt;
-          s_PID_output = K_p * s_error + K_i * s_integral + K_d * s_derivative;
-          s_previous_error = s_error;
-
-          if (s_error<-0.005)
-          {
-              gpio_set_level(GPIO_RED,1);
-              gpio_set_level(GPIO_GREEN,0);
-              gpio_set_level(GPIO_BLUE,0);
-          }
-          else if (s_error>0.005)
-          {
-              gpio_set_level(GPIO_RED,0);
-              gpio_set_level(GPIO_GREEN,0);
-              gpio_set_level(GPIO_BLUE,1);
-          }
-          else
-          {
-              gpio_set_level(GPIO_RED,0);
-              gpio_set_level(GPIO_GREEN,1);
-              gpio_set_level(GPIO_BLUE,0);
-          }
-
-
-          dt_complete = 0;
-          // Re-enable alarm
-          TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
-      }
-
-      vTaskDelay(100 / portTICK_RATE_MS);
-    }
-
-}
-
-static void steering_PID_task() {
-    float error, derivative, output, previous_error, integral, dt;
-    previous_error = 0;
-    integral = 0;
-    dt = 0.1; // 100 ms
-
-    //#define MAX_RIGHT 700
-    //#define MAX_LEFT 2000
-    //#define NEUTRAL 1300
-
-    //IR_left, IR_right, US_left, US_right
-
-    if(IR_left < 25 || US_left < 25)
-    {
-
-    }
-
-    else()
-    {}
-
-
-    while(1)
-    {
-      if(IR_left < 25 || US_left < 25)
-      {
-        
-      }
-
-    else()
-    {}
-
-      else
-      {
-        set_pwm_steering = MIDDLE;
-      }
-        if (dt_complete == 1) {
-            error = SET_POINT - distance;
-            integral = integral + error * dt;
-            derivative = (error - previous_error) / dt;
-            output = K_p * error + K_i * integral + K_d * derivative;
-            previous_error = error;
-
-            if (error<-0.005)
+            if (d_error < -0.005)
             {
-                gpio_set_level(GPIO_RED,1);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,0);
+                gpio_set_level(GPIO_RED, 1);
+                gpio_set_level(GPIO_GREEN, 0);
+                gpio_set_level(GPIO_BLUE, 0);
             }
-            else if (error>0.005)
+            else if (d_error > 0.005)
             {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,0);
-                gpio_set_level(GPIO_BLUE,1);
+                gpio_set_level(GPIO_RED, 0);
+                gpio_set_level(GPIO_GREEN, 0);
+                gpio_set_level(GPIO_BLUE, 1);
             }
             else
             {
-                gpio_set_level(GPIO_RED,0);
-                gpio_set_level(GPIO_GREEN,1);
-                gpio_set_level(GPIO_BLUE,0);
+                gpio_set_level(GPIO_RED, 0);
+                gpio_set_level(GPIO_GREEN, 1);
+                gpio_set_level(GPIO_BLUE, 0);
             }
+
+            // speed PID
+
+            sp_error = SPEED_SET_POINT - measured_speed_m_per_s;
+            sp_integral = sp_integral + sp_error * dt;
+            sp_derivative = (sp_error - sp_previous_error) / dt;
+            PID_speed = K_p * sp_error + K_i * sp_integral + K_d * sp_derivative;
+            sp_previous_error = sp_error;
+
+            if (s_error < -0.005)
+            {
+                gpio_set_level(GPIO_RED, 1);
+                gpio_set_level(GPIO_GREEN, 0);
+                gpio_set_level(GPIO_BLUE, 0);
+            }
+            else if (s_error > 0.005)
+            {
+                gpio_set_level(GPIO_RED, 0);
+                gpio_set_level(GPIO_GREEN, 0);
+                gpio_set_level(GPIO_BLUE, 1);
+            }
+            else
+            {
+                gpio_set_level(GPIO_RED, 0);
+                gpio_set_level(GPIO_GREEN, 1);
+                gpio_set_level(GPIO_BLUE, 0);
+            }
+
+            // steering PID will go here
+
+            st_R_error = RIGHT_SET_POINT - IR_right;
+            st_R_integral = st_R_integral + st_R_error * dt;
+            st_R_derivative = (st_R_error - st_R_previous_error) / dt;
+            PID_steering = K_p * st_R_error + K_i * st_R_integral + K_d * st_R_derivative;
+            st_R_previous_error = st_R_error;
+
+            st_L_error = LEFT_SET_POINT - IR_left;
+            st_L_integral = st_L_integral + st_L_error * dt;
+            st_L_derivative = (st_L_error - st_L_previous_error) / dt;
+            PID_steering -= K_p * st_L_error + K_i * st_L_integral + K_d * st_L_derivative;
+            st_L_previous_error = st_L_error;
+
             dt_complete = 0;
+            set_pwm();
             // Re-enable alarm
             TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
         }
 
-        vTaskDelay(50 / portTICK_RATE_MS);
+        vTaskDelay(100 / portTICK_RATE_MS);
     }
-
 }
+
+// static void steering_PID_task() {
+//     float error, derivative, output, previous_error, integral, dt;
+//     previous_error = 0;
+//     integral = 0;
+//     dt = 0.1; // 100 ms
+
+//     //#define MAX_RIGHT 700
+//     //#define MAX_LEFT 2000
+//     //#define NEUTRAL 1300
+
+//     //IR_left, IR_right, US_left, US_right
+
+//     if(IR_left < 25 || US_left < 25)
+//     {
+
+//     }
+
+//     else()
+//     {}
+
+//     while(1)
+//     {
+//          if(IR_left < 25 || US_left < 25)
+//     {
+
+//     }
+
+//     else()
+//     {}
+
+//       else
+//       {
+//         pwm_steering = MIDDLE;
+//       }
+//         if (dt_complete == 1) {
+//             error = SET_POINT - distance;
+//             integral = integral + error * dt;
+//             derivative = (error - previous_error) / dt;
+//             output = K_p * error + K_i * integral + K_d * derivative;
+//             previous_error = error;
+
+//             if (error<-0.005)
+//             {
+//                 gpio_set_level(GPIO_RED,1);
+//                 gpio_set_level(GPIO_GREEN,0);
+//                 gpio_set_level(GPIO_BLUE,0);
+//             }
+//             else if (error>0.005)
+//             {
+//                 gpio_set_level(GPIO_RED,0);
+//                 gpio_set_level(GPIO_GREEN,0);
+//                 gpio_set_level(GPIO_BLUE,1);
+//             }
+//             else
+//             {
+//                 gpio_set_level(GPIO_RED,0);
+//                 gpio_set_level(GPIO_GREEN,1);
+//                 gpio_set_level(GPIO_BLUE,0);
+//             }
+//             dt_complete = 0;
+//             // Re-enable alarm
+//             TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
+//         }
+
+//         vTaskDelay(50 / portTICK_RATE_MS);
+//     }
+
+// }
 //Movement,speed,steering
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void control_pwm() {
-	if (Lidar_front < DISTANCE_SET_POINT)
-	{
-		set_pwm_speed += d_PID_output;
-	}
-	else
-	{
-		set_pwm_speed += s_PID_output;
-	}
+static void set_pwm()
+{
+    if (Lidar_front < FRONT_SET_POINT)
+    {
+        pwm_speed += PID_distance;
+    }
+    else
+    {
+        pwm_speed += PID_speed;
+    }
+
+    pwm_steering += PID_steering;
 }
 
+static void calc_speed()
+{
+    vTaskDelay(6000 / portTICK_PERIOD_MS);
 
-static void calc_speed(){
-  vTaskDelay(6000 / portTICK_PERIOD_MS);
+    while (1)
+    {
+        count = 0;
+        int flag = 0;
+        for (int j = 0; j < 100; j++)
+        {
+            uint32_t adc_reading = 0;
+            if (unit == ADC_UNIT_1)
+            {
+                adc_reading = adc1_get_raw((adc1_channel_t)channel5);
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+            //Convert adc_reading to voltage in mV
+            uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+            // printf(" volts : %d\n", voltage);
 
-  while(1){
-    count = 0;
-    int flag = 0;
-    for (int j = 0; j < 100; j++){
-      uint32_t adc_reading = 0;
-          if (unit == ADC_UNIT_1)
-          {
-              adc_reading = adc1_get_raw((adc1_channel_t)channel5);
-              vTaskDelay(10 / portTICK_PERIOD_MS);
-          }
-      //Convert adc_reading to voltage in mV
-      uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-      // printf(" volts : %d\n", voltage);
-
-      if(voltage > 2000 && flag == 1){
-        count += 1;
-        flag = 0;
-      }
-      if(voltage < 2000){
-        flag = 1;
-      }
+            if (voltage > 2000 && flag == 1)
+            {
+                count += 1;
+                flag = 0;
+            }
+            if (voltage < 2000)
+            {
+                flag = 1;
+            }
+        }
+        rotations = count / 6.0;
+        measured_speed_m_per_s = rotations * (62.0 / 100);
+        printf(" speed: %f\n", measured_speed_m_per_s);
     }
-    rotations = count / 6.0;
-    measured_speed_m_per_s =  rotations * (62.0/100);
-    printf(" speed: %f\n", measured_speed_m_per_s);
-  }
 }
 
 static void mcpwm_example_gpio_initialize(void)
@@ -841,9 +867,6 @@ static void mcpwm_example_gpio_initialize(void)
 /**
  * @brief Configure MCPWM module
  */
-
-
-
 
 void movement(void *arg)
 {
@@ -864,7 +887,7 @@ void movement(void *arg)
 
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, set_pwm_speed); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, pwm_speed); // Neutral signal in microseconds
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
@@ -882,7 +905,7 @@ void steering(void *arg)
     vTaskDelay(2000 / portTICK_PERIOD_MS);                // Give yourself time to turn on crawler
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, set_pwm_steering); // Neutral signal in microseconds
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, pwm_steering); // Neutral signal in microseconds
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
@@ -983,7 +1006,6 @@ static void udp_client_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-
 //alphanum prints speed
 static void alphanum_display()
 {
@@ -1055,15 +1077,14 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-   /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
     * Read "Establishing Wi-Fi or Ethernet Connection" section in
     * examples/protocols/README.md for more information about this function.
     */
     ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
-    xTaskCreate(ultrasound_task, "button_task", 2048, NULL, 4, NULL);
-    xTaskCreate(IR_task, "button_task", 2048, NULL, 4, NULL);
-    xTaskCreate(PID_task, "display_task", 2048, NULL,3, NULL);
+    xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
+    xTaskCreate(PID_task, "PID_task", 2048, NULL, 3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
     xTaskCreate(calc_speed, "calc_speed", 4096, NULL, 6, NULL);
