@@ -17,16 +17,16 @@ app.get('/', function(req, res) {
 
 
 app.post('/status', (req,res) => {
-  led_status = req.body.status;
+  status = req.body.status;
   res.end('yes');
 });
 
 app.get('/status', function(req,res) {
-  res.send([led_status]);
+  res.send([status]);
 })
 
 
-app.listen(4000);
+app.listen(4444);
 
 
 
@@ -35,7 +35,7 @@ var dgram = require('dgram');
 
 // Port and IP
 var PORT = 1234;
-var HOST = '192.168.1.111';
+var HOST = '192.168.1.139';
 
 // Create socket
 var server = dgram.createSocket('udp4');
@@ -58,7 +58,7 @@ server.on('message', function (message, remote) {
         console.log('MEH!');
       }
       else {
-        console.log('Sent: ' + led_status.toString());
+        console.log('Sent: ' + status.toString());
       }
     });
 

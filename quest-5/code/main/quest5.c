@@ -56,7 +56,7 @@
 #define HOST_IP_ADDR CONFIG_EXAMPLE_IPV6_ADDR
 #endif
 
-#define PORT CONFIG_EXAMPLE_PORT
+#define PORT "192.168.1.139"
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
@@ -82,8 +82,8 @@ static const char *TAG = "cmd_i2ctools";
 
 #define SET_POINT 0.50
 #define K_p 1
-#define K_i 1
-#define K_d 1
+#define K_i 0
+#define K_d 0
 
 #define GPIO_RED 12
 #define GPIO_GREEN 27
@@ -204,6 +204,7 @@ static void i2c_scanner()
 }
 //LIDR
 ////////////////////////////////////////////////////////////////////////////////
+
 uint16_t get_Distance()
 {
   uint8_t val1;
@@ -406,7 +407,7 @@ static void init()
 
 
 // returns distances in cm
-static double voltage_to_distance(uint32_t reading)
+static double ultrasound_v_to_d(uint32_t reading)
 {
     if (reading==0)
     {
@@ -444,7 +445,7 @@ static void ultrasound_task()
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
         // display voltage
-        distance = voltage_to_distance(voltage);
+        distance = ultrasound_v_to_d(voltage);
 
         printf("Raw: %d\tVoltage: %dmV\tDistance: %.2fm\n", adc_reading, voltage, distance);
         //#2
@@ -466,7 +467,7 @@ static void ultrasound_task()
         uint32_t voltage2 = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
         // display voltage
-        distance2 = voltage_to_distance(voltage2);
+        distance2 = ultrasound_v_to_d(voltage2);
 
         printf("Raw2: %d\tVoltage2: %dmV\tDistance2: %.2fm\n", adc_reading2, voltage2, distance2);
     }
@@ -798,6 +799,7 @@ static void udp_client_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
 void app_main(void)
 {
     timer = 0;
