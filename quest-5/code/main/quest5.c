@@ -70,14 +70,6 @@
 #define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
 #define PORT 1234
 
-static const char *TAG = "example";
-static const char *payload = "Message from ESP32 ";
-
-struct timeval
-{
-    int tv_sec;
-    int tv_usec;
-};
 
 #define TIMER_INTERVAL_SEC 0.100
 #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
@@ -100,6 +92,30 @@ struct timeval
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES 20  //Multisampling
 
+//You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
+#define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
+#define SERVO_MAX_PULSEWIDTH 2100 //Maximum pulse width in microsecond
+
+#define MAX_RIGHT 700
+#define MAX_LEFT 2000
+#define MIDDLE 1300
+
+#define NEUTRAL 1400
+
+#define STOP_PWM_INCREMENT 50
+
+
+
+
+static const char *TAG = "example";
+static const char *payload = "Message from ESP32 ";
+
+struct timeval
+{
+    int tv_sec;
+    int tv_usec;
+};
+
 // ultrasound variables
 static float distance = 0;
 static float distance2 = 0;
@@ -110,14 +126,8 @@ static float PID_speed;
 static float PID_distance;
 static float PID_steering;
 
-//You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
-#define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
-#define SERVO_MAX_PULSEWIDTH 2100 //Maximum pulse width in microsecond
 void calibrateESC();
 
-#define MAX_RIGHT 700
-#define MAX_LEFT 2000
-#define MIDDLE 1300
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
@@ -828,16 +838,42 @@ static void PID_task()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void set_pwm()
 {
-    if (Lidar_front < FRONT_SET_POINT)
-    {
-        pwm_speed += PID_distance;
-    }
-    else
-    {
-        pwm_speed += PID_speed;
-    }
+	if (start==0)	// if start is set to 0, move towards NEUTRAL and MIDDLE
+	{
+		if (pwm_speed < NEUTRAL + STOP_PWM_INCREMENT)
+		{
+			pwm_speed = NEUTRAL;
+		}
+		else
+		{
+			pwm_speed-=100;
+		}
+		if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
+		{
+			pwm_steering+=100;
+		}
+		else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
+		{
+			pwm_steering-=100;
+		}
+		else
+		{
+			pwm_steering = MIDDLE;
+		}
+	}
+	else
+	{
+		if (Lidar_front < FRONT_SET_POINT)
+		{
+			pwm_speed += PID_distance;
+		}
+		else
+		{
+			pwm_speed += PID_speed;
+		}
 
-    pwm_steering += PID_steering;
+		pwm_steering += PID_steering;
+	}
 }
 
 static void calc_speed()
