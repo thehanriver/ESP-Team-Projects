@@ -121,9 +121,9 @@ void calibrateESC();
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
-static const adc_channel_t channel2 = ADC_CHANNEL_0; //IR left GPIO 34 A4
-static const adc_channel_t channel3 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
-static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR right GPIO 32
+static const adc_channel_t channel2 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
+static const adc_channel_t channel3 = ADC_CHANNEL_0; //IR right GPIO 34 A4
+static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR left GPIO 32
 static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
@@ -576,7 +576,7 @@ static void ultrasound_task()
         {
             if (unit == ADC_UNIT_1)
             {
-                right += adc1_get_raw((adc1_channel_t)channel4);
+                right += adc1_get_raw((adc1_channel_t)channel1);
                 left += adc1_get_raw((adc1_channel_t)channel2);
                 vTaskDelay(50 / portTICK_RATE_MS);
             }
@@ -607,8 +607,8 @@ static void IR_task()
         {
             if (unit == ADC_UNIT_1)
             {
-                right += adc1_get_raw((adc1_channel_t)channel1);
-                left += adc1_get_raw((adc1_channel_t)channel3);
+                right += adc1_get_raw((adc1_channel_t)channel3);
+                left += adc1_get_raw((adc1_channel_t)channel4);
                 vTaskDelay(50 / portTICK_RATE_MS);
             }
         }
