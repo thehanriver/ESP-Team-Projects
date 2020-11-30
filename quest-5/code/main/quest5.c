@@ -137,10 +137,10 @@ static void calc_speed();
 static int pwm_speed;    //1400 neutral
 static int pwm_steering; //1300 straight
 
-static double US_left = 0;
-static double US_right = 0;
-static double IR_left = 0;
-static double IR_right = 0;
+static float US_left = 0;
+static float US_right = 0;
+static float IR_left = 0;
+static float IR_right = 0;
 static int timer;
 static int start = 0;
 static float LIDAR_front;
@@ -498,7 +498,7 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 // }
 
 // returns distances in cm
-// static double ultrasound_v_to_d(uint32_t reading)
+// static float ultrasound_v_to_d(uint32_t reading)
 // {
 //     if (reading==0)
 //     {
@@ -507,7 +507,7 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 //     }
 //     else
 //     {
-//         double dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
+//         float dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
 //         // uint32_t dist = (1 / 6.4 * (reading)); // 6.4 mV per in
 //         return dist;
 //     }
@@ -566,7 +566,7 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 static void ultrasound_task()
 {
     uint32_t left, right, volt_right, volt_left;
-    double dist_left, dist_right;
+    float dist_left, dist_right;
     while (1)
     {
         left = 0;
@@ -595,7 +595,7 @@ static void ultrasound_task()
 static void IR_task()
 {
     uint32_t left, right, volt_right, volt_left;
-    double dist_left, dist_right;
+    float dist_left, dist_right;
     while (1)
     {
         left = 0;
@@ -623,10 +623,10 @@ static void IR_task()
     }
 }
 
-double IR_v_to_dist(voltage)
+float IR_v_to_dist(voltage)
 {
     int dist;
-    double temp;
+    float temp;
       if (voltage > 2)
     {
         distance = (30 / (voltage - 1));
