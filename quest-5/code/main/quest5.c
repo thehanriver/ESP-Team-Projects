@@ -36,6 +36,8 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+#include "esp_wifi.h"
+#include "freertos/event_groups.h"
 
 // 14-Segment Display
 #define SLAVE_DISPLAY_ADDR 0x70      // alphanumeric address
@@ -65,6 +67,13 @@
 //UDP
 #define HOST_IP_ADDR "192.168.1.139" //"192.168.1.139"
 #define PORT 1234
+
+//Wifi defines
+#define EXAMPLE_ESP_WIFI_SSID "Group_2"
+#define EXAMPLE_ESP_WIFI_PASS "1GBSt0rage!"
+#define EXAMPLE_ESP_MAXIMUM_RETRY 5
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT BIT1
 
 #define TIMER_INTERVAL_SEC 0.5                       // 100 ms
 #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
@@ -96,6 +105,11 @@
 
 #define STOP_PWM_INCREMENT 50
 
+//Wifi
+static EventGroupHandle_t s_wifi_event_group;
+static int s_retry_num = 0;
+
+// UDP
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
 
@@ -118,7 +132,6 @@ static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
-static int timer;
 static int count;
 static float rotations;
 static float measured_speed_m_per_s;
@@ -130,7 +143,6 @@ static float US_left = 0;
 static float US_right = 0;
 static float IR_left = 0;
 static float IR_right = 0;
-static int timer;
 static int start = 0;
 static float LIDAR_front;
 
@@ -164,6 +176,102 @@ static void mcpwm_example_gpio_initialize(void)
     // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 14); //speed
+}
+
+//-------------------------Wifi Inits---------------------------------//
+static void event_handler(void *arg, esp_event_base_t event_base,
+                          int32_t event_id, void *event_data)
+{
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
+        esp_wifi_connect();
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
+        {
+            esp_wifi_connect();
+            s_retry_num++;
+            ESP_LOGI(TAG, "retry to connect to the AP");
+        }
+        else
+        {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
+        ESP_LOGI(TAG, "connect to the AP fail");
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    }
+}
+
+void wifi_init_sta(void)
+{
+    s_wifi_event_group = xEventGroupCreate();
+
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = EXAMPLE_ESP_WIFI_SSID,
+            .password = EXAMPLE_ESP_WIFI_PASS,
+            /* Setting a password implies station will connect to all security modes including WEP/WPA.
+             * However these modes are deprecated and not advisable to be used. Incase your Access point
+             * doesn't support WPA2, these mode can be enabled by commenting below line */
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+
+            .pmf_cfg = {
+                .capable = true,
+                .required = false},
+        },
+    };
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "wifi_init_sta finished.");
+
+    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
+     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           portMAX_DELAY);
+
+    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
+     * happened. */
+    if (bits & WIFI_CONNECTED_BIT)
+    {
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+    }
+    else if (bits & WIFI_FAIL_BIT)
+    {
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    }
+
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
+    vEventGroupDelete(s_wifi_event_group);
 }
 
 //I2c
@@ -316,7 +424,6 @@ uint16_t get_Distance()
     {
         ESP_LOGW(TAG, "Write Failed");
     }
-    printf("Wrote 0 to 4 \n");
     vTaskDelay(20 / portTICK_RATE_MS);
 
     i2c_cmd_handle_t cmd1 = i2c_cmd_link_create();
@@ -337,7 +444,6 @@ uint16_t get_Distance()
     i2c_cmd_link_delete(cmd);
     i2c_cmd_link_delete(cmd1);
     i2c_cmd_link_delete(cmd2);
-    printf("%d, %d\n", val1, val2);
 
     uint16_t output = (uint16_t)((val1 << 8) | val2);
     return output;
@@ -684,7 +790,6 @@ static void calc_speed()
         }
         rotations = count / 6.0;
         measured_speed_m_per_s = rotations * (23.5 / 100);
-        printf(" speed: %f\n", measured_speed_m_per_s);
     }
 }
 /**
@@ -763,7 +868,7 @@ static void udp_client_task(void *pvParameters)
         int ip_protocol;
 
         struct sockaddr_in dest_addr;
-        dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
+        dest_addr.sin_addr.s_addr = inet_addr(host_ip);
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = htons(PORT);
         addr_family = AF_INET;
@@ -780,9 +885,8 @@ static void udp_client_task(void *pvParameters)
 
         while (1)
         {
-            char buffer2[8];
-            int status;
-            status = sprintf(buffer2, "%d", start);
+            char buffer2[4];
+			snprintf(buffer2, 4,  "%d", start);
             payload = buffer2;
             int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (err < 0)
@@ -806,6 +910,7 @@ static void udp_client_task(void *pvParameters)
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
                 // ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
                 // ESP_LOGI(TAG, "%s", rx_buffer);
+                ESP_LOGI(TAG, "Received %c", rx_buffer[0]);
                 if (rx_buffer[0] == '1')
                 {
                     start = 1;
@@ -885,7 +990,20 @@ static void alphanum_display()
 
 void app_main(void)
 {
-    timer = 0;
+
+    //Wifi inits
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    wifi_init_sta();
+
+
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
     adc1_config_channel_atten(channel2, atten);
