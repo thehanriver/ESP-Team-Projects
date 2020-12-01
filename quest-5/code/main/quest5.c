@@ -876,7 +876,7 @@ static void alphanum_display()
         displaybuffer[0] = alphafonttable[((int)measured_speed_m_per_s) % 10] | (1 << 14);
         displaybuffer[1] = alphafonttable[(int)((measured_speed_m_per_s)*10) % 10];   //
         displaybuffer[2] = alphafonttable[(int)((measured_speed_m_per_s)*100) % 10];  //
-        displaybuffer[2] = alphafonttable[(int)((measured_speed_m_per_s)*1000) % 10]; //
+        displaybuffer[3] = alphafonttable[(int)((measured_speed_m_per_s)*1000) % 10]; //
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
