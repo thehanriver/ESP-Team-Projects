@@ -1,10 +1,17 @@
-# Quest Name
-Authors: FirstName1 LastName1, FirstName2 LastName2, FirstName3 LastName 3
+# Quest 5: Cruise Control
+Authors: Vivek Cherian, Hussain Valiuddin, Mario Han
 
-Date: YYYY-MM-DD
+Date: 2020-11-30
 -----
 
 ## Summary
+
+For designing our cruise control rover, we implemented all the skills from this cluster into one rover. Since, all three of use were on campus,
+we decided to test the speed sensor and movement on one rover and PID in another. The "demo" rover would be LIDR with I2C. At the end, we compiled all
+our sensors into the "demo" rover.
+
+The node server was copied from our last quest with many things taken out so it only has an on off button which is nothing special. It sends a response of 
+1 or 0 to the esp to determine if the rover should start or stop.
 
 
 ## Self-Assessment
