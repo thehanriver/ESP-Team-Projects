@@ -924,9 +924,12 @@ static void udp_client_task(void *pvParameters)
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
+        printf("No response from server - stopping car\n");
+        start = 0;
+
         if (sock != -1)
         {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
+            ESP_LOGE(TAG, "Shutting down socket, and restarting...");
             shutdown(sock, 0);
             close(sock);
         }
