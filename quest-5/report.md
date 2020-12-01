@@ -1,4 +1,4 @@
-# Quest Name
+# Quest 5: Cruise Control
 Authors: FirstName1 LastName1, FirstName2 LastName2, FirstName3 LastName 3
 
 Date: YYYY-MM-DD
