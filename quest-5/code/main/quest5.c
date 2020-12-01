@@ -123,10 +123,10 @@ static float PID_steering;
 void calibrateESC();
 
 static esp_adc_cal_characteristics_t *adc_chars;
-static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
-static const adc_channel_t channel2 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
+static const adc_channel_t channel1 = ADC_CHANNEL_0; //Ultrasonic right GPIO 36 A3
+static const adc_channel_t channel2 = ADC_CHANNEL_3; //ultrasonic left GPIO 39 A2
 static const adc_channel_t channel3 = ADC_CHANNEL_5; //IR right GPIO 33
-static const adc_channel_t channel4 = ADC_CHANNEL_0; //IR left GPIO 34 A4
+static const adc_channel_t channel4 = ADC_CHANNEL_6; //IR left GPIO 34 A4
 static const adc_channel_t channel5 = ADC_CHANNEL_4; //Speed Sensor GPIO 32
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
@@ -174,8 +174,8 @@ static void mcpwm_example_gpio_initialize(void)
 {
     printf("initializing mcpwm servo control gpio......\n");
     // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 12); //Steering
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 27); //speed
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 14); //speed
 }
 
 //-------------------------Wifi Inits---------------------------------//
@@ -541,7 +541,7 @@ static void check_efuse(void)
     }
 }
 
-static void ultrasound_task()
+static void ultrasonic_task()
 {
     uint32_t left, right, volt_right, volt_left;
     float dist_left, dist_right;
@@ -1028,8 +1028,8 @@ void app_main(void)
     * examples/protocols/README.md for more information about this function.
     */
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
-    xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
-    xTaskCreate(IR_task, "ultrasound_task", 2048, NULL, 4, NULL);
+    xTaskCreate(ultrasonic_task, "ultrasonic_task", 2048, NULL, 4, NULL);
+    xTaskCreate(IR_task, "ultrasonic_task", 2048, NULL, 4, NULL);
     xTaskCreate(PID_task, "PID_task", 2048, NULL, 3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
