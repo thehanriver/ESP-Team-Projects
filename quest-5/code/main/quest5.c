@@ -63,7 +63,7 @@
 #define NACK_VAL 0xFF                       // i2c nack value
 
 //UDP
-#define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
+#define HOST_IP_ADDR "192.168.1.139" //"192.168.1.139"
 #define PORT 1234
 
 #define TIMER_INTERVAL_SEC 0.5                       // 100 ms
