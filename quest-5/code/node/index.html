@@ -6,18 +6,6 @@
   <body>
   	<div id="div1"></div>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  	<button id="On"
-			  type="button"
-			  onClick="sendStart()"
-			  style=" height:50px; width:200px ">
-  		Start
-  	</button>
-  	<button id="Off"
-			  type="button"
-			  onClick="sendStop()"
-			  style=" height:50px; width:200px ">
-  		Stop
-  	</button>
 
 	<div>
 		<b>
@@ -54,6 +42,19 @@
 			</script>
 		</b>
 	</div>
+
+	<button id="On"
+			  type="button"
+			  onClick="sendStart()"
+			  style=" height:50px; width:200px ">
+  		Start
+  	</button>
+  	<button id="Off"
+			  type="button"
+			  onClick="sendStop()"
+			  style=" height:50px; width:200px ">
+  		Stop
+  	</button>
   	
   	<script type="text/javascript">function sendStart() {
 	  //Ajax call for /status seeing if it is on or off
