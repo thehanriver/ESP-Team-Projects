@@ -740,13 +740,13 @@ static void PID_task()
             st_R_error = RIGHT_SET_POINT - IR_right;
             st_R_integral = st_R_integral + st_R_error * dt;
             st_R_derivative = (st_R_error - st_R_previous_error) / dt;
-            PID_steering = K_p * st_R_error + K_i * st_R_integral + K_d * st_R_derivative;
+            PID_steering = (IR_right > RIGHT_SET_POINT) ? 0 : K_p * st_R_error + K_i * st_R_integral + K_d * st_R_derivative;
             st_R_previous_error = st_R_error;
 
             st_L_error = LEFT_SET_POINT - IR_left;
             st_L_integral = st_L_integral + st_L_error * dt;
             st_L_derivative = (st_L_error - st_L_previous_error) / dt;
-            PID_steering -= K_p * st_L_error + K_i * st_L_integral + K_d * st_L_derivative;
+            PID_steering -= (IR_left > LEFT_SET_POINT) ? 0 : K_p * st_L_error + K_i * st_L_integral + K_d * st_L_derivative;
             st_L_previous_error = st_L_error;
 
             dt_complete = 0;
