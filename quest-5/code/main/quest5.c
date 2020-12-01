@@ -37,10 +37,6 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES 20  //Multisampling
-#define E 2.718
-
 // 14-Segment Display
 #define SLAVE_DISPLAY_ADDR 0x70      // alphanumeric address
 #define OSC 0x21                     // oscillator cmd
@@ -70,27 +66,23 @@
 #define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
 #define PORT 1234
 
-
-#define TIMER_INTERVAL_SEC 0.050	// 50 ms
+#define TIMER_INTERVAL_SEC 0.5                       // 100 ms
 #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // to seconds
 #define TEST_WITH_RELOAD 1                           // Testing will be done with auto reload
 
 #define FRONT_SET_POINT 0.50 // m
 #define SPEED_SET_POINT 2    // m/s
-#define RIGHT_SET_POINT 0.25 // m
-#define LEFT_SET_POINT 0.25  // m
+#define RIGHT_SET_POINT 0.28 // m
+#define LEFT_SET_POINT 0.28  // m
 #define K_p 50
 #define K_i 0
 #define K_d 0
 
-#define GPIO_RED 12
-#define GPIO_GREEN 27
-#define GPIO_BLUE 15
-
 // ultrasound defines
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES 20  //Multisampling
+#define NO_OF_SAMPLES 10  //Multisampling
+#define E 2.718
 
 //You can get these value from the datasheet of servo you use, in general pulse width varies between 1000 to 2000 mocrosecond
 #define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
@@ -98,9 +90,9 @@
 
 #define MAX_RIGHT 700
 #define MAX_LEFT 2000
-#define MIDDLE 1300
+#define MIDDLE 1300 //straight
 
-#define NEUTRAL 1400
+#define NEUTRAL 1400 //not moving
 
 #define STOP_PWM_INCREMENT 50
 
@@ -125,7 +117,6 @@ static float PID_steering;
 
 void calibrateESC();
 
-
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
 static const adc_channel_t channel2 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
@@ -141,7 +132,7 @@ static int count;
 static float rotations;
 static float measured_speed_m_per_s;
 static void calc_speed();
-static int pwm_speed;    //1400 neutral
+static int pwm_movement; //1400 neutral
 static int pwm_steering; //1300 straight
 
 static float US_left = 0;
@@ -174,6 +165,14 @@ static void alphanum_init()
     displaybuffer[1] = 0b0000000000000000; // 0
     displaybuffer[2] = 0b0000000000000000; // 0
     displaybuffer[3] = 0b0000000000000000; // 0
+}
+
+static void mcpwm_example_gpio_initialize(void)
+{
+    printf("initializing mcpwm servo control gpio......\n");
+    // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 14); //speed
 }
 
 //I2c
@@ -420,21 +419,6 @@ static void periodic_timer_init()
     timer_start(TIMER_GROUP_0, TIMER_0);
 }
 
-static void led_init()
-{
-    gpio_reset_pin(GPIO_RED);
-    gpio_pad_select_gpio(GPIO_RED);
-    gpio_set_direction(GPIO_RED, GPIO_MODE_OUTPUT);
-
-    gpio_reset_pin(GPIO_GREEN);
-    gpio_pad_select_gpio(GPIO_GREEN);
-    gpio_set_direction(GPIO_GREEN, GPIO_MODE_OUTPUT);
-
-    gpio_reset_pin(GPIO_BLUE);
-    gpio_pad_select_gpio(GPIO_BLUE);
-    gpio_set_direction(GPIO_BLUE, GPIO_MODE_OUTPUT);
-}
-
 // BEGIN ULTRASOUND FUNCTIONS
 
 static void check_efuse(void)
@@ -459,116 +443,6 @@ static void check_efuse(void)
         printf("eFuse Vref: NOT supported\n");
     }
 }
-
-static void print_char_val_type(esp_adc_cal_value_t val_type)
-{
-    if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP)
-    {
-        printf("Characterized using Two Point Value\n");
-    }
-    else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF)
-    {
-        printf("Characterized using eFuse Vref\n");
-    }
-    else
-    {
-        printf("Characterized using Default Vref\n");
-    }
-}
-// static void init()
-// {
-
-//     led_init();
-//     periodic_timer_init();
-
-//     ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0));
-//     esp_vfs_dev_uart_use_driver(UART_NUM_0);
-
-//     //Check if Two Point or Vref are burned into eFuse
-//     check_efuse();
-
-//     //Configure ADC
-//     if (unit == ADC_UNIT_1)
-//     {
-//         adc1_config_width(ADC_WIDTH_BIT_12);
-//         adc1_config_channel_atten(channel2, atten);
-//     }
-//     else
-//     {
-//         adc2_config_channel_atten((adc2_channel_t)channel2, atten);
-//     }
-
-//     //Characterize ADC
-//     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-//     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
-//     print_char_val_type(val_type);
-// }
-
-// returns distances in cm
-// static float ultrasound_v_to_d(uint32_t reading)
-// {
-//     if (reading==0)
-//     {
-//         printf("returning 0");
-//         return 0;
-//     }
-//     else
-//     {
-//         float dist = ((1 / 6.4 * (reading))-4.25)*.0254; // 6.4 mV per in
-//         // uint32_t dist = (1 / 6.4 * (reading)); // 6.4 mV per in
-//         return dist;
-//     }
-// }
-
-// static void ultrasound_task()
-// {
-//     //Continuously sample ADC1
-//     while (1) {
-//       // #1
-//         uint32_t adc_reading = 0;
-//         //Multisampling
-//         for (int i = 0; i < NO_OF_SAMPLES; i++) {
-//             if (unit == ADC_UNIT_1) {
-//                 adc_reading += adc1_get_raw((adc1_channel_t)channel2);
-//             } else {
-//                 int raw;
-//                 adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
-//                 adc_reading += raw;
-//             }
-//             vTaskDelay(100 / portTICK_PERIOD_MS);
-//         }
-//         adc_reading /= NO_OF_SAMPLES;
-//         //Convert adc_reading to voltage in mV
-//         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-//         // display voltage
-//         distance = ultrasound_v_to_d(voltage);
-
-//         printf("Raw: %d\tVoltage: %dmV\tDistance: %.2fm\n", adc_reading, voltage, distance);
-//         //#2
-//         uint32_t adc_reading2 = 0;
-//         //Multisampling
-//         for (int j = 0; j < NO_OF_SAMPLES; j++) {
-//           //change this HUSSAIN
-//             if (unit == ADC_UNIT_1) {
-//                 adc_reading2 += adc1_get_raw((adc1_channel_t)channel2);
-//             } else {
-//                 int raw2;
-//                 adc2_get_raw((adc2_channel_t)channel2, ADC_WIDTH_BIT_12, &raw);
-//                 adc_reading2 += raw2;
-//             }
-//             vTaskDelay(100 / portTICK_PERIOD_MS);
-//         }
-//         adc_reading2 /= NO_OF_SAMPLES;
-//         //Convert adc_reading to voltage in mV
-//         uint32_t voltage2 = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-//         // display voltage
-//         distance2 = ultrasound_v_to_d(voltage2);
-
-//         printf("Raw2: %d\tVoltage2: %dmV\tDistance2: %.2fm\n", adc_reading2, voltage2, distance2);
-//     }
-// }
 
 static void ultrasound_task()
 {
@@ -599,15 +473,36 @@ static void ultrasound_task()
     }
 }
 
+float IR_v_to_dist(voltage)
+{
+    int d;
+    float temp;
+    if (voltage > 2)
+    {
+        d = (30 / (voltage - 1));
+    }
+    else if (voltage < 2 && voltage > 1)
+    {
+        d = (57 / (voltage - 0.08));
+    }
+    else
+    {
+        temp = (3 - voltage) / 0.5;
+        temp = pow(E, temp);
+        temp = temp / 1.4;
+        d = temp + 25.5;
+    }
+    d = d / 100.0;
+    return d;
+}
+
 static void IR_task()
 {
     uint32_t left, right, volt_right, volt_left;
-    float dist_left, dist_right;
     while (1)
     {
         left = 0;
         right = 0;
-        dist = 0;
         temp = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
@@ -625,32 +520,9 @@ static void IR_task()
         volt_left = esp_adc_cal_raw_to_voltage(left, adc_chars);
         volt_right /= 1000;
         volt_left /= 1000;
-        US_right = IR_v_to_dist(volt_right);
-        US_left = IR_v_to_dist(volt_left);;
+        IR_right = IR_v_to_dist(volt_right);
+        IR_left = IR_v_to_dist(volt_left);
     }
-}
-
-float IR_v_to_dist(voltage)
-{
-    int dist;
-    float temp;
-      if (voltage > 2)
-    {
-        distance = (30 / (voltage - 1));
-    }
-    else if (voltage < 2 && voltage > 1)
-    {
-        distance = (57 / (voltage - 0.08));
-    }
-    else
-    {
-        temp = (3 - voltage) / 0.5;
-        temp = pow(E, temp);
-        temp = temp / 1.4;
-        distance = temp + 25.5;
-    }
-    distance = distance / 100.0;
-    return distance;
 }
 
 void LIDAR_task()
@@ -660,7 +532,7 @@ void LIDAR_task()
     while (1)
     {
         sum = 0;
-        for (i = 0; i < 10; i++)
+        for (i = 0; i < NO_OF_SAMPLES; i++)
         {
             if (checkBit())
             {
@@ -671,6 +543,72 @@ void LIDAR_task()
         dist = (sum / 10.0) - 13;
         LIDAR_front = dist;
         // printf("Distance: %f\n", dist);
+    }
+}
+
+// }
+//Movement,speed,steering
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void set_pwm()
+{
+    if (start == 0) // if start is set to 0, move towards NEUTRAL and MIDDLE
+    {
+        // adjust speed to NEUTRAL
+        if (pwm_movement < NEUTRAL + STOP_PWM_INCREMENT)
+        {
+            pwm_movement = NEUTRAL;
+        }
+        else
+        {
+            pwm_movement -= STOP_PWM_INCREMENT;
+        }
+        // adjust steering to middle
+        if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
+        {
+            pwm_steering += STOP_PWM_INCREMENT;
+        }
+        else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
+        {
+            pwm_steering -= STOP_PWM_INCREMENT;
+        }
+        else
+        {
+            pwm_steering = MIDDLE;
+        }
+    }
+    else
+    {
+        if (LIDAR_front < FRONT_SET_POINT)
+        {
+            pwm_movement += PID_distance;
+        }
+        else
+        {
+            pwm_movement += PID_speed;
+        }
+
+        if (IR_right > RIGHT_SET_POINT && IR_left > LEFT_SET_POINT)
+        {
+            // adjust steering to middle
+            if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
+            {
+                pwm_steering += STOP_PWM_INCREMENT;
+            }
+            else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
+            {
+                pwm_steering -= STOP_PWM_INCREMENT;
+            }
+            else
+            {
+                pwm_steering = MIDDLE;
+            }
+        }
+        else
+        {
+            pwm_steering += PID_steering;
+        }
+
+        pwm_steering += PID_steering;
     }
 }
 
@@ -691,26 +629,6 @@ static void PID_task()
             d_derivative = (d_error - d_previous_error) / dt;
             PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
             d_previous_error = d_error;
-
-            if (d_error < -0.005)
-            {
-                gpio_set_level(GPIO_RED, 1);
-                gpio_set_level(GPIO_GREEN, 0);
-                gpio_set_level(GPIO_BLUE, 0);
-            }
-            else if (d_error > 0.005)
-            {
-                gpio_set_level(GPIO_RED, 0);
-                gpio_set_level(GPIO_GREEN, 0);
-                gpio_set_level(GPIO_BLUE, 1);
-            }
-            else
-            {
-                gpio_set_level(GPIO_RED, 0);
-                gpio_set_level(GPIO_GREEN, 1);
-                gpio_set_level(GPIO_BLUE, 0);
-            }
-
             // speed PID
 
             sp_error = SPEED_SET_POINT - measured_speed_m_per_s;
@@ -718,25 +636,6 @@ static void PID_task()
             sp_derivative = (sp_error - sp_previous_error) / dt;
             PID_speed = K_p * sp_error + K_i * sp_integral + K_d * sp_derivative;
             sp_previous_error = sp_error;
-
-            if (s_error < -0.005)
-            {
-                gpio_set_level(GPIO_RED, 1);
-                gpio_set_level(GPIO_GREEN, 0);
-                gpio_set_level(GPIO_BLUE, 0);
-            }
-            else if (s_error > 0.005)
-            {
-                gpio_set_level(GPIO_RED, 0);
-                gpio_set_level(GPIO_GREEN, 0);
-                gpio_set_level(GPIO_BLUE, 1);
-            }
-            else
-            {
-                gpio_set_level(GPIO_RED, 0);
-                gpio_set_level(GPIO_GREEN, 1);
-                gpio_set_level(GPIO_BLUE, 0);
-            }
 
             // steering PID will go here
 
@@ -758,152 +657,18 @@ static void PID_task()
             TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
         }
 
-        vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelay(500 / portTICK_RATE_MS);
     }
-}
-
-// static void steering_PID_task() {
-//     float error, derivative, output, previous_error, integral, dt;
-//     previous_error = 0;
-//     integral = 0;
-//     dt = 0.1; // 100 ms
-
-//     //#define MAX_RIGHT 700
-//     //#define MAX_LEFT 2000
-//     //#define NEUTRAL 1300
-
-//     //IR_left, IR_right, US_left, US_right
-
-//     if(IR_left < 25 || US_left < 25)
-//     {
-
-//     }
-
-//     else()
-//     {}
-
-//     while(1)
-//     {
-//          if(IR_left < 25 || US_left < 25)
-//     {
-
-//     }
-
-//     else()
-//     {}
-
-//       else
-//       {
-//         pwm_steering = MIDDLE;
-//       }
-//         if (dt_complete == 1) {
-//             error = SET_POINT - distance;
-//             integral = integral + error * dt;
-//             derivative = (error - previous_error) / dt;
-//             output = K_p * error + K_i * integral + K_d * derivative;
-//             previous_error = error;
-
-//             if (error<-0.005)
-//             {
-//                 gpio_set_level(GPIO_RED,1);
-//                 gpio_set_level(GPIO_GREEN,0);
-//                 gpio_set_level(GPIO_BLUE,0);
-//             }
-//             else if (error>0.005)
-//             {
-//                 gpio_set_level(GPIO_RED,0);
-//                 gpio_set_level(GPIO_GREEN,0);
-//                 gpio_set_level(GPIO_BLUE,1);
-//             }
-//             else
-//             {
-//                 gpio_set_level(GPIO_RED,0);
-//                 gpio_set_level(GPIO_GREEN,1);
-//                 gpio_set_level(GPIO_BLUE,0);
-//             }
-//             dt_complete = 0;
-//             // Re-enable alarm
-//             TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
-//         }
-
-//         vTaskDelay(50 / portTICK_RATE_MS);
-//     }
-
-// }
-//Movement,speed,steering
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void set_pwm()
-{
-	if (start==0)	// if start is set to 0, move towards NEUTRAL and MIDDLE
-	{
-		// adjust speed to NEUTRAL
-		if (pwm_speed < NEUTRAL + STOP_PWM_INCREMENT)
-		{
-			pwm_speed = NEUTRAL;
-		}
-		else
-		{
-			pwm_speed-=STOP_PWM_INCREMENT;
-		}
-		// adjust steering to middle
-		if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
-		{
-			pwm_steering+=STOP_PWM_INCREMENT;
-		}
-		else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
-		{
-			pwm_steering-=STOP_PWM_INCREMENT;
-		}
-		else
-		{
-			pwm_steering = MIDDLE;
-		}
-	}
-	else
-	{
-		if (LIDAR_front < FRONT_SET_POINT)
-		{
-			pwm_speed += PID_distance;
-		}
-		else
-		{
-			pwm_speed += PID_speed;
-		}
-
-		if (IR_right > RIGHT_SET_POINT && IR_left > LEFT_SET_POINT)
-		{
-			// adjust steering to middle
-			if (pwm_steering < MIDDLE - STOP_PWM_INCREMENT)
-			{
-				pwm_steering+=STOP_PWM_INCREMENT;
-			}
-			else if (pwm_steering > MIDDLE + STOP_PWM_INCREMENT)
-			{
-				pwm_steering-=STOP_PWM_INCREMENT;
-			}
-			else
-			{
-				pwm_steering = MIDDLE;
-			}
-		}
-		else
-		{
-			pwm_steering += PID_steering;
-		}
-		
-		pwm_steering += PID_steering;
-	}
 }
 
 static void calc_speed()
 {
     vTaskDelay(6000 / portTICK_PERIOD_MS);
-
     while (1)
     {
         count = 0;
         int flag = 0;
-        for (int j = 0; j < 100; j++)
+        for (int j = 0; j < 50; j++)
         {
             uint32_t adc_reading = 0;
             if (unit == ADC_UNIT_1)
@@ -926,19 +691,10 @@ static void calc_speed()
             }
         }
         rotations = count / 6.0;
-        measured_speed_m_per_s = rotations * (62.0 / 100);
+        measured_speed_m_per_s = rotations * (23.5 / 100);
         printf(" speed: %f\n", measured_speed_m_per_s);
     }
 }
-
-static void mcpwm_example_gpio_initialize(void)
-{
-    printf("initializing mcpwm servo control gpio......\n");
-    // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 32); //speed
-}
-
 /**
  * @brief Configure MCPWM module
  */
@@ -962,8 +718,8 @@ void movement(void *arg)
 
     while (1)
     {
-        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, pwm_speed); // Neutral signal in microseconds
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, pwm_movement); // Neutral signal in microseconds
+        vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 }
 
@@ -981,7 +737,7 @@ void steering(void *arg)
     while (1)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, pwm_steering); // Neutral signal in microseconds
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 }
 
@@ -1005,7 +761,7 @@ static void udp_client_task(void *pvParameters)
     char host_ip[] = HOST_IP_ADDR;
     int addr_family = 0;
     int ip_protocol = 0;
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     while (1)
     {
@@ -1032,7 +788,7 @@ static void udp_client_task(void *pvParameters)
 
         while (1)
         {
-            char buffer2[128];
+            char buffer2[8];
             int status;
             status = sprintf(buffer2, "%d", start);
             payload = buffer2;
@@ -1068,7 +824,7 @@ static void udp_client_task(void *pvParameters)
                 }
             }
 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
         if (sock != -1)
@@ -1125,10 +881,10 @@ static void alphanum_display()
         ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
         i2c_cmd_link_delete(cmd4);
 
-        displaybuffer[0] = alphafonttable[((int)dist) % 10] | (1 << 14);
-        displaybuffer[1] = alphafonttable[(int)((dist)*10) % 10];   //
-        displaybuffer[2] = alphafonttable[(int)((dist)*100) % 10];  //
-        displaybuffer[2] = alphafonttable[(int)((dist)*1000) % 10]; //
+        displaybuffer[0] = alphafonttable[((int)measured_speed_m_per_s) % 10] | (1 << 14);
+        displaybuffer[1] = alphafonttable[(int)((measured_speed_m_per_s)*10) % 10];   //
+        displaybuffer[2] = alphafonttable[(int)((measured_speed_m_per_s)*100) % 10];  //
+        displaybuffer[2] = alphafonttable[(int)((measured_speed_m_per_s)*1000) % 10]; //
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -1138,8 +894,6 @@ static void alphanum_display()
 void app_main(void)
 {
     timer = 0;
-    printf("Testing servo motor.......\n");
-
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
     adc1_config_channel_atten(channel2, atten);
@@ -1152,7 +906,6 @@ void app_main(void)
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
 
     mcpwm_example_gpio_initialize();
-    // init();
     // Routine
     i2c_master_init();
     i2c_scanner();
