@@ -174,8 +174,8 @@ static void mcpwm_example_gpio_initialize(void)
 {
     printf("initializing mcpwm servo control gpio......\n");
     // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 14); //speed
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 12); //Steering
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 27); //speed
 }
 
 //-------------------------Wifi Inits---------------------------------//
