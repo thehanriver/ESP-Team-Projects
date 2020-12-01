@@ -125,9 +125,9 @@ void calibrateESC();
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel1 = ADC_CHANNEL_3; //Ultrasonic right GPIO 36 A3
 static const adc_channel_t channel2 = ADC_CHANNEL_6; //ultrasonic left GPIO 39 A2
-static const adc_channel_t channel3 = ADC_CHANNEL_0; //IR right GPIO 34 A4
-static const adc_channel_t channel4 = ADC_CHANNEL_4; //IR left GPIO 32
-static const adc_channel_t channel5 = ADC_CHANNEL_5; //Speed Sensor GPIO 33
+static const adc_channel_t channel3 = ADC_CHANNEL_5; //IR right GPIO 33
+static const adc_channel_t channel4 = ADC_CHANNEL_0; //IR left GPIO 34 A4
+static const adc_channel_t channel5 = ADC_CHANNEL_4; //Speed Sensor GPIO 32
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
@@ -174,8 +174,8 @@ static void mcpwm_example_gpio_initialize(void)
 {
     printf("initializing mcpwm servo control gpio......\n");
     // mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 27); //Steering
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 14); //speed
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 12); //Steering
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 27); //speed
 }
 
 //-------------------------Wifi Inits---------------------------------//
@@ -886,7 +886,7 @@ static void udp_client_task(void *pvParameters)
         while (1)
         {
             char buffer2[4];
-			snprintf(buffer2, 4,  "%d", start);
+            snprintf(buffer2, 4, "%d", start);
             payload = buffer2;
             int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (err < 0)
@@ -1002,7 +1002,6 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
-
 
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel1, atten);
