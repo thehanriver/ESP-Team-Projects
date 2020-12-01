@@ -99,15 +99,6 @@
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
 
-struct timeval
-{
-    int tv_sec;
-    int tv_usec;
-};
-
-// ultrasound variables
-static float distance = 0;
-static float distance2 = 0;
 // Flag for dt
 static int dt_complete = 0;
 
@@ -371,7 +362,7 @@ int checkBit()
         i2c_master_stop(cmd2);
 
         i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
-        esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
+        i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd2, 1000 / portTICK_RATE_MS);
         i2c_cmd_link_delete(cmd);
         i2c_cmd_link_delete(cmd2);
 
@@ -473,7 +464,7 @@ static void ultrasound_task()
     }
 }
 
-float IR_v_to_dist(voltage)
+float IR_v_to_dist(float voltage)
 {
     int d;
     float temp;
@@ -503,7 +494,6 @@ static void IR_task()
     {
         left = 0;
         right = 0;
-        temp = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++)
         {
@@ -528,7 +518,8 @@ static void IR_task()
 void LIDAR_task()
 {
     int i;
-    int sum;
+    uint16_t sum;
+    float dist;
     while (1)
     {
         sum = 0;
@@ -540,7 +531,7 @@ void LIDAR_task()
             }
             vTaskDelay(50 / portTICK_RATE_MS);
         }
-        dist = (sum / 10.0) - 13;
+        dist = (sum / NO_OF_SAMPLES) - 13;
         LIDAR_front = dist;
         // printf("Distance: %f\n", dist);
     }
@@ -616,7 +607,8 @@ static void PID_task()
 {
     float d_error, d_derivative, d_previous_error = 0, d_integral = 0;
     float sp_error, sp_derivative, sp_previous_error = 0, sp_integral = 0;
-    float st_error, st_derivative, st_previous_error = 0, st_integral = 0;
+    float st_L_error, st_L_derivative, st_L_previous_error = 0, st_L_integral = 0;
+    float st_R_error, st_R_derivative, st_R_previous_error = 0, st_R_integral = 0;
     float dt = TIMER_INTERVAL_SEC; // 50 ms
 
     while (1)
@@ -911,12 +903,13 @@ void app_main(void)
     i2c_scanner();
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // ESP_ERROR_CHECK(example_connect());
+
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
     * Read "Establishing Wi-Fi or Ethernet Connection" section in
     * examples/protocols/README.md for more information about this function.
     */
-    ESP_ERROR_CHECK(example_connect());
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
     xTaskCreate(ultrasound_task, "ultrasound_task", 2048, NULL, 4, NULL);
     xTaskCreate(IR_task, "ultrasound_task", 2048, NULL, 4, NULL);
