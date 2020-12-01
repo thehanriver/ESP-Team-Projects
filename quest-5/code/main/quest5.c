@@ -84,9 +84,13 @@
 #define SPEED_SET_POINT 2    // m/s
 #define RIGHT_SET_POINT 0.28 // m
 #define LEFT_SET_POINT 0.28  // m
-#define K_p 50
-#define K_i 0
-#define K_d 0
+#define K_P 50
+#define K_I 0
+#define K_D 0
+
+#define K_P_DISTANCE 50
+#define K_I_DISTANCE 0
+#define K_D_DISTANCE 100
 
 // ultrasound defines
 #define DEFAULT_VREF 1100 //Use adc2_vref_to_gpio() to obtain a better estimate
@@ -725,14 +729,14 @@ static void PID_task()
             d_error = FRONT_SET_POINT - LIDAR_front;
             d_integral = d_integral + d_error * dt;
             d_derivative = (d_error - d_previous_error) / dt;
-            PID_distance = K_p * d_error + K_i * d_integral + K_d * d_derivative;
+            PID_distance = K_P_DISTANCE * d_error + K_I_DISTANCE * d_integral + K_D_DISTANCE * d_derivative;
             d_previous_error = d_error;
             // speed PID
 
             sp_error = SPEED_SET_POINT - measured_speed_m_per_s;
             sp_integral = sp_integral + sp_error * dt;
             sp_derivative = (sp_error - sp_previous_error) / dt;
-            PID_speed = K_p * sp_error + K_i * sp_integral + K_d * sp_derivative;
+            PID_speed = K_P * sp_error + K_I * sp_integral + K_D * sp_derivative;
             sp_previous_error = sp_error;
 
             // steering PID will go here
@@ -740,13 +744,13 @@ static void PID_task()
             st_R_error = RIGHT_SET_POINT - IR_right;
             st_R_integral = st_R_integral + st_R_error * dt;
             st_R_derivative = (st_R_error - st_R_previous_error) / dt;
-            PID_steering = (IR_right > RIGHT_SET_POINT) ? 0 : K_p * st_R_error + K_i * st_R_integral + K_d * st_R_derivative;
+            PID_steering = (IR_right > RIGHT_SET_POINT) ? 0 : K_P * st_R_error + K_I * st_R_integral + K_D * st_R_derivative;
             st_R_previous_error = st_R_error;
 
             st_L_error = LEFT_SET_POINT - IR_left;
             st_L_integral = st_L_integral + st_L_error * dt;
             st_L_derivative = (st_L_error - st_L_previous_error) / dt;
-            PID_steering -= (IR_left > LEFT_SET_POINT) ? 0 : K_p * st_L_error + K_i * st_L_integral + K_d * st_L_derivative;
+            PID_steering -= (IR_left > LEFT_SET_POINT) ? 0 : K_P * st_L_error + K_I * st_L_integral + K_D * st_L_derivative;
             st_L_previous_error = st_L_error;
 
             dt_complete = 0;
