@@ -38,6 +38,7 @@
 #include <lwip/netdb.h>
 #include "esp_wifi.h"
 #include "freertos/event_groups.h"
+#include "esp_adc_cal.h"
 
 // 14-Segment Display
 #define SLAVE_DISPLAY_ADDR 0x70      // alphanumeric address
@@ -414,7 +415,7 @@ uint16_t get_Distance()
     esp_err_t ret = i2c_master_cmd_begin(I2C_EXAMPLE_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
     if (ret == ESP_OK)
     {
-        ESP_LOGI(TAG, "Write OK");
+        // ESP_LOGI(TAG, "Write OK");
     }
     else if (ret == ESP_ERR_TIMEOUT)
     {
@@ -638,7 +639,7 @@ void LIDAR_task()
             vTaskDelay(50 / portTICK_RATE_MS);
         }
         dist = (sum / NO_OF_SAMPLES) - 13;
-        LIDAR_front = dist;
+        LIDAR_front = dist / 100.0;
         // printf("Distance: %f\n", dist);
     }
 }
@@ -648,6 +649,8 @@ void LIDAR_task()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void set_pwm()
 {
+    printf("PWM steering: %d\n", pwm_steering);
+    printf("PWM movement: %d\n", pwm_movement);
     if (start == 0) // if start is set to 0, move towards NEUTRAL and MIDDLE
     {
         // adjust speed to NEUTRAL
@@ -677,12 +680,14 @@ static void set_pwm()
     {
         if (LIDAR_front < FRONT_SET_POINT)
         {
-            pwm_movement += PID_distance;
+            pwm_movement -= PID_distance;
         }
         else
         {
             pwm_movement += PID_speed;
         }
+        pwm_movement = (pwm_movement > SERVO_MAX_PULSEWIDTH) ? SERVO_MAX_PULSEWIDTH : pwm_movement;
+        pwm_movement = (pwm_movement < SERVO_MIN_PULSEWIDTH) ? SERVO_MIN_PULSEWIDTH : pwm_movement;
 
         if (IR_right > RIGHT_SET_POINT && IR_left > LEFT_SET_POINT)
         {
@@ -704,8 +709,8 @@ static void set_pwm()
         {
             pwm_steering += PID_steering;
         }
-
-        pwm_steering += PID_steering;
+        pwm_steering = (pwm_steering > SERVO_MAX_PULSEWIDTH) ? SERVO_MAX_PULSEWIDTH : pwm_steering;
+        pwm_steering = (pwm_steering < SERVO_MIN_PULSEWIDTH) ? SERVO_MIN_PULSEWIDTH : pwm_steering;
     }
 }
 
@@ -761,7 +766,7 @@ static void PID_task()
 
 static void calc_speed()
 {
-    vTaskDelay(6000 / portTICK_PERIOD_MS);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
     while (1)
     {
         count = 0;
@@ -789,6 +794,8 @@ static void calc_speed()
             }
         }
         rotations = count / 6.0;
+        printf("count %d, rotations %f", count, rotations);
+
         measured_speed_m_per_s = rotations * (23.5 / 100);
     }
 }
@@ -919,6 +926,7 @@ static void udp_client_task(void *pvParameters)
                 {
                     start = 0;
                 }
+                printf("%d", start);
             }
 
             vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -965,6 +973,7 @@ static void alphanum_display()
     }
 
     // Initiallize characters to buffer
+    // alphanum_init();
     while (1)
     {
         // Send commands characters to display over I2C
@@ -987,6 +996,26 @@ static void alphanum_display()
         displaybuffer[3] = alphafonttable[(int)((measured_speed_m_per_s)*1000) % 10]; //
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+}
+static void print_state()
+{
+
+    while (1)
+    {
+        printf("US_left: %f\n", US_left);
+
+        printf("US_right: %f\n", US_right);
+
+        printf("IR_left: %f\n", IR_left);
+
+        printf("IR_right: %f\n", IR_right);
+        printf("LIDAR_front: %f\n", LIDAR_front);
+        printf("Speed: %f\n", measured_speed_m_per_s);
+
+        printf("start: %d\n", start);
+
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1016,6 +1045,7 @@ void app_main(void)
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+    // print_char_val_type(val_type);
 
     mcpwm_example_gpio_initialize();
     // Routine
@@ -1030,13 +1060,17 @@ void app_main(void)
     * Read "Establishing Wi-Fi or Ethernet Connection" section in
     * examples/protocols/README.md for more information about this function.
     */
+    // check_efuse();
+    periodic_timer_init(); // start PID timer
+
     xTaskCreate(LIDAR_task, "LIDAR_task", 4096, NULL, 5, NULL);
-    xTaskCreate(ultrasonic_task, "ultrasonic_task", 2048, NULL, 4, NULL);
-    xTaskCreate(IR_task, "ultrasonic_task", 2048, NULL, 4, NULL);
+    // xTaskCreate(ultrasonic_task, "ultrasonic_task", 2048, NULL, 4, NULL);
+    // xTaskCreate(IR_task, "ultrasonic_task", 2048, NULL, 4, NULL);
     xTaskCreate(PID_task, "PID_task", 2048, NULL, 3, NULL);
     xTaskCreate(movement, "movement", 4096, NULL, 5, NULL);
     xTaskCreate(steering, "steering", 4096, NULL, 5, NULL);
     xTaskCreate(calc_speed, "calc_speed", 4096, NULL, 6, NULL);
     xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
     xTaskCreate(alphanum_display, "alphanum_display", 2048, NULL, 4, NULL);
+    xTaskCreate(print_state, "print_state", 4096, NULL, 4, NULL);
 }
