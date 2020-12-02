@@ -13,7 +13,12 @@ The LIDAR sensor is used to detect any thing infront of it. If there is anything
 The two IR sensors are used to detect anything that is on its sides and to steer accordingly. The IR sensors allow the car to remain in a steady straight course that should always be 25 cm away from the wall.
 The speed sensor is used to detect wheel speed in m/s and is displayed on the alphanumeric display. The values from the speed sensor are used to keep the car at a speed of 0.4 m/s. The speed is calculated by seeing how many times the speed sensor detects the black on the 12 pattern encoder and measures the speed by multiplying rotations per second and the circumference of the wheel in meters to get meters per second.
 There is a node server which controls the esp to start and stop the buggy. When the esp receives a 0 over the UDP, the buggy stops and if it gets a 1, then the pid takes control of the car.
-The PID gets the distances from these sensors and determines the appropriate pwm values for the movement and steering tasks to maintain a steady speed and distance from the wall. Based on the difference between the set speed and distance, the PID would calculate the error and change the pwm 
+
+There are four PID controls: front distance PID, speed PID, left steering PID, and right steering PID. These correspond to readings from the front LIDAR, the speed sensor, the left IR sensor, and the right IR sensor, respectively. 
+
+The front distance PID and speed PID are combined to control the PWM values for forward motion. Specifically, when the car is above a front distance setpoint, speed PID controls motion; when the car is below the front distance setpoint, the distance PID takes over. 
+
+Left steering and right steering PIDs are combined to control the PWM values for steering. When either sensor reads a distance above the left or right distance setpoints, its corresponding PID value is negated. When a sensor reads a distance below the left or right distance setpoints, it changes the steering PWM to move in the opposite direction. Once both sensors read distances above their setpoints, steering is returned to point forward. If both sensors read distances below their setpoints, they should combine to left-right center.
 
 
 PROBLEMS:
