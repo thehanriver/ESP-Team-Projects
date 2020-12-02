@@ -12,11 +12,6 @@ We have a LIDAR sensor, speed sensor, and two IR sensors for left and right dist
 The LIDAR sensor is used to detect any thing infront of it. If there is anything closer than 50 cm the car will start slowing down and will stop the rover if less than 20 cm from the object.
 The two IR sensors are used to detect anything that is on its sides and to steer accordingly. The IR sensors allow the car to remain in a steady straight course that should always be 25 cm away from the wall.
 The speed sensor is used to detect wheel speed in m/s and is displayed on the alphanumeric display. The values from the speed sensor are used to keep the car at a speed of 0.4 m/s. The speed is calculated by seeing how many times the speed sensor detects the black on the 12 pattern encoder and measures the speed by multiplying rotations per second and the circumference of the wheel in meters to get meters per second.
-The node server was copied from our last quest with many things taken out so it only has an two buttons(on and off) which is nothing special. It sends a response of 
-1 or 0 to the esp to determine if the rover should start or stop. The node server communicates with the ESP over udp. The raspberry pi sends the state in the UDP response. If the response is a 0, then the car's steering and speed pwm values return to neutral. if the response is 1, then the pid takes over. 
-The LIDAR code is taken from skill31 and the v3 LIDAR was used. it communicates via I2C with the esp over the same bus as the Alphanumeric display. 
-The IR sensor code is taken from skill12 and used to detect the sides. We chose the IR over ultrasonic since they ultrasonic sensor did not accurately detect small distances.
-The alphanumeric display code was also copied from skill8 and was displaying the speed of the buggy.
 
 The PID gets the distances from these sensors and determines the appropriate pwm values for the movement and steering tasks to maintain a steady speed and distance from the wall. Based on the difference between the set speed and distance, the PID would calculate the error and change the pwm 
 
@@ -56,6 +51,12 @@ PROBLEMS:
 
 We put all the sensors onto one bread board ontop of a cardboard square that is thoroughly taped and ziptied onto the rover. 
 The LIDAR is pointed to the front and the IR sensors are pointed to the sides. The speed sensors are put close to the wheels and a 12 cycle encoder is taped to the inside of the wheel. The power bank is directly under the board as well.
+
+The node server was copied from our last quest with many things taken out so it only has an two buttons(on and off) which is nothing special. It sends a response of 
+1 or 0 to the esp to determine if the rover should start or stop. The node server communicates with the ESP over udp. The raspberry pi sends the state in the UDP response. If the response is a 0, then the car's steering and speed pwm values return to neutral. if the response is 1, then the pid takes over. 
+The LIDAR code is taken from skill31 and the v3 LIDAR was used. it communicates via I2C with the esp over the same bus as the Alphanumeric display. 
+The IR sensor code is taken from skill12 and used to detect the sides. We chose the IR over ultrasonic since they ultrasonic sensor did not accurately detect small distances.
+The alphanumeric display code was also copied from skill8 and was displaying the speed of the buggy.
 
 INVESTIGATIVE QUESTION:
 To maintain "adaptive" cruise control, we would need to track the speed of any object in front of us and adjust speed accordingly.
