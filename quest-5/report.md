@@ -23,23 +23,23 @@ The node server was copied from our last quest with many things taken out so it 
 
 | Objective Criterion | Rating | Max Value  | 
 |---------------------------------------------|:-----------:|:---------:|
-| Objective One |  |  1     | 
-| Objective Two |  |  1     | 
-| Objective Three |  |  1     | 
-| Objective Four |  |  1     | 
-| Objective Five |  |  1     | 
-| Objective Six |  |  1     | 
-| Objective Seven |  |  1     | 
+| Objective One |  |  1     | 0
+| Objective Two |  |  1     | 1
+| Objective Three |  |  1     | 0 
+| Objective Four |  |  1     | 1
+| Objective Five |  |  1     | 1
+| Objective Six |  |  1     | 1
+| Objective Seven |  |  1     | 0
 
 
 ### Qualitative Criteria
 
 | Qualitative Criterion | Rating | Max Value  | 
 |---------------------------------------------|:-----------:|:---------:|
-| Quality of solution |  |  5     | 
-| Quality of report.md including use of graphics |  |  3     | 
-| Quality of code reporting |  |  3     | 
-| Quality of video presentation |  |  3     | 
+| Quality of solution |  |  5     | 	2
+| Quality of report.md including use of graphics |  |  3     |  3
+| Quality of code reporting |  |  3     |  2
+| Quality of video presentation |  |  3     | 2
 
 
 ## Solution Design
