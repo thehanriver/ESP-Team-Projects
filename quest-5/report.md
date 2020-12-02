@@ -16,6 +16,11 @@ The speed sensor is used to detect wheel speed in m/s and is displayed on the al
 The node server was copied from our last quest with many things taken out so it only has an two buttons(on and off) which is nothing special. It sends a response of 
 1 or 0 to the esp to determine if the rover should start or stop.
 
+PROBLEMS:
+1) We weren't able to adjust PID settings to make the car stop before hitting the obstacle.
+2) It detects the wall but doesn't slow down fast enough and ends up crashing.
+3) Steering issues: steers left or right too hard.
+4) Takes too long to stay on track.
 
 ## Self-Assessment
 
@@ -48,6 +53,9 @@ We put all the sensors onto one bread board ontop of a cardboard square that is 
 The LIDAR is pointed to the front and the IR sensors are pointed to the sides. The speed sensors are put close to the wheels and a 12 cycle encoder is taped to the inside of the wheel. The power bank is directly under the board as well.
 
 INVESTIGATIVE QUESTION:
+To maintain "adaptive" cruise control, we would need to track the speed of any object in front of us and adjust speed accordingly.
+
+We tried to do this by maintaining a certain speed and slowing down once there was an obstacle in front of us. If we enter too close to the obstacle, we would wait for it to move out of the critical distance for our crawler to move at a certain speed. In doing so, if the obstacle was moving, we would ideally be moving at a constant speed and distance away from the obstacle.
 
 ## Sketches and Photos
 
