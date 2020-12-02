@@ -55,7 +55,7 @@ The LIDAR is pointed to the front and the IR sensors are pointed to the sides. T
 INVESTIGATIVE QUESTION:
 To maintain "adaptive" cruise control, we would need to track the speed of any object in front of us and adjust speed accordingly.
 
-We tried to do this by maintaining a certain speed and slowing down once there was an obstacle in front of us. If we enter too close to the obstacle, we would wait for it to move out of the critical distance for our crawler to move at a certain speed. In doing so, if the obstacle was moving, we would ideally be moving at a constant speed and distance away from the obstacle.
+We tried to do this by maintaining a certain speed and slowing down once there was an obstacle in front of us. If we enter too close to the obstacle, we would wait for it to move out of the critical distance for our crawler to move at a certain speed. In doing so, if the obstacle was moving, we would ideally be moving at a constant speed and distance from the obstacle.
 
 ## Sketches and Photos
 
