@@ -85,7 +85,7 @@ LIDAR
 
 
 ## Supporting Artifacts
-- [Link to video demo](). Not to exceed 120s
+- [Link to video demo](https://drive.google.com/file/d/16miMK2T8jwBAz1xiFUA5wwN5RwlxUN5l/view?usp=sharing). Not to exceed 120s
 
 
 ## Modules, Tools, Source Used Including Attribution
