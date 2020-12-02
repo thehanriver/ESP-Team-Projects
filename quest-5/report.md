@@ -12,7 +12,7 @@ We have a LIDAR sensor, speed sensor, and two IR sensors for left and right dist
 The LIDAR sensor is used to detect any thing infront of it. If there is anything closer than 50 cm the car will start slowing down and will stop the rover if less than 20 cm from the object.
 The two IR sensors are used to detect anything that is on its sides and to steer accordingly. The IR sensors allow the car to remain in a steady straight course that should always be 25 cm away from the wall.
 The speed sensor is used to detect wheel speed in m/s and is displayed on the alphanumeric display. The values from the speed sensor are used to keep the car at a speed of 0.4 m/s. The speed is calculated by seeing how many times the speed sensor detects the black on the 12 pattern encoder and measures the speed by multiplying rotations per second and the circumference of the wheel in meters to get meters per second.
-
+There is a node server which controls the esp to start and stop the buggy. When the esp receives a 0 over the UDP, the buggy stops and if it gets a 1, then the pid takes control of the car.
 The PID gets the distances from these sensors and determines the appropriate pwm values for the movement and steering tasks to maintain a steady speed and distance from the wall. Based on the difference between the set speed and distance, the PID would calculate the error and change the pwm 
 
 
@@ -57,11 +57,12 @@ The node server was copied from our last quest with many things taken out so it 
 The LIDAR code is taken from skill31 and the v3 LIDAR was used. it communicates via I2C with the esp over the same bus as the Alphanumeric display. 
 The IR sensor code is taken from skill12 and used to detect the sides. We chose the IR over ultrasonic since they ultrasonic sensor did not accurately detect small distances.
 The alphanumeric display code was also copied from skill8 and was displaying the speed of the buggy.
+The speed sensor code is taken from skill32 using n encoder to determine rpm and using the circumference of the car, calculate the speed in m/s.
 
 INVESTIGATIVE QUESTION:
 To maintain "adaptive" cruise control, we would need to track the speed of any object in front of us and adjust speed accordingly.
 
-We tried to do this by maintaining a certain speed and slowing down once there was an obstacle in front of us. If we enter too close to the obstacle, we would wait for it to move out of the critical distance for our crawler to move at a certain speed. In doing so, if the obstacle was moving, we would ideally be moving at a constant speed and distance from the obstacle.
+We tried to implement a sort of adaptive control. When there is no obstacle, the car maintains a certain speed. When the car detects an obstacle in front of it, this case 1m, it starts to slow down. Only when the obstacle is closer than 20cm does the car stop moving. If we enter too close to the obstacle, we would wait for it to move out of the critical distance for our crawler to move at a certain speed. In doing so, if the obstacle was moving, we would ideally be moving at a constant speed and distance from the obstacle.
 
 ## Sketches and Photos
 
