@@ -50,8 +50,10 @@ The LIDAR is pointed to the front and the IR sensors are pointed to the sides. T
 INVESTIGATIVE QUESTION:
 
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
-<center> </center>
+![IMG_9449](https://user-images.githubusercontent.com/45515930/100826102-9d28d580-3427-11eb-991f-9bfe68825704.JPG)
+![IMG_9450](https://user-images.githubusercontent.com/45515930/100826104-9dc16c00-3427-11eb-831a-78d14effd66d.JPG)
+![IMG_9451](https://user-images.githubusercontent.com/45515930/100826105-9dc16c00-3427-11eb-999b-eb0f4cdebe41.JPG)
+![IMG_9448](https://user-images.githubusercontent.com/45515930/100826106-9e5a0280-3427-11eb-90c7-b8d153c97701.JPG)
 
 
 ## Supporting Artifacts
