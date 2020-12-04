@@ -10,10 +10,10 @@ const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/quest5
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
 var pwd = [0,0,10];
+var log='retrieving...';
 
 
-
-function getDate(){
+function getDateTime(){
 	var today = new Date();
 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
@@ -27,6 +27,33 @@ app.get('/', function(req, res) {
   	res.sendFile(path.join(__dirname + '/index.html'));
 });
 
+
+app.get('/log', function(req, res) {
+	MongoClient.connect(uri, async function(err, client) {
+		assert.equal(null, err);
+		var collection = client.db("quest5").collection("log");
+		try {
+			log = await collection.find({}).toArray();
+		} catch (err) {
+			console.log(err);
+		}
+		// console.log(log)
+		client.close();
+	});
+	// getLog();
+	res.send(log);
+});
+function getLog(){
+	MongoClient.connect(uri, function(err, client) {
+		assert.equal(null, err);
+		var collection = client.db("quest5").collection("log");
+		collection.find({}).toArray(function(err, result) {
+			if (err) throw err;
+			log = result;
+		});
+		client.close();
+	});
+}
 
 
 // app.get('/read', function(req,res) {
@@ -60,9 +87,9 @@ server.on('listening', function () {
 
 function isPwd(input) {
 	var allowance = 2
-	if (input[0] >= pwd[0]-allowance || input[0] <= pwd[0]+allowance])
-		if (input[1] >= pwd[1]-allowance || input[1] <= pwd[1]+allowance])
-			if (input[2] >= pwd[2]-allowance || input[2] <= pwd[[2]+allowance])
+	if (input[0] >= pwd[0]-allowance || input[0] <= pwd[0]+allowance)
+		if (input[1] >= pwd[1]-allowance || input[1] <= pwd[1]+allowance)
+			if (input[2] >= pwd[2]-allowance || input[2] <= pwd[2]+allowance)
 				return true;
 	return false;
 }
@@ -83,22 +110,21 @@ server.on('message', function (message, remote) {
 
 	//begin log stuff
 	
-	var logEntry = [];
-	logEntry.push({keyID : keyID , vote: vote , event: event});
+	var logEntry = {keyID : keyID , event: event, dateTime: getDateTime()};
 
 	MongoClient.connect(uri, function(err, client) {
 		assert.equal(null, err);
-		console.log("CONNECTED");
 		var collection = client.db("quest5").collection("log");
-		collection.insertOne(myObj, function(err, res) {
+		collection.insertOne(logEntry, function(err, res) {
 		  if (err) throw err;
 		  console.log("1 event logged");
 		  // db.close();
 		});
 		client.close();
-	  });
+	});
 
 	// end log stuff
+
 	//send UDP response
 	server.send(event.toString(),remote.port,remote.address,function(error){
 	if(error){

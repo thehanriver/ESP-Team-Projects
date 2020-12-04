@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-	  <title>Quest 4</title>
+	  <title>Quest 6</title>
   </head>
   <body>
-    <div><h> Quest 4 </h></div>
-  	<div id="div1">
+  	<!-- <div id="div1">
       <button id="All"
   			  type="button"
   			  onClick=readAll()
@@ -26,143 +25,43 @@
   			  style=" height:50px; width:200px ">
     		Clear Database
     	</button>
-</div>
-    <div id = "all"> All </div>
-    <div id = "red"> Red </div>
-    <div id = "green"> Green </div>
-    <div id = "blue"> Blue </div>
-  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </div> -->
+    <div id = 'log'> Log</div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-      var contents;
-      var contents_R;
-      var contents_G;
-      var contents_B;
+    <script> window.onload = function () {
 
-      var buffer_1 = [" "];
-      var buffer_2 = [" "];
-      var buffer_3 = [" "];
-      var buffer_4 = [" "];
-      var buffer_5 = [" "];
-      var buffer_6 = [" "];
+      var logContents;
+      var updateInterval = 1000;
+      function updateLog() {
+        $.ajax({url: "/log", success: function(result){
+          logContents = "";
+          var eventString;
 
-      function sendRead() {
-        $.post('/read',{read: 1},function(data,clear){
-          console.log('read');
-          });
-      }
+          jQuery.each(result, function(i, val) {
+            if (val.event===0){
+              eventString = ' denied access';
+            }
+            else if (val.event===1){
+              eventString = ' granted access ';
+            }
+            else if (val.event===2){
+              eventString = ' changed password ';
+            }
+            console.log('id is ' + val.keyID.toString());
+            logContents += "Key " + val.keyID.toString() + eventString + "at time " +val.dateTime + " <br />";
 
-      function readAll(){
-      sendRead();
-      console.log("im in read");
-      buffer_1 = [" "];
-      buffer_2 = [" "];
-      buffer_3 = [" "];
-      buffer_4 = [" "];
-      buffer_5 = [" "];
-      buffer_6 = [" "];
-      $.ajax({url: "/all", success: function(result){
-
-      jQuery.each( result , function(i, val) {
-        contents ="";
-        contents += "id: " + val.id + " vote: " + val.vote + " time: " +val.date_time + " <br />";
-        if(val.id == 1){
-          buffer_1.shift();
-          buffer_1.push(contents);
-          console.log("I am buffer 1 ", buffer_1);
-        }
-        else if(val.id == 2){
-          buffer_2.shift();
-          buffer_2.push(contents);
-        }
-        else if(val.id == 3){
-          buffer_3.shift();
-          buffer_3.push(contents);
-        }
-        else if(val.id == 4){
-          buffer_4.shift();
-          buffer_4.push(contents);
-        }
-        else if(val.id == 5){
-          buffer_5.shift();
-          buffer_5.push(contents);
-        }
-        else if(val.id == 6){
-          buffer_6.shift();
-          buffer_6.push(contents);
-        }
-        });
-      contents = "";
-
-      contents += buffer_1[0] + " <br />" + buffer_2[0] + " <br />" + buffer_3[0] + " <br />" + buffer_4[0] + " <br />"
-      + buffer_5[0] + " <br />" + buffer_6[0] + " <br />";
-      console.log("here results: ",contents);
-      //We add contents HTML content to page
-      document.getElementById('all').innerHTML="<b> All </b><br />" + contents;
-      document.getElementById('red').innerHTML=" Red <br />" ;
-      document.getElementById('blue').innerHTML=" Blue <br />" ;
-      document.getElementById('green').innerHTML=" Green <br />" ;
-        //
-        // $("#all").html(contents);
-      }});
-      }
-
-      function candVotes(){
-        sendRead();
-        console.log("im in cand");
-        $.ajax({url: "/all/red", success: function(result){
-        contents_R ="";
-        var count_R;
-        jQuery.each( result , function(i, val) {
-            count_R = i + 1 ;
-            contents_R += "id: " + val.id + " time: " +val.date_time + " <br />";
-          });
-          console.log("here results for red: ",contents_R);
-        //We add contents HTML content to page
-        document.getElementById('all').innerHTML=" All <br />" ;
-        document.getElementById('red').innerHTML="<b> Red: "+count_R+" </b><br />" + contents_R;
-        }});
-
-        $.ajax({url: "/all/blue", success: function(result){
-        contents_B ="";
-        var count_B = "";
-        jQuery.each( result , function(i, val) {
-            count_B = i + 1;
-            contents_B += "id: " + val.id + " time: " +val.date_time + " <br />";
-          });
-          console.log("here results for blue: ",contents_B);
-        //We add contents HTML content to page
-        document.getElementById('all').innerHTML=" All <br />" ;
-        document.getElementById('blue').innerHTML="<b> Blue: "+count_B+" </b><br />" + contents_B;
-        }});
-
-        $.ajax({url: "/all/green", success: function(result){
-        contents_G ="";
-        var count_G = "";
-        jQuery.each( result , function(i, val) {
-            count_G = i + 1 ;
-            contents_G += "id: " + val.id + " time: " +val.date_time + " <br />";
           });
 
-        console.log("here results for G: ",contents_G);
-        //We add contents HTML content to page
-        document.getElementById('all').innerHTML=" All <br />" ;
-        document.getElementById('green').innerHTML="<b> Green: "+count_G+" </b><br />" + contents_G;
+          document.getElementById('log').innerHTML="<b> Log </b><br />" + logContents;
+          
+          
         }});
       }
 
-      function sendClear() {
-        $.post('/clear',{clear: 1},function(data,clear){
-          document.getElementById('all').innerHTML=" All <br />" ;
-          document.getElementById('red').innerHTML=" Red: <br />" ;
-          document.getElementById('blue').innerHTML=" Blue <br />" ;
-          document.getElementById('green').innerHTML=" Green <br />" ;
-
-          console.log('cleared');
-
-          });
-
-      }
+      updateLog();
+      setInterval(function(){updateLog()}, updateInterval);
+    }
     </script>
   </body>
 </html>
