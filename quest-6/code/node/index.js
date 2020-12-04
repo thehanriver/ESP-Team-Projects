@@ -70,13 +70,20 @@ function isPwd(input) {
 // On connection, print out received message
 server.on('message', function (message, remote) {
 	console.log(remote.address + ':' + remote.port +' - ' + message);
+
+	// begin password stuff
 	message = message.split(',');
 	var setbit = message[0];
 	var keyID = message[1];
 	var input = message.slice(2).map(Number);
-	var result = isPwd(input) ? '1' : '0';
+	var isCorrect = isPwd(input) ? '1' : '0';
 
-	var logEntry
+	// end password stuff
+	
+	//begin log stuff
+	var result;
+	var logEntry = [];
+	logEntry.push({keyID : keyID , vote: vote , action: action});
 
 	MongoClient.connect(uri, function(err, client) {
 		assert.equal(null, err);
@@ -90,8 +97,9 @@ server.on('message', function (message, remote) {
 		client.close();
 	  });
 
-
-	server.send(result,remote.port,remote.address,function(error){
+	// end log stuff
+	//send UDP response
+	server.send(isCorrect,remote.port,remote.address,function(error){
 	if(error){
 		console.log('Error: could not reply');
 	}
