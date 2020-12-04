@@ -5,6 +5,9 @@ var path = require('path');
 // var http = require('http').Server(app);
 const assert = require('assert');
 const bodyParser = require('body-parser');
+var MongoClient = require('mongodb').MongoClient;
+const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/quest5?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
 var pwd = [0,0,10];
 
@@ -69,9 +72,25 @@ server.on('message', function (message, remote) {
 	console.log(remote.address + ':' + remote.port +' - ' + message);
 	message = message.split(',');
 	var setbit = message[0];
-	var key_id = message[1];
+	var keyID = message[1];
 	var input = message.slice(2).map(Number);
 	var result = isPwd(input) ? '1' : '0';
+
+	var logEntry
+
+	MongoClient.connect(uri, function(err, client) {
+		assert.equal(null, err);
+		console.log("CONNECTED");
+		var collection = client.db("quest5").collection("log");
+		collection.insertOne(myObj, function(err, res) {
+		  if (err) throw err;
+		  console.log("1 event logged");
+		  // db.close();
+		});
+		client.close();
+	  });
+
+
 	server.send(result,remote.port,remote.address,function(error){
 	if(error){
 		console.log('Error: could not reply');
