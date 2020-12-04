@@ -6,9 +6,7 @@ var path = require('path');
 const assert = require('assert');
 const bodyParser = require('body-parser');
 
-var pwd = [ [0,0,10],
-			[0,0,10],
-			[0,0,10]];
+var pwd = [0,0,10];
 
 
 
@@ -59,9 +57,9 @@ server.on('listening', function () {
 
 function isPwd(input) {
 	var allowance = 2
-	if (input[0] >= pwd[position][0]-allowance || input[0] <= pwd[position[0]+allowance])
-		if (input[1] >= pwd[position][1]-allowance || input[1] <= pwd[position[1]+allowance])
-			if (input[2] >= pwd[position][2]-allowance || input[2] <= pwd[position[2]+allowance])
+	if (input[0] >= pwd[0]-allowance || input[0] <= pwd[0]+allowance])
+		if (input[1] >= pwd[1]-allowance || input[1] <= pwd[1]+allowance])
+			if (input[2] >= pwd[2]-allowance || input[2] <= pwd[[2]+allowance])
 				return true;
 	return false;
 }
@@ -72,8 +70,7 @@ server.on('message', function (message, remote) {
 	message = message.split(',');
 	var setbit = message[0];
 	var key_id = message[1];
-	var position = message[2];
-	var input = message.slice(3).map(Number);
+	var input = message.slice(2).map(Number);
 	var result = isPwd(input) ? '1' : '0';
 	server.send(result,remote.port,remote.address,function(error){
 	if(error){
