@@ -77,13 +77,14 @@ server.on('message', function (message, remote) {
 	var keyID = message[1];
 	var input = message.slice(2).map(Number);
 	var isCorrect = isPwd(input) ? '1' : '0';
+	var event;	// MARIO, set this variable to int 0 for failure, 1 for success, 2 for set password
 
 	// end password stuff
-	
+
 	//begin log stuff
-	var result;
+	
 	var logEntry = [];
-	logEntry.push({keyID : keyID , vote: vote , action: action});
+	logEntry.push({keyID : keyID , vote: vote , event: event});
 
 	MongoClient.connect(uri, function(err, client) {
 		assert.equal(null, err);
@@ -99,7 +100,7 @@ server.on('message', function (message, remote) {
 
 	// end log stuff
 	//send UDP response
-	server.send(isCorrect,remote.port,remote.address,function(error){
+	server.send(event.toString(),remote.port,remote.address,function(error){
 	if(error){
 		console.log('Error: could not reply');
 	}
