@@ -11,6 +11,7 @@ const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: 
 
 var pwd = [0,0,10];
 var log='retrieving...';
+var filterForKeyID = -1;
 
 
 function getDateTime(){
@@ -29,20 +30,46 @@ app.get('/', function(req, res) {
 
 
 app.get('/log', function(req, res) {
-	MongoClient.connect(uri, async function(err, client) {
-		assert.equal(null, err);
-		var collection = client.db("quest5").collection("log");
-		try {
-			log = await collection.find({}).toArray();
-		} catch (err) {
-			console.log(err);
-		}
-		// console.log(log)
-		client.close();
-	});
-	// getLog();
-	res.send(log);
+	if (filterForKeyID == -1) // send all
+	{
+		MongoClient.connect(uri, async function(err, client) {
+			console.log("CONNECTED");
+			assert.equal(null, err);
+			var collection = client.db("quest5").collection("log");
+			try {
+				log = await collection.find({}).toArray();
+			} catch (err) {
+				console.log(err);
+			}
+			// console.log(log)
+			client.close();
+		});
+		// getLog();
+	}
+	else{
+		MongoClient.connect(uri, async function(err, client) {
+			console.log("CONNECTED");
+			assert.equal(null, err);
+			var query = {keyID: filterForKeyID};
+			var collection = client.db("quest5").collection("log");
+			try {
+				log = await collection.find(query).toArray();
+			} catch (err) {
+				console.log(err);
+			}
+			// console.log(log)
+			client.close();
+		});
+	}
+	res.send(log)
 });
+
+
+
+// query the below address from all documents in 'customers'
+
+
+
 function getLog(){
 	MongoClient.connect(uri, function(err, client) {
 		assert.equal(null, err);
@@ -60,10 +87,13 @@ function getLog(){
 //   res.send(read_flag);
 // })
 
-// app.post('/read', (req,res) => {
-//   read_flag = req.body.read;
-//   res.end('yes');
-// });
+app.post('/query', (req,res) => {
+	console.log('querying ' + req.body.keyID);
+	filterForKeyID = parseInt(req.body.keyID);
+	res.end('yes');
+});
+
+
 
 app.listen(4000);
 

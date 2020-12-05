@@ -26,10 +26,22 @@
     		Clear Database
     	</button>
     </div> -->
-    <div id = 'log'> Log</div>
+    <div> <b>Log</b></div>
+
+    <form id="myform" action="javascript:;" onsubmit="submitForm(this)">
+      <label for="keyid">Key ID</label>
+      <input type="text" name="keyid" id="keyid" required>
+      
+      <button type="submit" id="submit">Filter</button>
+      <button type="reset" id="clear" onClick = clearFilter()>Clear</button>
+    </form>
+    <div id = 'log'></div>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script> window.onload = function () {
+    <script>
+
+      
 
       var logContents;
       var updateInterval = 1000;
@@ -37,7 +49,11 @@
         $.ajax({url: "/log", success: function(result){
           logContents = "";
           var eventString;
-
+          if (result==='hi')
+          {
+            console.log(result);
+            return;
+          }
           jQuery.each(result, function(i, val) {
             if (val.event===0){
               eventString = ' denied access';
@@ -48,12 +64,11 @@
             else if (val.event===2){
               eventString = ' changed password ';
             }
-            console.log('id is ' + val.keyID.toString());
             logContents += "Key " + val.keyID.toString() + eventString + "at time " +val.dateTime + " <br />";
 
           });
 
-          document.getElementById('log').innerHTML="<b> Log </b><br />" + logContents;
+          document.getElementById('log').innerHTML=logContents;
           
           
         }});
@@ -61,7 +76,34 @@
 
       updateLog();
       setInterval(function(){updateLog()}, updateInterval);
-    }
+
+
+      function submitForm() {
+        document.getElementById('log').innerHTML = "";
+        $.post('/query',{keyID: document.getElementById("keyid").value},function(data,status){
+            console.log(status);
+          });
+      }
+
+      // $('#submit').click(function() {
+      //     $.ajax({
+      //       url: '/query',
+      //       type: 'POST',
+      //       data: {
+      //         keyID: document.getElementById("keyid").value
+      //       },
+      //       // success: function(msg) {
+      //       //   alert('Email Sent');
+      //       // }               
+      //     });
+      //   });
+      function clearFilter() {
+        document.getElementById('log').innerHTML = "";
+        $.post('/query',{keyID: -1},function(data,status){
+					console.log(status);
+				});
+      }
+      
     </script>
   </body>
 </html>
