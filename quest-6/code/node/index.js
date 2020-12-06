@@ -6,12 +6,12 @@ var path = require('path');
 const assert = require('assert');
 const bodyParser = require('body-parser');
 var MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/quest5?retryWrites=true&w=majority";
+const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/quest6?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
 
 var pwd = [0,0,10];
 var log='retrieving...';
-var filterForKeyID = -1;
+var filterForUserID = -1;
 
 
 function getDateTime(){
@@ -29,58 +29,24 @@ app.get('/', function(req, res) {
 });
 
 
-app.get('/log', function(req, res) {
-	if (filterForKeyID == -1) // send all
-	{
-		MongoClient.connect(uri, async function(err, client) {
-			console.log("CONNECTED");
-			assert.equal(null, err);
-			var collection = client.db("quest5").collection("log");
-			try {
-				log = await collection.find({}).toArray();
-			} catch (err) {
-				console.log(err);
-			}
-			// console.log(log)
-			client.close();
-		});
-		// getLog();
-	}
-	else{
-		MongoClient.connect(uri, async function(err, client) {
-			console.log("CONNECTED");
-			assert.equal(null, err);
-			var query = {keyID: filterForKeyID};
-			var collection = client.db("quest5").collection("log");
-			try {
-				log = await collection.find(query).toArray();
-			} catch (err) {
-				console.log(err);
-			}
-			// console.log(log)
-			client.close();
-		});
-	}
-	res.send(log)
-});
-
-
-
-// query the below address from all documents in 'customers'
-
-
-
-function getLog(){
-	MongoClient.connect(uri, function(err, client) {
-		assert.equal(null, err);
-		var collection = client.db("quest5").collection("log");
-		collection.find({}).toArray(function(err, result) {
-			if (err) throw err;
-			log = result;
-		});
+app.get('/log', async function(req, res) {
+	try {
+		var client = await MongoClient.connect(uri);
+		console.log("CONNECTED");
+		var collection = client.db("quest6").collection("log");
+		if (filterForUserID == -1){ // send all
+			log = await collection.find({}).toArray();
+		}
+		else{
+			log = await collection.find({userID: filterForUserID}).toArray();
+		}
+		console.log(log);
 		client.close();
-	});
-}
+	} catch (err) {
+		console.log(err.message);
+	}
+	res.send(log);
+});
 
 
 // app.get('/read', function(req,res) {
@@ -88,8 +54,8 @@ function getLog(){
 // })
 
 app.post('/query', (req,res) => {
-	console.log('querying ' + req.body.keyID);
-	filterForKeyID = parseInt(req.body.keyID);
+	console.log('querying ' + req.body.userID);
+	filterForUserID = parseInt(req.body.userID);
 	res.end('yes');
 });
 
@@ -115,43 +81,73 @@ server.on('listening', function () {
 	console.log('UDP Server listening on ' + address.address + ":" + address.port);
 });
 
-function isPwd(input) {
+function isPwd(xyzObj, pwd) {	
 	var allowance = 2
-	if (input[0] >= pwd[0]-allowance || input[0] <= pwd[0]+allowance)
-		if (input[1] >= pwd[1]-allowance || input[1] <= pwd[1]+allowance)
-			if (input[2] >= pwd[2]-allowance || input[2] <= pwd[2]+allowance)
+	if (input.x >= pwd.x-allowance || input.x <= pwd.x+allowance)
+		if (input.y >= pwd.y-allowance || input.y <= pwd.y+allowance)
+			if (input.z >= pwd.z-allowance || input.z <= pwd.z+allowance)
 				return true;
 	return false;
 }
 
 // On connection, print out received message
-server.on('message', function (message, remote) {
+server.on('message', async function (message, remote) {
 	console.log(remote.address + ':' + remote.port +' - ' + message);
 
 	// begin password stuff
 	message = message.split(',');
-	var setbit = message[0];
-	var keyID = message[1];
-	var input = message.slice(2).map(Number);
-	var isCorrect = isPwd(input) ? '1' : '0';
-	var event;	// MARIO, set this variable to int 0 for failure, 1 for success, 2 for set password
+	var setbit = parseInt(message[0]);
+	var userID = parseInt(message[1]);
+	var xyz = message.slice(2).map(Number);
+	// var isCorrect = isPwd(xyz) ? '1' : '0';
+	var usersObj = {userID: userID , x: xyz[0] , y: xyz[1], z: xyz[2]};
+	var event; // int 0 for incorrect password, 1 for correct password, 2 for new password set
+
+	try {
+		client = await MongoClient.connect(uri);
+		console.log("CONNECTED");
+		var collection = client.db("quest6").collection("users");
+		var usersQuery = {userID: userID} //  query existing password for user userID
+		if (setbit==1) { // update password
+			await collection.findOneAndReplace(usersQuery, usersObj, {upsert: true});
+
+			console.log("User " + usersObj.userID.toString() + " Password updated");
+			event = 2;
+		}
+		else {	// check password
+			var pwd = await collection.findOne(usersQuery) 	// query existing password into pwd variable.
+			if(isPwd(usersObj,pwd)) {
+				console.log("Password is correct.");
+				event = 1;
+			}
+			else {
+				console.log("Password is incorrect. Try again.");
+				event = 0;
+			}
+		}
+		client.close();
+	} catch (err) {
+		console.log(err.message);
+	}
+	
+
 
 	// end password stuff
 
 	//begin log stuff
 	
-	var logEntry = {keyID : keyID , event: event, dateTime: getDateTime()};
+	var logEntry = {userID : userID , event: event, dateTime: getDateTime()};
 
-	MongoClient.connect(uri, function(err, client) {
-		assert.equal(null, err);
-		var collection = client.db("quest5").collection("log");
-		collection.insertOne(logEntry, function(err, res) {
-		  if (err) throw err;
-		  console.log("1 event logged");
-		  // db.close();
-		});
+	try {
+		client = await MongoClient.connect(uri);
+		var collection = client.db("quest6").collection("log");
+		await collection.insertOne(logEntry);
+		console.log("1 event logged");
 		client.close();
-	});
+
+	} catch (err) {
+		console.log(err.message);
+	} 
 
 	// end log stuff
 

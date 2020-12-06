@@ -29,8 +29,8 @@
     <div> <b>Log</b></div>
 
     <form id="myform" action="javascript:;" onsubmit="submitForm(this)">
-      <label for="keyid">Key ID</label>
-      <input type="text" name="keyid" id="keyid" required>
+      <label for="userid">User ID</label>
+      <input type="text" name="userid" id="userid" required>
       
       <button type="submit" id="submit">Filter</button>
       <button type="reset" id="clear" onClick = clearFilter()>Clear</button>
@@ -64,7 +64,7 @@
             else if (val.event===2){
               eventString = ' changed password ';
             }
-            logContents += "Key " + val.keyID.toString() + eventString + "at time " +val.dateTime + " <br />";
+            logContents += "User " + val.userID.toString() + eventString + "at time " +val.dateTime + " <br />";
 
           });
 
@@ -80,7 +80,7 @@
 
       function submitForm() {
         document.getElementById('log').innerHTML = "";
-        $.post('/query',{keyID: document.getElementById("keyid").value},function(data,status){
+        $.post('/query',{userID: document.getElementById("userid").value},function(data,status){
             console.log(status);
           });
       }
@@ -90,7 +90,7 @@
       //       url: '/query',
       //       type: 'POST',
       //       data: {
-      //         keyID: document.getElementById("keyid").value
+      //         userID: document.getElementById("userid").value
       //       },
       //       // success: function(msg) {
       //       //   alert('Email Sent');
@@ -99,7 +99,7 @@
       //   });
       function clearFilter() {
         document.getElementById('log').innerHTML = "";
-        $.post('/query',{keyID: -1},function(data,status){
+        $.post('/query',{userID: -1},function(data,status){
 					console.log(status);
 				});
       }
