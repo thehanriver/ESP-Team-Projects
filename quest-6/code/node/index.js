@@ -8,8 +8,14 @@ const bodyParser = require('body-parser');
 var MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://viv:1GBSt0rage%21@vivcluster.h5rba.mongodb.net/quest6?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true});
+const { exec } = require("child_process");
+var fs = require('fs');
 
-var pwd = [0,0,10];
+var images_dir = './images/';
+if (!fs.existsSync(images_dir)){
+	fs.mkdirSync(images_dir);
+}
+
 var log='retrieving...';
 var filterForUserID = -1;
 
@@ -130,13 +136,28 @@ server.on('message', async function (message, remote) {
 		console.log(err.message);
 	}
 	
+	var dateTime = getDateTime();
 
+	if (event==0){	// take a picture if the password is wrong into the images directory
+		exec("raspistill -n -v -o " + images_dir + dateTime + ".jpg", (error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.message}`);
+				return;
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`);
+				return;
+			}
+			console.log(`stdout: ${stdout}`);
+		});
+	}
 
 	// end password stuff
 
 	//begin log stuff
 	
-	var logEntry = {userID : userID , event: event, dateTime: getDateTime()};
+	
+	var logEntry = {userID : userID , event: event, dateTime: dateTime};
 
 	try {
 		client = await MongoClient.connect(uri);
