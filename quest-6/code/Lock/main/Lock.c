@@ -1,4 +1,4 @@
-//Quest 6
+//Quest 4
 //Mario Han, Vivek Cherian, Hussain Valiuddin
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,8 +40,12 @@
 #include "soc/rmt_reg.h"
 #include "sdkconfig.h"
 
+#include "driver/mcpwm.h"
+#include "soc/mcpwm_periph.h"
+
 // LED Output pins definitions
 #define LEDPIN 14
+#define PASSWORDPIN 15
 
 // RMT definitions
 #define RMT_TX_CHANNEL 1                                 // RMT channel for transmitter
@@ -77,6 +81,9 @@
 #define HOST_IP_ADDR "192.168.1.139" //"192.168.1.139"
 #define PORT 1234
 
+#define SERVO_MIN_PULSEWIDTH 600  //Minimum pulse width in microsecond
+#define SERVO_MAX_PULSEWIDTH 2600 //Maximum pulse width in microsecond
+
 //Wifi
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
@@ -84,11 +91,11 @@ static int s_retry_num = 0;
 static const char *TAG = "Quest 6";
 
 static int timer;
-static int rec_vote = 1;
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
 int set_password;
+int open = 0;
 
 // Mutex (for resources), and Queues (for button)
 SemaphoreHandle_t mux = NULL;
@@ -129,6 +136,12 @@ bool checkCheckSum(uint8_t *p, int len)
 }
 
 // Init Functions //////////////////////////////////////////////////////////////
+
+static void mcpwm_example_gpio_initialize(void)
+{
+    printf("initializing mcpwm servo control gpio......\n");
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 12); //Set GPIO 12 as PWM0A, to which servo is connected
+}
 
 //  For IR
 // RMT tx init
@@ -180,8 +193,10 @@ static void uart_init()
 static void led_init()
 {
     gpio_pad_select_gpio(LEDPIN);
+    gpio_pad_select_gpio(PASSWORDPIN);
 
     gpio_set_direction(LEDPIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(PASSWORDPIN, GPIO_MODE_OUTPUT);
 
     gpio_set_direction(GPIO_INPUT_IO_2_SEND, GPIO_MODE_INPUT);
 }
@@ -419,7 +434,6 @@ void ir_receive_task()
                     vTaskDelay(200 / portTICK_PERIOD_MS);
                     gpio_set_level(LEDPIN, 0);
                     vTaskDelay(1000 / portTICK_PERIOD_MS);
-                    rec_vote = 1;
                 }
             }
         }
@@ -429,7 +443,7 @@ void ir_receive_task()
 }
 
 // Button task -- rotate through myIDs
-void change_vote()
+void set_password()
 {
     uint32_t io_num;
     while (1)
@@ -437,326 +451,53 @@ void change_vote()
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
         {
             xSemaphoreTake(mux, portMAX_DELAY);
-            if (myVote == '3') //r
-            {
-                myVote = '4';
-                printf("Went from red to green\n");
-            }
-            else if (myVote == '4') //g
-            {
-                myVote = '5';
-                printf("Went from green to blue\n");
-            }
-            else if (myVote == '5') //b
-            {
-                myVote = '3';
-                printf("Went from blue to red\n");
-            }
+            set_password = 1;
+            gpio_set_level(PASSWORDPIN, 1);
+
             xSemaphoreGive(mux);
             printf("Button pressed.\n");
             // ir_send_task();
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-static void send_vote()
-{
-    while (1)
-    {
-        if (!gpio_get_level(GPIO_INPUT_IO_2_SEND))
-        {
-            printf("Sending vote");
-            ir_send_task();
-        }
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-}
-// LED task to light LED based on vote
-void led_task()
-{
-    while (1)
-    {
-        if (rec_vote)
-        {
-            switch (myVote)
-            {
-            case '3': // red
-                gpio_set_level(GREENPIN, 0);
-                gpio_set_level(REDPIN, 1);
-                gpio_set_level(LEDPIN, 0);
-                // printf("Current state: %c\n",status);
-                break;
-            case '4': // Green
-                gpio_set_level(GREENPIN, 1);
-                gpio_set_level(REDPIN, 0);
-                gpio_set_level(LEDPIN, 0);
-                // printf("Current state: %c\n",status);
-                break;
-            case '5': // blue
-                gpio_set_level(GREENPIN, 0);
-                gpio_set_level(REDPIN, 0);
-                gpio_set_level(LEDPIN, 1);
-                // printf("Current state: %c\n",status);
-            }
-        }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        set_password = 0;
+        gpio_set_level(PASSWORDPIN, 0);
     }
 }
 
-// LED task to blink onboard LED based on ID
-void id_task()
+void mcpwm_example_servo_control(void *arg)
 {
+    uint32_t count;
+    //1. mcpwm gpio initialization
+    mcpwm_example_gpio_initialize();
+
+    //2. initial mcpwm configuration
+    printf("Configuring Initial Parameters of mcpwm......\n");
+    mcpwm_config_t pwm_config;
+    pwm_config.frequency = 50; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+    pwm_config.cmpr_a = 0;     //duty cycle of PWMxA = 0
+    pwm_config.cmpr_b = 0;     //duty cycle of PWMxb = 0
+    pwm_config.counter_mode = MCPWM_UP_COUNTER;
+    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
     while (1)
     {
-
-        for (int i = 0; i < (int)myID; i++)
+        if (open)
         {
-            gpio_set_level(ONBOARD, 1);
-            vTaskDelay(200 / portTICK_PERIOD_MS);
-            gpio_set_level(ONBOARD, 0);
-            vTaskDelay(200 / portTICK_PERIOD_MS);
+            for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 200)
+            {
+                mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+            for (count = SERVO_MAX_PULSEWIDTH; count < SERVO_MIN_PULSEWIDTH; count -= 200)
+            {
+                mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+            }
         }
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
-void switch_state(int *state_ptr, int to_state, int *delay_count_ptr)
-{
-    *state_ptr = to_state;
-    *delay_count_ptr = 0;
-    OKIE = 0;
-    WIN = 0;
-    E = 0;
-}
-
-void voting_fsm_task()
-{
-    int delay_count = 0; // number of delays that has occurred; inc before each vTaskDelay, set to 0 when switching states
-    state = NOT_LEADER;
-    int id; // used for loops
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    printf("Starting fsm...\n");
-    while (1)
-    {
-        switch (state)
-        {
-        case ELECTION:
-
-            // printf("entered ELECTION\n");
-
-            // reset extraneous signals
-            if (E)
-            {
-                E = 0; // don't print attention here because this is normal
-            }
-            if (OKIE) // switch to WAIT_WIN bc a higher esp is taking care of it
-            {
-                OKIE = 0;
-                // printf("Attention: OKIE signal received in ELECTION state. Moving to WAIT_WIN\n");
-                switch_state(&state, WAIT_WIN, &delay_count);
-                break;
-            }
-            if (WIN)
-            {
-                WIN = 0;
-                // printf("Attention: WIN signal received in ELECTION state. Moving to NOT_LEADER.\n");
-                switch_state(&state, NOT_LEADER, &delay_count);
-                break;
-            }
-
-            // send OKIE to lower ids
-            for (id = myID - 1; id > 0; id--)
-            {
-                udp_client_fn(myID, id, OKIE_SIGNAL);
-            }
-
-            // send E to higher ids
-            for (id = myID + 1; id <= MAX_ID; id++)
-            {
-                udp_client_fn(myID, id, E_SIGNAL);
-            }
-
-            // switch to WAIT_OK state, reset delay count
-            switch_state(&state, WAIT_OK, &delay_count);
-            break;
-
-        case WAIT_OK:
-            if (delay_count == 0)
-            {
-                //printf("entered WAIT_OK\n");
-            }
-
-            // reset extraneous signals
-            if (E)
-            {
-                E = 0; // not printing attention cuz this is normal
-            }
-            if (WIN)
-            {
-                WIN = 0;
-                // printf("Attention: WIN signal received in WAIT_OK state. Moving to NOT_LEADER.\n");
-                switch_state(&state, NOT_LEADER, &delay_count);
-                break;
-            }
-
-            // send OKIE to lower ids while waiting for OKIE
-            for (id = myID - 1; id > 0; id--)
-            {
-                udp_client_fn(myID, id, OKIE_SIGNAL);
-            }
-
-            // If OKIE is received, switch to WAIT_WIN
-            if (OKIE)
-            {
-                OKIE = 0;
-                switch_state(&state, WAIT_WIN, &delay_count);
-                break;
-            }
-
-            // if timeout occurs, switch to LEADER
-            if (delay_count == 10) // set to appropriate value
-            {
-                switch_state(&state, LEADER, &delay_count);
-                break;
-            }
-            delay_count++;
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-            break;
-
-        case WAIT_WIN:
-            if (delay_count == 0)
-            {
-                // printf("entered WAIT_WIN\n");
-            }
-
-            // reset extraneous signals
-            if (OKIE)
-            {
-                OKIE = 0; // don't print attention this is normal
-            }
-
-            // if E is received, another election was started, switch to ELECTION
-            if (E)
-            {
-                E = 0;
-                switch_state(&state, ELECTION, &delay_count);
-                break;
-            }
-
-            // if WIN is received, switch to NOT_LEADER
-            if (WIN)
-            {
-                WIN = 0; // reset
-                switch_state(&state, NOT_LEADER, &delay_count);
-                break;
-            }
-            // if timeout occurs in 20 delay_counts, switch to ELECTION
-            if (delay_count == 20) // set to appropriate value
-            {
-                switch_state(&state, ELECTION, &delay_count);
-                break;
-            }
-            delay_count++;
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-            break;
-
-        case LEADER:
-            leaderID = myID;
-            if (delay_count == 0)
-            {
-                // printf("entered LEADER\n");
-            }
-
-            // reset extraneous signals, and print 'error'
-            if (E)
-            {
-                E = 0;
-                // printf("Attention: E signal received in LEADER state\n");
-            }
-
-            if (WIN)
-            {
-                WIN = 0;
-                // printf("Attention: WIN signal received in LEADER state. Moving to NOT_LEADER.\n");
-                switch_state(&state, NOT_LEADER, &delay_count);
-                break;
-            }
-
-            // if OKIE is received, it means a new ESP with a higher id entered, didn't received a WIN, so it started an election and sent OKIE's to lower id's
-            // switch to WAIT_WIN
-            if (OKIE)
-            {
-                OKIE = 0;
-                switch_state(&state, WAIT_WIN, &delay_count);
-                break;
-            }
-
-            // Send WIN to lower
-            for (id = myID - 1; id > 0; id--)
-            {
-                udp_client_fn(myID, id, WIN_SIGNAL);
-            }
-
-            if (delay_count % 10 == 0)
-            {
-                // printf("I am the leader.\n");
-            }
-            delay_count++;
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-            break;
-
-        case NOT_LEADER:
-            if (delay_count == 0)
-            {
-                // printf("entered NOT_LEADER\n");
-            }
-
-            if (E)
-            {
-                E = 0;
-                switch_state(&state, ELECTION, &delay_count);
-                break;
-            }
-
-            // if WIN is received, reset and stay in NOT_LEADER
-            if (WIN)
-            {
-                WIN = 0;
-                delay_count = 0;
-                break; // because we stay in same state don't reset delay_count
-            }
-            // if OKIE is received switch to WAIT_WIN
-            if (OKIE)
-            {
-                OKIE = 0;
-                switch_state(&state, WAIT_WIN, &delay_count);
-                break;
-            }
-            // if neither is received in 8 delay counts, the leader has died. check if second highest. If so, become LEADER. If not, move to ELECTION
-            if (delay_count >= 8)
-            {
-                // set OKIE to lower id's
-                for (id = myID - 1; id > 0; id--)
-                {
-                    udp_client_fn(myID, id, OKIE_SIGNAL);
-                }
-                if (myID == leaderID - 1)
-                {
-                    switch_state(&state, LEADER, &delay_count);
-                    break;
-                }
-                else
-                {
-                    switch_state(&state, ELECTION, &delay_count);
-                    break;
-                }
-            }
-
-            delay_count++;
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-            break;
-        }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -791,10 +532,11 @@ void app_main()
 
     // Create Task to print out values received
     xTaskCreate(ir_receive_task, "uart_rx_task", 1024 * 4, NULL, 5, NULL);
-    xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, 3, NULL);
+    xTaskCreate(blink_LED, "set_traffic_task", 1024 * 2, NULL, 3, NULL);
     xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, 5, NULL);
-    xTaskCreate(change_vote, "change_vote", 1024 * 2, NULL, 5, NULL);
+    xTaskCreate(set_password, "set_password", 1024 * 2, NULL, 5, NULL);
     xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
     xTaskCreate(voting_fsm_task, "voting_fsm", 4096, NULL, 5, NULL);
     xTaskCreate(send_vote, "send_vote", 1024 * 2, NULL, 5, NULL);
+    xTaskCreate(mcpwm_example_servo_control, "mcpwm_example_servo_control", 4096, NULL, 5, NULL);
 }
