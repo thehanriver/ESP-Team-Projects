@@ -442,7 +442,6 @@ void ir_receive_task()
     free(data_in);
 }
 
-// Button task -- rotate through myIDs
 void set_password()
 {
     uint32_t io_num;
@@ -532,11 +531,6 @@ void app_main()
 
     // Create Task to print out values received
     xTaskCreate(ir_receive_task, "uart_rx_task", 1024 * 4, NULL, 5, NULL);
-    xTaskCreate(blink_LED, "set_traffic_task", 1024 * 2, NULL, 3, NULL);
-    xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, 5, NULL);
     xTaskCreate(set_password, "set_password", 1024 * 2, NULL, 5, NULL);
-    xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
-    xTaskCreate(voting_fsm_task, "voting_fsm", 4096, NULL, 5, NULL);
-    xTaskCreate(send_vote, "send_vote", 1024 * 2, NULL, 5, NULL);
     xTaskCreate(mcpwm_example_servo_control, "mcpwm_example_servo_control", 4096, NULL, 5, NULL);
 }
