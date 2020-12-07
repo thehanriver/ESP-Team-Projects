@@ -1,4 +1,4 @@
-//Quest 4
+//Quest 6
 //Mario Han, Vivek Cherian, Hussain Valiuddin
 #include <stdio.h>
 #include <stdlib.h>
