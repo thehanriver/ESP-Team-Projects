@@ -18,6 +18,7 @@ if (!fs.existsSync(images_dir)){
 
 var log='retrieving...';
 var filterForUserID = -1;
+var maxEvents = 50;
 
 
 function getDateTime(){
@@ -45,6 +46,10 @@ app.get('/log', async function(req, res) {
 		}
 		else{
 			log = await collection.find({userID: filterForUserID}).toArray();
+			if (log.length > maxEvents) // only show last 50
+			{
+				log = log.slice(log.length - maxEvents, log.length);
+			}
 		}
 		console.log(log);
 		client.close();

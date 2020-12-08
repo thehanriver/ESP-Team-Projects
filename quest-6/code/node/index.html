@@ -49,11 +49,6 @@
         $.ajax({url: "/log", success: function(result){
           logContents = "";
           var eventString;
-          if (result==='hi')
-          {
-            console.log(result);
-            return;
-          }
           jQuery.each(result, function(i, val) {
             if (val.event===0){
               eventString = ' denied access';
