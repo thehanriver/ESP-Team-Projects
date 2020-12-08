@@ -59,7 +59,7 @@
 #define SLAVE_ADDR ADXL343_ADDRESS // 0x53
 
 // Default ID/color
-#define FLASH_THIS_ID 6 //1,2,3,4,5
+#define FLASH_THIS_ID 1 //1,2,3,4,5
 
 // LED Output pins definitions
 #define LED_PIN 14
@@ -79,25 +79,11 @@
 // Hardware interrupt definitions
 #define GPIO_INPUT_IO_2_SEND 39 //Button pin A3 // Button for sending IR Task
 
-//Wifi defines
-#define EXAMPLE_ESP_WIFI_SSID "Group_2"
-#define EXAMPLE_ESP_WIFI_PASS "1GBSt0rage!"
-#define EXAMPLE_ESP_MAXIMUM_RETRY 5
-
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-
 #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // to seconds
 #define TIMER_INTERVAL_2_SEC (2)
 #define TIMER_INTERVAL_10_SEC (10)
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
-
-//Wifi
-static EventGroupHandle_t s_wifi_event_group;
-static int s_retry_num = 0;
-
-static const char *TAG = "Quest 6";
 
 static int timer;
 static int rec_vote = 1;
@@ -114,7 +100,7 @@ SemaphoreHandle_t mux = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 // System tags
-static const char *TAG_SYSTEM = "system"; // For debug logs
+static const char *TAG_SYSTEM = "Quest 6 "; // For debug logs
 
 // Button interrupt handler -- add to queue
 static void IRAM_ATTR gpio_isr_handler(void *arg)
@@ -209,11 +195,11 @@ static void button_init()
     //enable pull-up mode
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
-    gpio_intr_enable(GPIO_INPUT_IO_1_VOTE);
+    gpio_intr_enable(GPIO_INPUT_IO_2_SEND);
     //install gpio isr service
     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
     //hook isr handler for specific gpio pin
-    gpio_isr_handler_add(GPIO_INPUT_IO_1_VOTE, gpio_isr_handler, (void *)GPIO_INPUT_IO_1_VOTE);
+    gpio_isr_handler_add(GPIO_INPUT_IO_2_SEND, gpio_isr_handler, (void *)GPIO_INPUT_IO_2_SEND);
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     //start gpio task
@@ -316,168 +302,6 @@ static void Accel_init()
 
     // Enable measurements
     writeRegister(ADXL343_REG_POWER_CTL, 0x08);
-}
-
-//Wifi funtions
-static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data)
-{
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-    {
-        esp_wifi_connect();
-    }
-    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
-    {
-        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
-        {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
-        }
-        else
-        {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-        }
-        ESP_LOGI(TAG, "connect to the AP fail");
-    }
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-void wifi_init_sta(void)
-{
-    s_wifi_event_group = xEventGroupCreate();
-
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
-
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
-            /* Setting a password implies station will connect to all security modes including WEP/WPA.
-             * However these modes are deprecated and not advisable to be used. Incase your Access point
-             * doesn't support WPA2, these mode can be enabled by commenting below line */
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-
-            .pmf_cfg = {
-                .capable = true,
-                .required = false},
-        },
-    };
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           portMAX_DELAY);
-
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-
-    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
-    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
-    vEventGroupDelete(s_wifi_event_group);
-}
-
-// Tasks ///////////////////////////////////////////////////////////////////////
-/* Server task, i.e. receiving task */
-
-// Send task -- sends payload | Start | myVote | myID | checkSum
-static void ir_send_task() // send myID and myVote
-{
-
-    printf("Sent payload\n");
-    char *data_out = (char *)malloc(len_out);
-    xSemaphoreTake(mux, portMAX_DELAY);
-    data_out[0] = start;
-    data_out[1] = (char)(myID + '0');
-    data_out[2] = xVal;
-    data_out[3] = yVal;
-    data_out[4] = zVal;
-    data_out[5] = genCheckSum(data_out, len_out - 1);
-    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
-
-    uart_write_bytes(UART_NUM_1, data_out, len_out);
-    xSemaphoreGive(mux);
-}
-
-static void send_vote()
-{
-    while (1)
-    {
-        if (!gpio_get_level(GPIO_INPUT_IO_2_SEND))
-        {
-            printf("Sending vote");
-            ir_send_task();
-        }
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-}
-// LED task to light LED based on vote
-void led_task()
-{
-    while (1)
-    {
-        if (rec_vote)
-        {
-            switch (myVote)
-            {
-            case '3': // red
-                gpio_set_level(GREENPIN, 0);
-                gpio_set_level(REDPIN, 1);
-                gpio_set_level(LED_PIN, 0);
-                // printf("Current state: %c\n",status);
-                break;
-            case '4': // Green
-                gpio_set_level(GREENPIN, 1);
-                gpio_set_level(REDPIN, 0);
-                gpio_set_level(LED_PIN, 0);
-                // printf("Current state: %c\n",status);
-                break;
-            case '5': // blue
-                gpio_set_level(GREENPIN, 0);
-                gpio_set_level(REDPIN, 0);
-                gpio_set_level(LED_PIN, 1);
-                // printf("Current state: %c\n",status);
-            }
-        }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
 }
 
 // Function to initiate i2c -- note the MSB declaration!
@@ -661,6 +485,28 @@ dataRate_t getDataRate(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Tasks ///////////////////////////////////////////////////////////////////////
+/* Server task, i.e. receiving task */
+
+// Send task -- sends payload | Start | myVote | myID | checkSum
+static void ir_send_task() // send myID and myVote
+{
+
+    printf("Sent payload\n");
+    char *data_out = (char *)malloc(len_out);
+    xSemaphoreTake(mux, portMAX_DELAY);
+    data_out[0] = start;
+    data_out[1] = (char)(myID + '0');
+    data_out[2] = xVal;
+    data_out[3] = yVal;
+    data_out[4] = zVal;
+    data_out[5] = genCheckSum(data_out, len_out - 1);
+    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
+
+    uart_write_bytes(UART_NUM_1, data_out, len_out);
+    xSemaphoreGive(mux);
+}
+
 // function to get acceleration
 void getAccel(float *xp, float *yp, float *zp)
 {
@@ -707,22 +553,29 @@ static void test_adxl343()
     }
 }
 
+static void send_key()
+{
+    while (1)
+    {
+        if (!gpio_get_level(GPIO_INPUT_IO_2_SEND))
+        {
+            printf("Sending vote");
+            ir_send_task();
+            led_task();
+        }
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+}
+// LED task to light LED based on vote
+void led_task()
+{
+    gpio_set_level(LED_PIN, 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gpio_set_level(LED_PIN, 1);
+}
+
 void app_main()
 {
-    //Wifi inits
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-
     // Mutex for current values when sending
     mux = xSemaphoreCreateMutex();
 
@@ -743,7 +596,5 @@ void app_main()
 
     // Create Task to print out values received
     xTaskCreate(test_adxl343, "test_adxl343", 4096, NULL, 5, NULL);
-    xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, 3, NULL);
-    xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, 5, NULL);
-    xTaskCreate(send_vote, "send_vote", 1024 * 2, NULL, 5, NULL);
+    xTaskCreate(send_key, "send_key", 1024 * 2, NULL, 5, NULL);
 }
