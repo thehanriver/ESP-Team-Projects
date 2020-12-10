@@ -149,7 +149,7 @@ server.on('message', async function (message, remote) {
 		}
 		client.close();
 	} catch (err) {
-		console.log(err.buffer);
+		console.log(err.message);
 	}
 	
 	var dateTime = getDateTime();
@@ -162,7 +162,7 @@ server.on('message', async function (message, remote) {
 		filename = filename.split(' ').join('_');
 		exec("raspistill -n -v -o " + filename, (error, stdout, stderr) => {
 			if (error) {
-				console.log(`error: ${error.buffer}`);
+				console.log(`error: ${error.message}`);
 				return;
 			}
 			if (stderr) {
@@ -188,7 +188,7 @@ server.on('message', async function (message, remote) {
 		client.close();
 
 	} catch (err) {
-		console.log(err.buffer);
+		console.log(err.message);
 	} 
 
 	// end log stuff
