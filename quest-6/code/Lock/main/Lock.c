@@ -81,8 +81,8 @@
 #define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
 #define PORT 1234
 
-#define SERVO_MIN_PULSEWIDTH 600  //Minimum pulse width in microsecond
-#define SERVO_MAX_PULSEWIDTH 2600 //Maximum pulse width in microsecond
+#define SERVO_MIN_PULSEWIDTH 700  //Minimum pulse width in microsecond
+#define SERVO_MAX_PULSEWIDTH 2100 //Maximum pulse width in microsecond
 
 // 14-Segment Display
 #define SLAVE_ADDR 0x70              // alphanumeric address
@@ -612,7 +612,7 @@ void mcpwm_example_servo_control()
 {
     uint32_t count;
 
-    for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 100)
+    for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 50)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -620,7 +620,7 @@ void mcpwm_example_servo_control()
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
-    for (count = SERVO_MAX_PULSEWIDTH; count > SERVO_MIN_PULSEWIDTH; count -= 100)
+    for (count = SERVO_MAX_PULSEWIDTH; count > SERVO_MIN_PULSEWIDTH; count -= 50)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -685,11 +685,11 @@ static void udp_client_fn(int key, int x, int y, int z)
         if (open_servo == 1)
         {
             printf("password correct!!\n");
-            mcpwm_example_servo_control();
             displaybuffer[0] = ASCII_to_Alphanum('O'); //
             displaybuffer[1] = ASCII_to_Alphanum('P'); //
             displaybuffer[2] = ASCII_to_Alphanum('E'); //
             displaybuffer[3] = ASCII_to_Alphanum('N'); //
+            mcpwm_example_servo_control();
         }
         if (open_servo == 0)
         {
@@ -707,7 +707,7 @@ static void udp_client_fn(int key, int x, int y, int z)
             displaybuffer[2] = ASCII_to_Alphanum('T'); //
             displaybuffer[3] = ASCII_to_Alphanum('.'); //
         }
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 
     displaybuffer[0] = 0b0000000000000000; // 0
