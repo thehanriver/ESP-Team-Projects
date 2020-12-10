@@ -148,6 +148,8 @@ server.on('message', async function (message, remote) {
 	}
 	
 	var dateTime = getDateTime();
+	console.log('event is ');
+	console.log(event);
 
 	if (event==0){	// take a picture if the password is wrong into the images directory
 		exec("raspistill -n -v -o " + images_dir + dateTime + ".jpg", (error, stdout, stderr) => {
