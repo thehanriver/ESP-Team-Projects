@@ -631,7 +631,7 @@ static int convert(int val)
     val = -3;
   else if (val < -3 && val > -6)
     val = -6;
-  else
+  else if (val < -6)
     val = -9;
 
   return val;
@@ -650,7 +650,7 @@ static void test_adxl343()
     Yint = convert((int)yVal);
     Zint = convert((int)zVal);
 
-    printf("X: %d, Y: %d, Z: %d", Xint, Yint, Zint);
+    printf("X: %d, Y: %d, Z: %d \n", Xint, Yint, Zint);
     vTaskDelay(500 / portTICK_RATE_MS);
   }
 }
