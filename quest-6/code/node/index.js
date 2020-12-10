@@ -155,7 +155,7 @@ server.on('message', async function (message, remote) {
 	if (event==0){	// take a picture if the password is wrong into the images directory	
 		var filename = images_dir + dateTime + ".jpg";
 		filename = filename.split(' ').join('_');
-		exec("raspistill -n -v -o " + filename, (error, stdout, stderr) => {
+		exec("raspistill -n -v -o " + filename, {stdio : 'pipe' }, (error, stdout, stderr) => {
 			if (error) {
 				console.log(`error: ${error.message}`);
 				return;
