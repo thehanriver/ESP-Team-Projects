@@ -130,9 +130,14 @@ server.on('message', async function (message, remote) {
 			event = 2;
 		}
 		else {	// check password
-			var pwd = await collection.findOne(usersQuery) 	// query existing password into pwd variable.
+			var pwd = await collection.findOne(usersQuery); 	// query existing password into pwd variable.
 			console.log('checking against existing password');
 			console.log(pwd);
+			if (pwd == null)	// no password has been set for this user
+			{
+				console.log('No password set for user ' + userID.toString);
+				event = 0;
+			}
 			if(isPwd(usersObj,pwd)) {
 				console.log("Password is correct.");
 				event = 1;
