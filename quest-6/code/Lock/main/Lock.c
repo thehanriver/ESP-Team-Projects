@@ -44,8 +44,8 @@
 #include "soc/mcpwm_periph.h"
 
 // LED Output pins definitions
-#define LEDPIN 14
-#define PASSWORDPIN 15
+#define LEDPIN 32
+#define PASSWORDPIN 14
 
 // RMT definitions
 #define RMT_TX_CHANNEL 1                                 // RMT channel for transmitter
@@ -56,11 +56,11 @@
 
 // UART definitions
 #define UART_TX_GPIO_NUM 26 // A0
-#define UART_RX_GPIO_NUM 36 // A4
+#define UART_RX_GPIO_NUM 4  // A5
 #define BUF_SIZE (1024)
 
 // Hardware interrupt definitions
-#define GPIO_BUTTON 4 //Button pin A5 //Button for changing vote
+#define GPIO_BUTTON 36 //Button pin A4 //Button for changing vote
 #define GPIO_INPUT_PIN_SEL 1ULL << GPIO_BUTTON
 
 //Wifi defines
@@ -89,13 +89,15 @@ static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 
 static const char *TAG = "Quest 6";
+static const char *payload = "Default payload";
 
 static int timer;
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
-int set_password;
-int open = 0;
+static int set_password = 0;
+int open_servo = 0;
+int len_out = 6;
 
 // Mutex (for resources), and Queues (for button)
 SemaphoreHandle_t mux = NULL;
@@ -110,8 +112,6 @@ static void IRAM_ATTR gpio_isr_handler(void *arg)
     uint32_t gpio_num = (uint32_t)arg;
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
-static void udp_server_task(void *pvParameters);
-static void udp_client_fn(int fromID, int targetID, int signal);
 
 // Utility  Functions //////////////////////////////////////////////////////////
 
@@ -194,34 +194,50 @@ static void led_init()
 {
     gpio_pad_select_gpio(LEDPIN);
     gpio_pad_select_gpio(PASSWORDPIN);
+    gpio_pad_select_gpio(GPIO_BUTTON);
 
     gpio_set_direction(LEDPIN, GPIO_MODE_OUTPUT);
     gpio_set_direction(PASSWORDPIN, GPIO_MODE_OUTPUT);
-
-    gpio_set_direction(GPIO_INPUT_IO_2_SEND, GPIO_MODE_INPUT);
+    gpio_set_direction(GPIO_BUTTON, GPIO_MODE_INPUT);
 }
 
 // Button interrupt init
-static void button_init()
+// static void button_init()
+// {
+//     gpio_config_t io_conf;
+//     //interrupt of rising edge
+//     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+//     //bit mask of the pins, use GPIO4 here
+//     io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+//     //set as input mode
+//     io_conf.mode = GPIO_MODE_INPUT;
+//     //enable pull-up mode
+//     io_conf.pull_up_en = 1;
+//     gpio_config(&io_conf);
+//     gpio_intr_enable(GPIO_BUTTON);
+//     //install gpio isr service
+//     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
+//     //hook isr handler for specific gpio pin
+//     gpio_isr_handler_add(GPIO_BUTTON, gpio_isr_handler, (void *)GPIO_BUTTON);
+//     //create a queue to handle gpio event from isr
+//     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+//     //start gpio task
+// }
+
+static void mcpwm_task_init()
 {
-    gpio_config_t io_conf;
-    //interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4 here
-    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
-    //set as input mode
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
-    gpio_config(&io_conf);
-    gpio_intr_enable(GPIO_BUTTON);
-    //install gpio isr service
-    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
-    //hook isr handler for specific gpio pin
-    gpio_isr_handler_add(GPIO_BUTTON, gpio_isr_handler, (void *)GPIO_BUTTON);
-    //create a queue to handle gpio event from isr
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    //start gpio task
+    //1. mcpwm gpio initialization
+    mcpwm_example_gpio_initialize();
+
+    //2. initial mcpwm configuration
+    printf("Configuring Initial Parameters of mcpwm......\n");
+    mcpwm_config_t pwm_config;
+    pwm_config.frequency = 50; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+    pwm_config.cmpr_a = 0;     //duty cycle of PWMxA = 0
+    pwm_config.cmpr_b = 0;     //duty cycle of PWMxb = 0
+    pwm_config.counter_mode = MCPWM_UP_COUNTER;
+    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
 }
 
 //Wifi funtions
@@ -321,6 +337,26 @@ void wifi_init_sta(void)
 }
 
 // Tasks ///////////////////////////////////////////////////////////////////////
+
+void mcpwm_example_servo_control()
+{
+    uint32_t count;
+
+    for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 200)
+    {
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    for (count = SERVO_MAX_PULSEWIDTH; count < SERVO_MIN_PULSEWIDTH; count -= 200)
+    {
+        mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+}
+
 /* Client function, i.e. sending task */
 static void udp_client_fn(int key, int x, int y, int z)
 {
@@ -356,7 +392,7 @@ static void udp_client_fn(int key, int x, int y, int z)
         {
             char buffer2[128];
             int status;
-            status = snprintf(payload, BUF_SIZE, "%d,%d,%d,%d,%d", set_password, key, x, y, z);
+            status = snprintf(buffer2, BUF_SIZE, "%d,%d,%d,%d,%d", set_password, key, x, y, z);
             payload = buffer2;
 
             if (timer > 5) //Accelorometer takes some time to start giving data
@@ -385,7 +421,11 @@ static void udp_client_fn(int key, int x, int y, int z)
                     rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
                     ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
                     ESP_LOGI(TAG, "%s", rx_buffer);
-                    toggle = atoi(rx_buffer);
+                    open_servo = atoi(rx_buffer);
+                    if (open_servo == 1)
+                    {
+                        mcpwm_example_servo_control();
+                    }
                     if (strncmp(rx_buffer, "OK: ", 4) == 0)
                     {
                         ESP_LOGI(TAG, "Received expected message, reconnecting");
@@ -419,21 +459,23 @@ void ir_receive_task()
         {
             if (data_in[0] == start)
             {
+                printf("Recieved a signal");
                 if (checkCheckSum(data_in, len_out))
                 {
                     ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
                     printf("Received data_in from Key: %c\n", data_in[1]);
                     gpio_set_level(LEDPIN, 1);
                     vTaskDelay(200 / portTICK_PERIOD_MS);
-                    int key = (int)(data_in[1] - '0');   // convert char number to int number
-                    int x_val = (int)(data_in[2] - '0'); // convert char number to int number
-                    int y_val = (int)(data_in[3] - '0');
-                    int z_val = (int)(data_in[4] - '0');
+                    int key = (int)('j' - data_in[1]);   // convert char number to int number
+                    int x_val = (int)('j' - data_in[2]); // convert char number to int number
+                    int y_val = (int)('j' - data_in[3]);
+                    int z_val = (int)('j' - data_in[4]);
 
+                    gpio_set_level(LEDPIN, 1);
                     udp_client_fn(key, x_val, y_val, z_val);
-                    vTaskDelay(200 / portTICK_PERIOD_MS);
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
                     gpio_set_level(LEDPIN, 0);
-                    vTaskDelay(1000 / portTICK_PERIOD_MS);
+                    vTaskDelay(200 / portTICK_PERIOD_MS);
                 }
             }
         }
@@ -442,61 +484,38 @@ void ir_receive_task()
     free(data_in);
 }
 
-void set_password()
+// void set_password_fn()
+// {
+//     uint32_t io_num;
+//     while (1)
+//     {
+//         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+//         {
+//             set_password = 1;
+//             gpio_set_level(PASSWORDPIN, 1);
+//             printf("Button pressed.\n");
+//             // ir_send_task();
+//             vTaskDelay(3000 / portTICK_PERIOD_MS);
+//             set_password = 0;
+//             gpio_set_level(PASSWORDPIN, 0);
+//         }
+//         vTaskDelay(500 / portTICK_PERIOD_MS);
+//     }
+// }
+
+static void button_press()
 {
-    uint32_t io_num;
     while (1)
     {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+        if (gpio_get_level(GPIO_BUTTON))
         {
-            xSemaphoreTake(mux, portMAX_DELAY);
-            set_password = 1;
             gpio_set_level(PASSWORDPIN, 1);
-
-            xSemaphoreGive(mux);
-            printf("Button pressed.\n");
-            // ir_send_task();
+            set_password = 1;
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
         set_password = 0;
         gpio_set_level(PASSWORDPIN, 0);
-    }
-}
-
-void mcpwm_example_servo_control(void *arg)
-{
-    uint32_t count;
-    //1. mcpwm gpio initialization
-    mcpwm_example_gpio_initialize();
-
-    //2. initial mcpwm configuration
-    printf("Configuring Initial Parameters of mcpwm......\n");
-    mcpwm_config_t pwm_config;
-    pwm_config.frequency = 50; //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
-    pwm_config.cmpr_a = 0;     //duty cycle of PWMxA = 0
-    pwm_config.cmpr_b = 0;     //duty cycle of PWMxb = 0
-    pwm_config.counter_mode = MCPWM_UP_COUNTER;
-    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
-    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
-    while (1)
-    {
-        if (open)
-        {
-            for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 200)
-            {
-                mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
-                vTaskDelay(50 / portTICK_PERIOD_MS);
-            }
-
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-            for (count = SERVO_MAX_PULSEWIDTH; count < SERVO_MIN_PULSEWIDTH; count -= 200)
-            {
-                mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
-                vTaskDelay(50 / portTICK_PERIOD_MS);
-            }
-        }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
@@ -527,10 +546,10 @@ void app_main()
     uart_init();
     led_init();
     //alarm_init();
-    button_init();
+    // button_init();
+    mcpwm_task_init();
 
     // Create Task to print out values received
     xTaskCreate(ir_receive_task, "uart_rx_task", 1024 * 4, NULL, 5, NULL);
-    xTaskCreate(set_password, "set_password", 1024 * 2, NULL, 5, NULL);
-    xTaskCreate(mcpwm_example_servo_control, "mcpwm_example_servo_control", 4096, NULL, 5, NULL);
+    xTaskCreate(button_press, "button_press", 1024 * 2, NULL, 5, NULL);
 }
