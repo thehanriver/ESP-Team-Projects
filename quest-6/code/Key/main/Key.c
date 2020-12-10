@@ -79,7 +79,7 @@
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
 
 // Default ID/color
-#define ID 3
+#define ID 1
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
@@ -617,25 +617,25 @@ void getAccel(float *xp, float *yp, float *zp)
   //printf("X: %.2f \t Y: %.2f \t Z: %.2f\n", *xp, *yp, *zp);
 }
 
-static int convert(int val)
-{
-  if (val > 9)
-    val = 9;
-  else if (val < 9 && val > 6)
-    val = 6;
-  else if (val < 6 && val > 3)
-    val = 3;
-  else if (val < 3 && val > 0)
-    val = 0;
-  else if (val < 0 && val > -3)
-    val = -3;
-  else if (val < -3 && val > -6)
-    val = -6;
-  else if (val < -6)
-    val = -9;
+// static int convert(int val)
+// {
+//   if (val > 9)
+//     val = 9;
+//   else if (val < 9 && val > 6)
+//     val = 6;
+//   else if (val < 6 && val > 3)
+//     val = 3;
+//   else if (val < 3 && val > 0)
+//     val = 0;
+//   else if (val < 0 && val > -3)
+//     val = -3;
+//   else if (val < -3 && val > -6)
+//     val = -6;
+//   else if (val < -6)
+//     val = -9;
 
-  return val;
-}
+//   return val;
+// }
 
 // Task to continuously poll acceleration and calculate roll and pitch
 static void test_adxl343()
@@ -646,9 +646,9 @@ static void test_adxl343()
     float xVal, yVal, zVal;
     getAccel(&xVal, &yVal, &zVal);
     // calcRP(xVal, yVal, zVal);
-    Xint = convert((int)xVal);
-    Yint = convert((int)yVal);
-    Zint = convert((int)zVal);
+    Xint = (int)xVal;
+    Yint = (int)yVal;
+    Zint = (int)zVal;
 
     printf("X: %d, Y: %d, Z: %d \n", Xint, Yint, Zint);
     vTaskDelay(500 / portTICK_RATE_MS);
