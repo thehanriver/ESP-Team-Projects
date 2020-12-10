@@ -27,6 +27,7 @@
     	</button>
     </div> -->
     <div> <b>Log</b></div>
+    <div>Showing User: <span id="filtering">(retreiving)</span></div>
 
     <form id="myform" action="javascript:;" onsubmit="submitForm(this)">
       <label for="userid">User ID</label>
@@ -52,6 +53,10 @@
 
       var logContents;
       var updateInterval = 1000;
+
+      var filterForUserID = -1;
+
+
       function updateLog() {
         $.ajax({url: "/log", success: function(result){
           logContents = "";
@@ -72,7 +77,14 @@
 
           document.getElementById('log').innerHTML=logContents;
 
-
+          if (filterForUserID == -1)
+          {
+            $('#filtering').html( 'all' )
+          }
+          else{
+            $('#filtering').html( filterForUserID )
+          }
+        
         }});
       }
 
@@ -81,8 +93,9 @@
 
 
       function submitForm() {
+        filterForUserID = document.getElementById("userid").value;
         document.getElementById('log').innerHTML = "";
-        $.post('/query',{userID: document.getElementById("userid").value},function(data,status){
+        $.post('/query',{userID: filterForUserID},function(data,status){
             console.log(status);
           });
       }
