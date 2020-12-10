@@ -89,8 +89,15 @@ Console of node server:
 
 
 ## Modules, Tools, Source Used Including Attribution
+[IR code](https://github.com/BU-EC444/code-examples/tree/master/traffic-light-ir-example)
+[MCPWM code](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/mcpwm/mcpwm_servo_control)
+[I2C display](https://github.com/BU-EC444/code-examples/tree/master/i2c-display)
+[Accelerometer code](https://github.com/BU-EC444/code-examples/tree/master/i2c-accel)
+[UDP client code](https://github.com/espressif/esp-idf/tree/master/examples/protocols/sockets/udp_client)
+
 
 ## References
+- [Camera operation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md)
 - [Camera setup instructions](https://www.raspberrypi.org/documentation/configuration/camera.md)
 
 -----
