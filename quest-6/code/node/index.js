@@ -135,7 +135,7 @@ server.on('message', async function (message, remote) {
 			console.log(pwd);
 			if (pwd == null)	// no password has been set for this user
 			{
-				console.log('No password set for user ' + userID.toString);
+				console.log('No password set for user ' + userID.toString());
 				event = 0;
 			}
 			if(isPwd(usersObj,pwd)) {
