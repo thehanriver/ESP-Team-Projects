@@ -51,7 +51,7 @@ We used raspberry pi camera module to take picture when bad password.
 
 The Lock: There is an IR reciever and recieve task which gets data from IR. When it recieves data, it lights the green LED and sends the data over UDP packet to the node server on raspberry pi. It also has a button on it which can be used to indicate if we are checking or setting the password. If the button was pressed before we recieved the data, this password is stored in mongoDB for future use. Based on the response, it can either open the look if the password is correct and display "OPEN" on alphanumeric. If it is wrong password, then it says "NOPE". If setting the password and successful, it says "SET". If unlocked the servo is turned and goes back to lock.
 
-The Key: There is an IR transmitter, accelorometer, and a button with an H-Bridge to increase current through the IR LED. When the button is pressed, it sends the current X,Y,Z acceleration values along with the key ID. The Key ESP doesn't wait for a response back.
+The Key: There is an IR transmitter, accelorometer, and a button with an H-Bridge to increase current through the IR LED. When the button is pressed, it sends the current X,Y,Z acceleration values along with the key ID. The Key ESP doesn't wait for a response back. An LED lights up when it is sent.
 
 So we used vivipi.ddns.net:4444 to show logs of who unlocked, locked, or set password. Index.html retrieves the latest 50 events from the mongoDB collection. It dispays it on the page with the most recent on top and has a filter for User IDs. It shows which user it is currently filtering for too. 
 
