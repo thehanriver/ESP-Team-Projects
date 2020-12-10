@@ -5,7 +5,7 @@
    UART Transmitter   -- pin 25 -- A1
    UART Receiver      -- pin 34 wrong // 36 right-- A2 // A4
 
-   Hardware interrupt/Button -- pin 4 -- A5 
+   Hardware interrupt/Button -- pin 4 -- A5
    ID Indicator       -- pin 13 -- Onboard LED
 
    Red LED            -- pin 15
@@ -544,6 +544,7 @@ static void send_task()
   data_out[3] = (char)(Yint + '0');
   data_out[4] = (char)(Zint + '0');
   data_out[5] = genCheckSum(data_out, len_out - 1);
+  printf("data: %c\n",data_out);
   ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
 
   uart_write_bytes(UART_NUM_1, data_out, len_out);
@@ -628,6 +629,22 @@ static void test_adxl343()
     Xint = (int)xVal;
     Yint = (int)yVal;
     Zint = (int)zVal;
+    if( Xint > 9)
+      Xint = 9;
+    else if ( Xint < -9)
+      Xint = -9;
+
+    if( Yint > 9)
+      Yint = 9;
+    else if ( Yint < -9)
+      Yint = -9;
+
+    if( Zint > 9)
+      Zint = 9;
+    else if ( Zint < -9)
+      Zint = -9;
+
+    printf("X: %d, Y: %d, Z: %d", Xint, Yint , Zint);
     vTaskDelay(500 / portTICK_RATE_MS);
   }
 }
