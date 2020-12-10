@@ -72,7 +72,7 @@ We chose not to give indication of picture taken on the website because the owne
 
 ## Sketches and Photos
 Log from website:
-<center>![log](images/log.png) </center>
+![log](images/log.png)
 
 Log from website filtered for User 1:
 <center>![filter](images/filter.png) </center>
