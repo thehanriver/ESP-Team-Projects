@@ -629,20 +629,51 @@ static void test_adxl343()
     Xint = (int)xVal;
     Yint = (int)yVal;
     Zint = (int)zVal;
+
     if( Xint > 9)
       Xint = 9;
-    else if ( Xint < -9)
+    else if( Xint < 9 && Xint > 6)
+      Xint = 6;
+    else if ( Xint < 6 && Xint > 3 )
+      Xint = 3;
+    else if( Xint < 3 && Xint > 0 )
+      Xint = 0;
+    else if ( Xint <0 && Xint > -3 )
+      Xint = -3;
+    else if ( Xint <-3 && Xint > -6)
+      Xint = -6;
+    else
       Xint = -9;
 
-    if( Yint > 9)
-      Yint = 9;
-    else if ( Yint < -9)
-      Yint = -9;
+      if( Yint > 9)
+        Yint = 9;
+      else if( Yint < 9 && Yint > 6)
+        Yint = 6;
+      else if ( Yint < 6 && Yint > 3 )
+        Yint = 3;
+      else if( Yint < 3 && Yint > 0 )
+        Yint = 0;
+      else if ( Yint <0 && Yint > -3 )
+        Yint = -3;
+      else if ( Yint <-3 && Yint > -6)
+        Yint = -6;
+      else
+        Yint = -9;
 
-    if( Zint > 9)
-      Zint = 9;
-    else if ( Zint < -9)
-      Zint = -9;
+        if( Zint > 9)
+          Zint = 9;
+        else if( Zint < 9 && Zint > 6)
+          Zint = 6;
+        else if ( Zint < 6 && Zint > 3 )
+          Zint = 3;
+        else if( Zint < 3 && Zint > 0 )
+          Zint = 0;
+        else if ( Zint <0 && Zint > -3 )
+          Zint = -3;
+        else if ( Zint <-3 && Zint > -6)
+          Zint = -6;
+        else
+          Zint = -9;
 
     printf("X: %d, Y: %d, Z: %d", Xint, Yint , Zint);
     vTaskDelay(500 / portTICK_RATE_MS);
