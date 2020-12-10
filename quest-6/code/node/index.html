@@ -113,6 +113,7 @@
       //     });
       //   });
       function clearFilter() {
+        filterForUserID = -1;
         document.getElementById('log').innerHTML = "";
         $.post('/query',{userID: -1},function(data,status){
 					console.log(status);
