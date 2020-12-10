@@ -82,6 +82,7 @@ We chose not to give indication of picture taken on the website because the owne
 ## Modules, Tools, Source Used Including Attribution
 
 ## References
+- [Camera setup instructions](https://www.raspberrypi.org/documentation/configuration/camera.md)
 
 -----
 
