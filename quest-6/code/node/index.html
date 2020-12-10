@@ -33,13 +33,14 @@
       <input type="text" name="userid" id="userid" required>
 
       <button type="submit" id="submit">Filter</button>
+      
+      <button type="reset" id="clear" onClick = clearFilter()>Clear</button>
       <button type="button"
   			  id="webCam"
   			  onclick=" window.location.href='http://vivpi.ddns.net:3434/';"
   			  style=" height:50px; width:200px ">
     		Webcam
     	</button>
-      <button type="reset" id="clear" onClick = clearFilter()>Clear</button>
     </form>
     <div id = 'log'></div>
 
@@ -57,7 +58,7 @@
           var eventString;
           jQuery.each(result, function(i, val) {
             if (val.event===0){
-              eventString = ' denied access';
+              eventString = ' denied access ';
             }
             else if (val.event===1){
               eventString = ' granted access ';
