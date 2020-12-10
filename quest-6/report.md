@@ -72,12 +72,15 @@ We chose not to give indication of picture taken on the website because the owne
 
 ## Sketches and Photos
 Log from website:
+
 ![log](images/log.png)
 
 Log from website filtered for User 1:
+
 ![filter](images/filter.png)
 
 Console of node server:
+
 ![console](images/console.png)
 
 
