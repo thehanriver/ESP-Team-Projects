@@ -101,7 +101,7 @@ typedef struct
 
 // System tags
 static const char *TAG_SYSTEM = "system"; // For debug logs
-
+static void led_task();
 // Button interrupt handler -- add to queue
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {
@@ -117,15 +117,15 @@ void IRAM_ATTR timer_group0_isr(void *para)
   timer_event_t evt;
   evt.flag = 1;
 
-  // blue is shorter
-  if (myColor == 'G')
-  {
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE);
-  }
-  else
-  {
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
-  }
+  // // blue is shorter
+  // if (myColor == 'G')
+  // {
+  //   timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE);
+  // }
+  // else
+  // {
+  //   timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
+  // }
 
   // Clear the interrupt, Timer 0 in group 0
   TIMERG0.int_clr_timers.t0 = 1;
@@ -544,7 +544,7 @@ static void send_task()
   data_out[3] = (char)(Yint + '0');
   data_out[4] = (char)(Zint + '0');
   data_out[5] = genCheckSum(data_out, len_out - 1);
-  printf("data: %c\n",data_out);
+  printf("data: %s\n",data_out);
   ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
 
   uart_write_bytes(UART_NUM_1, data_out, len_out);
