@@ -6,4 +6,4 @@ The Lock/ dir is the project directory that should be built and flashed onto the
 
 node/ contains the node.js code. Inside of it, run 'node index.js' to start the node server. Then navigate to vivpi.ddns.net:4444 to view the website.
 
-Code attribution is included in report.md
+Code attribution is included in ../report.md
