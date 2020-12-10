@@ -149,19 +149,19 @@ server.on('message', async function (message, remote) {
 	
 	var dateTime = getDateTime();
 
-	// if (event==0){	// take a picture if the password is wrong into the images directory
-	// 	exec("raspistill -n -v -o " + images_dir + dateTime + ".jpg", (error, stdout, stderr) => {
-	// 		if (error) {
-	// 			console.log(`error: ${error.buffer}`);
-	// 			return;
-	// 		}
-	// 		if (stderr) {
-	// 			console.log(`stderr: ${stderr}`);
-	// 			return;
-	// 		}
-	// 		console.log(`stdout: ${stdout}`);
-	// 	});
-	// }
+	if (event==0){	// take a picture if the password is wrong into the images directory
+		exec("raspistill -n -v -o " + images_dir + dateTime + ".jpg", (error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.buffer}`);
+				return;
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`);
+				return;
+			}
+			console.log(`stdout: ${stdout}`);
+		});
+	}
 
 	// end password stuff
 
