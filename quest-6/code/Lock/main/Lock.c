@@ -78,7 +78,7 @@
 #define TEST_WITH_RELOAD 1 // Testing will be done with auto reload
 
 //UDP
-#define HOST_IP_ADDR "192.168.1.139" //"192.168.1.139"
+#define HOST_IP_ADDR "192.168.1.111" //"192.168.1.139"
 #define PORT 1234
 
 #define SERVO_MIN_PULSEWIDTH 600  //Minimum pulse width in microsecond
@@ -91,7 +91,7 @@ static int s_retry_num = 0;
 static const char *TAG = "Quest 6";
 static const char *payload = "Default payload";
 
-static int timer;
+// static int timer;
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B;
@@ -342,7 +342,7 @@ void mcpwm_example_servo_control()
 {
     uint32_t count;
 
-    for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 200)
+    for (count = SERVO_MIN_PULSEWIDTH; count < SERVO_MAX_PULSEWIDTH; count += 100)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -350,7 +350,7 @@ void mcpwm_example_servo_control()
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
-    for (count = SERVO_MAX_PULSEWIDTH; count < SERVO_MIN_PULSEWIDTH; count -= 200)
+    for (count = SERVO_MAX_PULSEWIDTH; count > SERVO_MIN_PULSEWIDTH; count -= 100)
     {
         mcpwm_set_duty_in_us(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, count);
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -362,89 +362,72 @@ static void udp_client_fn(int key, int x, int y, int z)
 {
     char rx_buffer[128];
     char host_ip[] = HOST_IP_ADDR;
-    int addr_family = 0;
-    int ip_protocol = 0;
 
-    while (1)
+    char addr_str[128];
+    int addr_family;
+    int ip_protocol;
+
+    struct sockaddr_in dest_addr;
+    dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(PORT);
+    addr_family = AF_INET;
+    ip_protocol = IPPROTO_IP;
+    inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
+
+    int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+    if (sock < 0)
     {
+        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+    }
+    ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
 
-        char addr_str[128];
-        int addr_family;
-        int ip_protocol;
+    char buffer2[128];
+    snprintf(buffer2, BUF_SIZE, "%d,%d,%d,%d,%d", set_password, key, x, y, z);
+    payload = buffer2;
+    printf("set_password = %d key = %d, x = %d, y = %d, z = %d \n", set_password, key, x, y, z);
 
-        struct sockaddr_in dest_addr;
-        dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port = htons(PORT);
-        addr_family = AF_INET;
-        ip_protocol = IPPROTO_IP;
-        inet_ntoa_r(dest_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
+    int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if (err < 0)
+    {
+        ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+    }
+    ESP_LOGI(TAG, "Message sent");
 
-        int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
-        if (sock < 0)
+    struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
+    socklen_t socklen = sizeof(source_addr);
+    int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
+
+    // Error occurred during receiving
+    if (len < 0)
+    {
+        ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
+    }
+    // Data received
+    else
+    {
+        rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
+        ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
+        ESP_LOGI(TAG, "%s", rx_buffer);
+        open_servo = atoi(rx_buffer);
+        if (open_servo == 1)
         {
-            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-            break;
+            printf("password correct!!\n");
+            mcpwm_example_servo_control();
         }
-        ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
-
-        while (1)
+        if (open_servo == 0)
         {
-            char buffer2[128];
-            int status;
-            status = snprintf(buffer2, BUF_SIZE, "%d,%d,%d,%d,%d", set_password, key, x, y, z);
-            payload = buffer2;
-
-            if (timer > 5) //Accelorometer takes some time to start giving data
-            {
-                int err = sendto(sock, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-                if (err < 0)
-                {
-                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-                    break;
-                }
-                ESP_LOGI(TAG, "Message sent");
-
-                struct sockaddr_in source_addr; // Large enough for both IPv4 or IPv6
-                socklen_t socklen = sizeof(source_addr);
-                int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
-
-                // Error occurred during receiving
-                if (len < 0)
-                {
-                    ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
-                    break;
-                }
-                // Data received
-                else
-                {
-                    rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                    ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
-                    ESP_LOGI(TAG, "%s", rx_buffer);
-                    open_servo = atoi(rx_buffer);
-                    if (open_servo == 1)
-                    {
-                        mcpwm_example_servo_control();
-                    }
-                    if (strncmp(rx_buffer, "OK: ", 4) == 0)
-                    {
-                        ESP_LOGI(TAG, "Received expected message, reconnecting");
-                        break;
-                    }
-                }
-            }
-
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            printf("Wrong password!!\n");
         }
-
-        if (sock != -1)
+        if (open_servo == 2)
         {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
-            shutdown(sock, 0);
-            close(sock);
+            printf("Password Set!!!\n");
         }
     }
-    vTaskDelete(NULL);
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    shutdown(sock, 0);
+    close(sock);
 }
 
 // Receives task -- looks for Start byte then stores received values
@@ -466,10 +449,12 @@ void ir_receive_task()
                     printf("Received data_in from Key: %c\n", data_in[1]);
                     gpio_set_level(LEDPIN, 1);
                     vTaskDelay(200 / portTICK_PERIOD_MS);
-                    int key = (int)('j' - data_in[1]);   // convert char number to int number
-                    int x_val = (int)('j' - data_in[2]); // convert char number to int number
-                    int y_val = (int)('j' - data_in[3]);
-                    int z_val = (int)('j' - data_in[4]);
+                    int key = (int)(data_in[1] - 'j');   // convert char number to int number
+                    int x_val = (int)(data_in[2] - 'j'); // convert char number to int number
+                    int y_val = (int)(data_in[3] - 'j');
+                    int z_val = (int)(data_in[4] - 'j');
+
+                    printf("key = %d, x = %d, y = %d, z = %d \n", key, x_val, y_val, z_val);
 
                     gpio_set_level(LEDPIN, 1);
                     udp_client_fn(key, x_val, y_val, z_val);
