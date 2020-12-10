@@ -75,7 +75,7 @@ Log from website:
 ![log](images/log.png)
 
 Log from website filtered for User 1:
-<center>![filter](images/filter.png) </center>
+![filter](images/filter.png)
 
 
 ## Supporting Artifacts
