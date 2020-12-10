@@ -130,10 +130,15 @@ server.on('message', async function (message, remote) {
 			event = 2;
 		}
 		else {	// check password
-			var pwd = await collection.findOne(usersQuery) 	// query existing password into pwd variable.
+			var pwd = await collection.findOne(usersQuery); 	// query existing password into pwd variable.
 			console.log('checking against existing password');
 			console.log(pwd);
-			if(isPwd(usersObj,pwd)) {
+			if (pwd == null)	// no password has been set for this user
+			{
+				console.log('No password set for user ' + userID.toString());
+				event = 0;
+			}
+			else if (isPwd(usersObj,pwd)) {
 				console.log("Password is correct.");
 				event = 1;
 			}
@@ -144,24 +149,29 @@ server.on('message', async function (message, remote) {
 		}
 		client.close();
 	} catch (err) {
-		console.log(err.buffer);
+		console.log(err.message);
 	}
 	
 	var dateTime = getDateTime();
+	console.log('event is ');
+	console.log(event);
 
-	// if (event==0){	// take a picture if the password is wrong into the images directory
-	// 	exec("raspistill -n -v -o " + images_dir + dateTime + ".jpg", (error, stdout, stderr) => {
-	// 		if (error) {
-	// 			console.log(`error: ${error.buffer}`);
-	// 			return;
-	// 		}
-	// 		if (stderr) {
-	// 			console.log(`stderr: ${stderr}`);
-	// 			return;
-	// 		}
-	// 		console.log(`stdout: ${stdout}`);
-	// 	});
-	// }
+	if (event==0){	// take a picture if the password is wrong into the images directory
+		console.log('taking pic');
+		var filename = images_dir + dateTime + ".jpg";
+		filename = filename.split(' ').join('_');
+		exec("raspistill -n -v -o " + filename, (error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.message}`);
+				return;
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`);
+				return;
+			}
+			console.log(`stdout: ${stdout}`);
+		});
+	}
 
 	// end password stuff
 
@@ -178,7 +188,7 @@ server.on('message', async function (message, remote) {
 		client.close();
 
 	} catch (err) {
-		console.log(err.buffer);
+		console.log(err.message);
 	} 
 
 	// end log stuff
