@@ -166,7 +166,7 @@ server.on('message', async function (message, remote) {
 			}
 			console.log(`stdout: ${stdout}`);
 		});
-		console.log('Picture taken at ' + filename);
+		console.log('Taking picture at ' + filename);
 	}
 
 	// end password stuff

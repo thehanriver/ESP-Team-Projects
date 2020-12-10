@@ -71,8 +71,11 @@ Note: the picture taken from a bad password is stored in raspberry pi and the na
 We chose not to give indication of picture taken on the website because the owner of the log can look at the timestamp on any "denied access" event and look for that same time stamp in the images folder. This is generally to make it more secure for whoever owns this.
 
 ## Sketches and Photos
-<center><img src="./images/ece444.png" width="25%" /></center>  
-<center> </center>
+Log from website:
+<center>![log](images/log.png) </center>
+
+Log from website filtered for User 1:
+<center>![filter](images/filter.png) </center>
 
 
 ## Supporting Artifacts
