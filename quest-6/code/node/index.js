@@ -18,7 +18,7 @@ if (!fs.existsSync(images_dir)){
 
 var log='retrieving...';
 var filterForUserID = -1;
-var maxEvents = 50;
+var maxEvents = 10;
 
 
 function getDateTime(){
@@ -42,7 +42,7 @@ app.get('/log', async function(req, res) {
 		// console.log("CONNECTED");
 		var collection = client.db("quest6").collection("log");
 		if (filterForUserID == -1){ // send all
-			log = await collection.find({}).toArray();
+			log = await collection.find({}).skip(collection.count() - maxEvents).toArray();
 		}
 		else{
 			log = await collection.find({userID: filterForUserID}).toArray();
