@@ -17,10 +17,18 @@ We can change the allowance if we need to be more secure.
 
 If we had more materials we would ideally hide the board and the raspberry pi so that only the alphanumeric display, pi camera, and IR reciever is visible. Also, we would need to use a better IR transmitter and reciever.
 
-We used 2 Acutuators: a servo and a alphanumeric display
+We used 2 Actuators: a servo and a alphanumeric display
 We used 3 Sensors: button , IR receiver, accelerometer
 We also made 3 keys and 1 lock.
 We used raspberry pi camera module to take picture when bad password.
+
+Summarizing changes since live demo:
+1. Replaced live stream with taking pictures on each 'denied access event'
+2. added User IDs 1, 2, and 3
+3. log shows most recent events on top
+4. Alphanumeric display on each key displays 'OPEN', 'NOPE', and 'SET' for correct password, failed password, and set password, respectively.
+5. xyz orientations are now rounded to the nearest int, and the server takes checks the password with a plus minus allowance 
+6. website shows the id that is currently being filtered for. 'Clear' button changed to 'Show All'
 
 ## Self-Assessment
 
