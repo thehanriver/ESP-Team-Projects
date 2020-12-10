@@ -539,12 +539,12 @@ static void send_task()
   char *data_out = (char *)malloc(len_out);
   xSemaphoreTake(mux, portMAX_DELAY);
   data_out[0] = start;
-  data_out[1] = (char)(myID + '0');
-  data_out[2] = (char)(Xint + '0');
-  data_out[3] = (char)(Yint + '0');
-  data_out[4] = (char)(Zint + '0');
+  data_out[1] = (char)(myID + 'j');
+  data_out[2] = (char)(Xint + 'j');
+  data_out[3] = (char)(Yint + 'j');
+  data_out[4] = (char)(Zint + 'j');
   data_out[5] = genCheckSum(data_out, len_out - 1);
-  printf("data: %s\n",data_out);
+  printf("data: %s\n", data_out);
   ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
 
   uart_write_bytes(UART_NUM_1, data_out, len_out);
@@ -617,6 +617,26 @@ void getAccel(float *xp, float *yp, float *zp)
   //printf("X: %.2f \t Y: %.2f \t Z: %.2f\n", *xp, *yp, *zp);
 }
 
+static int convert(int val)
+{
+  if (val > 9)
+    val = 9;
+  else if (val < 9 && val > 6)
+    val = 6;
+  else if (val < 6 && val > 3)
+    val = 3;
+  else if (val < 3 && val > 0)
+    val = 0;
+  else if (val < 0 && val > -3)
+    val = -3;
+  else if (val < -3 && val > -6)
+    val = -6;
+  else
+    val = -9;
+
+  return val;
+}
+
 // Task to continuously poll acceleration and calculate roll and pitch
 static void test_adxl343()
 {
@@ -626,56 +646,11 @@ static void test_adxl343()
     float xVal, yVal, zVal;
     getAccel(&xVal, &yVal, &zVal);
     // calcRP(xVal, yVal, zVal);
-    Xint = (int)xVal;
-    Yint = (int)yVal;
-    Zint = (int)zVal;
+    Xint = convert((int)xVal);
+    Yint = convert((int)yVal);
+    Zint = convert((int)zVal);
 
-    if( Xint > 9)
-      Xint = 9;
-    else if( Xint < 9 && Xint > 6)
-      Xint = 6;
-    else if ( Xint < 6 && Xint > 3 )
-      Xint = 3;
-    else if( Xint < 3 && Xint > 0 )
-      Xint = 0;
-    else if ( Xint <0 && Xint > -3 )
-      Xint = -3;
-    else if ( Xint <-3 && Xint > -6)
-      Xint = -6;
-    else
-      Xint = -9;
-
-      if( Yint > 9)
-        Yint = 9;
-      else if( Yint < 9 && Yint > 6)
-        Yint = 6;
-      else if ( Yint < 6 && Yint > 3 )
-        Yint = 3;
-      else if( Yint < 3 && Yint > 0 )
-        Yint = 0;
-      else if ( Yint <0 && Yint > -3 )
-        Yint = -3;
-      else if ( Yint <-3 && Yint > -6)
-        Yint = -6;
-      else
-        Yint = -9;
-
-        if( Zint > 9)
-          Zint = 9;
-        else if( Zint < 9 && Zint > 6)
-          Zint = 6;
-        else if ( Zint < 6 && Zint > 3 )
-          Zint = 3;
-        else if( Zint < 3 && Zint > 0 )
-          Zint = 0;
-        else if ( Zint <0 && Zint > -3 )
-          Zint = -3;
-        else if ( Zint <-3 && Zint > -6)
-          Zint = -6;
-        else
-          Zint = -9;
-
-    printf("X: %d, Y: %d, Z: %d", Xint, Yint , Zint);
+    printf("X: %d, Y: %d, Z: %d", Xint, Yint, Zint);
     vTaskDelay(500 / portTICK_RATE_MS);
   }
 }
