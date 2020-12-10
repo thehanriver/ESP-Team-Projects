@@ -563,6 +563,7 @@ void button_task()
     {
       printf("Button pressed.\n");
       send_task();
+      led_task();
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
@@ -659,7 +660,7 @@ void app_main()
   xTaskCreate(test_adxl343, "test_adxl343", 4096, NULL, 5, NULL);
   // xTaskCreate(recv_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
   // xTaskCreate(send_task, "uart_tx_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
-  xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
+  // xTaskCreate(led_task, "set_traffic_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
   //xTaskCreate(id_task, "set_id_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
   xTaskCreate(button_task, "button_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL);
 }
