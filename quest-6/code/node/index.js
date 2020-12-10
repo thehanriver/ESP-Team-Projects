@@ -51,6 +51,10 @@ app.get('/log', async function(req, res) {
 				log = log.slice(log.length - maxEvents, log.length);
 			}
 		}
+		if (log.length > maxEvents) // only show last 50
+		{
+			log = log.slice(log.length - maxEvents, log.length);
+		}
 		// console.log(log);
 		client.close();
 	} catch (err) {
@@ -65,7 +69,6 @@ app.get('/log', async function(req, res) {
 // })
 
 app.post('/query', (req,res) => {
-	console.log('querying ' + req.body.userID);
 	filterForUserID = parseInt(req.body.userID);
 	res.end('yes');
 });
@@ -105,9 +108,6 @@ function isPwd(xyzObj, pwd) {
 server.on('message', async function (message, remote) {
 	console.log(remote.address + ':' + remote.port +' - ' + message);
 	var buffer = message;
-	// console.log('MESSAGE RECEIVED:');
-	// console.log(buffer);
-	// console.log(buffer.toString());
 	// begin password stuff
 	buffer = buffer.toString();
 	buffer = buffer.split(',');
@@ -126,24 +126,22 @@ server.on('message', async function (message, remote) {
 		if (setbit==1) { // update password
 			await collection.findOneAndReplace(usersQuery, usersObj, {upsert: true});
 
-			console.log("User " + usersObj.userID.toString() + " Password updated");
+			console.log("User " + usersObj.userID.toString() + " password updated");
 			event = 2;
 		}
 		else {	// check password
 			var pwd = await collection.findOne(usersQuery); 	// query existing password into pwd variable.
-			console.log('checking against existing password');
-			console.log(pwd);
 			if (pwd == null)	// no password has been set for this user
 			{
 				console.log('No password set for user ' + userID.toString());
 				event = 0;
 			}
 			else if (isPwd(usersObj,pwd)) {
-				console.log("Password is correct.");
+				console.log("User " + usersObj.userID.toString() + " password is correct.");
 				event = 1;
 			}
 			else {
-				console.log("Password is incorrect. Try again.");
+				console.log("User " + usersObj.userID.toString() + " password is incorrect. Try again.");
 				event = 0;
 			}
 		}
@@ -153,11 +151,8 @@ server.on('message', async function (message, remote) {
 	}
 	
 	var dateTime = getDateTime();
-	console.log('event is ');
-	console.log(event);
 
-	if (event==0){	// take a picture if the password is wrong into the images directory
-		console.log('taking pic');
+	if (event==0){	// take a picture if the password is wrong into the images directory	
 		var filename = images_dir + dateTime + ".jpg";
 		filename = filename.split(' ').join('_');
 		exec("raspistill -n -v -o " + filename, (error, stdout, stderr) => {
@@ -171,6 +166,7 @@ server.on('message', async function (message, remote) {
 			}
 			console.log(`stdout: ${stdout}`);
 		});
+		console.log('Taking picture at ' + filename);
 	}
 
 	// end password stuff
@@ -184,7 +180,6 @@ server.on('message', async function (message, remote) {
 		client = await MongoClient.connect(uri);
 		var collection = client.db("quest6").collection("log");
 		await collection.insertOne(logEntry);
-		console.log("1 event logged");
 		client.close();
 
 	} catch (err) {
@@ -199,7 +194,7 @@ server.on('message', async function (message, remote) {
 		console.log('Error: could not reply');
 	}
 	else {
-		console.log('Sent: ' + event.toString());
+		console.log('Sent to receiver : ' + event.toString());
 	}
 	});
 
