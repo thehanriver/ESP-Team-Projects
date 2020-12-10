@@ -1,4 +1,5 @@
-// var $ = require( "jquery" );
+//Quest 6
+//Mario Han, Vivek Cherian, Hussain Valiuddin
 var express = require('express');
 var app = express();
 var path = require('path');

@@ -77,9 +77,12 @@ Log from website:
 Log from website filtered for User 1:
 ![filter](images/filter.png)
 
+Console of node server:
+![console](images/console.png)
+
 
 ## Supporting Artifacts
-- [Link to video demo](). Not to exceed 120s
+- [Link to video demo](https://drive.google.com/file/d/1vP-z7Dfg-Y_co0Ezb22PUyRCTN5icdHv/view?usp=sharing).
 
 
 ## Modules, Tools, Source Used Including Attribution
