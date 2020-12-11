@@ -83,6 +83,16 @@ Console of node server:
 
 ![console](images/console.png)
 
+Users collection on Mongo DB:
+
+![usersdb](images/usersdb.png)
+
+Log collection on Mongo DB:
+
+![logdb](images/logdb.png)
+
+
+
 
 ## Supporting Artifacts
 - [Link to video demo](https://drive.google.com/file/d/1vP-z7Dfg-Y_co0Ezb22PUyRCTN5icdHv/view?usp=sharing).
