@@ -1,2 +1,2 @@
 # Team2-Cherian-Han-Valiuddin
-Quests repository for Team 2
+Team projects my team and I did for a class in BU that was about smart and connected systems.
